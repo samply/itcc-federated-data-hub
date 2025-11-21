@@ -1,0 +1,20 @@
+name: Build with rust and docker
+
+on:
+  push:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  build-with-samply:
+    uses: samply/github-workflows/.github/workflows/rust.yml@main
+    with:
+      image-prefix: "samply/"
+      components: '[ "itcc-omics-ingest" ]'
+      #architectures: '[ "amd64", "arm64" ]'
+      #profile: debug
+      test-via-script: false
+      cargo-fmt-check: true
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
