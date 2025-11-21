@@ -16,8 +16,7 @@ pub struct AppState {
 async fn main() {
     fmt()
         .with_env_filter(
-            EnvFilter::from_default_env()
-                .add_directive("omics_endpoint=info".parse().unwrap()),
+            EnvFilter::from_default_env().add_directive("omics_endpoint=info".parse().unwrap()),
         )
         .init();
 
@@ -38,7 +37,7 @@ async fn main() {
     let app = build_router(state);
 
     info!("Starting server token ON!");
-    let addr: SocketAddr = "0.0.0.0:8080".parse().unwrap();
+    let addr: SocketAddr = "0.0.0.0:6080".parse().unwrap();
     info!("Listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.unwrap();
