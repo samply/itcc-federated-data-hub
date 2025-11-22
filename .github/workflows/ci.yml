@@ -6,9 +6,14 @@ on:
   pull_request:
 
 jobs:
-  build-with-samply:
-    continue-on-error: true
+  rust:
     uses: samply/github-workflows/.github/workflows/rust.yml@main
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+      security-events: write
+      statuses: read
     with:
       image-prefix: "samply/"
       components: '[ "itcc-omics-ingest" ]'
