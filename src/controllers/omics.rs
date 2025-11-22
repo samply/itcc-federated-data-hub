@@ -3,7 +3,7 @@ use axum::{
     extract::State,
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
-    routing::{get, post},
+    routing::post,
     Json, Router,
 };
 use serde::Serialize;
@@ -20,17 +20,11 @@ struct UploadResponse {
     stored_as: String,
 }
 
-pub fn build_router(state: AppState) -> Router {
+pub fn routers() -> Router<AppState> {
     Router::new()
-        .route("/omics/health", get(health))
         .route("/omics/upload", post(upload_handler))
-        .with_state(state)
 }
 
-// GET /omics/healthz
-async fn health() -> impl IntoResponse {
-    (StatusCode::OK, "ok")
-}
 
 // POST /omics/upload
 async fn upload_handler(
