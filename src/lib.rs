@@ -2,6 +2,7 @@ mod controllers;
 mod config;
 
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
+use axum::middleware::from_fn_with_state;
 use axum::Router;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -9,12 +10,14 @@ use once_cell::sync::Lazy;
 use clap::Parser;
 use crate::config::Config;
 use crate::controllers::{health, omics};
+use crate::controllers::extractors::api_key_check;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
 
 #[derive(Clone)]
 pub struct AppState {
     pub upload_dir: Arc<PathBuf>,
+    pub api_key: String,
 }
 
 pub async fn run_with_config() -> anyhow::Result<()> {
@@ -29,6 +32,7 @@ pub async fn run_with_config() -> anyhow::Result<()> {
 
     let state = AppState {
         upload_dir: Arc::new(upload_dir),
+        api_key: CONFIG.api_key.clone(),
     };
 
     let app = create_router(state);
@@ -45,6 +49,8 @@ pub async fn run_with_config() -> anyhow::Result<()> {
 pub async fn create_router(app_state: AppState) -> Router {
     Router::new()
         .merge(omics::routers())
+        .route_layer(from_fn_with_state(app_state.clone(), api_key_check))
         .merge(health::routers())
         .with_state(app_state)
+    
 }

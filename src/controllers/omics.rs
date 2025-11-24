@@ -1,17 +1,9 @@
-use axum::{
-    body::Bytes,
-    extract::State,
-    http::{HeaderMap, StatusCode},
-    response::IntoResponse,
-    routing::post,
-    Json, Router,
-};
+use axum::{body::Bytes, extract::State, http::{HeaderMap, StatusCode}, response::IntoResponse, routing::post, Json, Router};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
 use tracing::error;
-
 use crate::AppState;
 
 #[derive(Serialize)]
@@ -30,7 +22,7 @@ pub fn routers() -> Router<AppState> {
 async fn upload_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
-    body: Bytes,
+    body: Bytes
 ) -> impl IntoResponse {
     
     let header_name = headers
