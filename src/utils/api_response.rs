@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
 use serde::{Deserialize, Serialize};
 
 // Type for successfull Response with data
@@ -21,15 +21,14 @@ pub enum ErrorType {
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            ErrorType::NonEmptyDir => {
-                (StatusCode::NOT_FOUND, "Directory already exists and is non-empty".to_string())
-            }
-            ErrorType::WriteFile => {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "failed to write file on server".to_string(),
-                )
-            }
+            ErrorType::NonEmptyDir => (
+                StatusCode::NOT_FOUND,
+                "Directory already exists and is non-empty".to_string(),
+            ),
+            ErrorType::WriteFile => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "failed to write file on server".to_string(),
+            ),
             ErrorType::ApiKeyError => {
                 (StatusCode::UNAUTHORIZED, "API key is not valid".to_string())
             }
@@ -41,9 +40,7 @@ impl IntoResponse for ErrorType {
 impl IntoResponse for SuccessType {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            SuccessType::Health => {
-                (StatusCode::OK, "OK".to_string())
-            }
+            SuccessType::Health => (StatusCode::OK, "OK".to_string()),
             SuccessType::UploadResponse(filename) => {
                 (StatusCode::CREATED, format!("stored_as: {filename}"))
             }

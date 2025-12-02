@@ -1,17 +1,17 @@
-mod controllers;
 mod config;
+mod controllers;
 pub mod utils;
 
-use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
+use crate::config::Config;
+use crate::controllers::extractors::api_key_check;
+use crate::controllers::{health, omics};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
+use clap::Parser;
+use once_cell::sync::Lazy;
+use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::net::TcpListener;
 use tracing::info;
-use once_cell::sync::Lazy;
-use clap::Parser;
-use crate::config::Config;
-use crate::controllers::{health, omics};
-use crate::controllers::extractors::api_key_check;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
 
@@ -24,12 +24,8 @@ pub struct AppState {
 pub async fn run_with_config() {
     let upload_dir = PathBuf::from(&CONFIG.upload_dir);
 
-    fs::create_dir_all(&upload_dir).unwrap_or_else(|e| {
-        panic!(
-            "Failed to create upload dir {}: {e}",
-            upload_dir.display()
-        )
-    });
+    fs::create_dir_all(&upload_dir)
+        .unwrap_or_else(|e| panic!("Failed to create upload dir {}: {e}", upload_dir.display()));
 
     let state = AppState {
         upload_dir: Arc::new(upload_dir),
@@ -43,7 +39,9 @@ pub async fn run_with_config() {
     info!("Listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.expect("Can't listen to port");
-    axum::serve(listener, app.await.into_make_service()).await.expect("Can't start server");
+    axum::serve(listener, app.await.into_make_service())
+        .await
+        .expect("Can't start server");
 }
 
 pub async fn create_router(app_state: AppState) -> Router {
@@ -52,5 +50,4 @@ pub async fn create_router(app_state: AppState) -> Router {
         .route_layer(from_fn_with_state(app_state.clone(), api_key_check))
         .merge(health::routers())
         .with_state(app_state)
-    
 }

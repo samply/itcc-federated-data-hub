@@ -5,5 +5,5 @@ pub struct Config {
     #[clap(long, env)]
     pub api_key: String,
     #[clap(long, env, default_value = "uploads")]
-    pub upload_dir: String
+    pub upload_dir: String,
 }

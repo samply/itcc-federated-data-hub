@@ -1,8 +1,8 @@
-use crate::AppState;
-use axum::response::IntoResponse;
-use axum::middleware;
-use axum::extract::{Request, State};
 use crate::utils::api_response::ErrorType;
+use crate::AppState;
+use axum::extract::{Request, State};
+use axum::middleware;
+use axum::response::IntoResponse;
 
 pub async fn api_key_check(
     State(state): State<AppState>,

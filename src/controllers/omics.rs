@@ -1,24 +1,21 @@
-use axum::{body::Bytes, extract::State, http::{HeaderMap}, routing::post, Router};
+use crate::utils::api_response::{ApiResult, ErrorType, SuccessType};
+use crate::AppState;
+use axum::{body::Bytes, extract::State, http::HeaderMap, routing::post, Router};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
 use tracing::error;
-use crate::AppState;
-use crate::utils::api_response::{ApiResult, ErrorType, SuccessType};
 
 pub fn routers() -> Router<AppState> {
-    Router::new()
-        .route("/omics/upload", post(upload_handler))
+    Router::new().route("/omics/upload", post(upload_handler))
 }
-
 
 // POST /omics/upload
 async fn upload_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
-    body: Bytes
+    body: Bytes,
 ) -> ApiResult {
-    
     let header_name = headers
         .get("x-filename")
         .and_then(|v| v.to_str().ok())
