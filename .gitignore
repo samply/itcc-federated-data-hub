@@ -33,3 +33,4 @@ Cargo.lock
 .idea/*
 .dockerignore
 uploads/
+.cargo/config.toml
