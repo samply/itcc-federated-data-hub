@@ -38,7 +38,6 @@ async fn upload_handler(
     headers: HeaderMap,
     body: Bytes,
 ) -> impl IntoResponse {
-    
     let header_name = headers
         .get("x-filename")
         .and_then(|v| v.to_str().ok())
