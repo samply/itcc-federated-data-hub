@@ -39,7 +39,7 @@ pub async fn run_with_config() {
     let app = create_router(state);
 
     info!("Starting server token ON!");
-    let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 8040));
+    let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 6080));
     info!("Listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.expect("Can't listen to port");

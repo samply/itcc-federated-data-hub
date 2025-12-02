@@ -45,7 +45,7 @@ impl IntoResponse for SuccessType {
                 (StatusCode::OK, "OK".to_string())
             }
             SuccessType::UploadResponse(filename) => {
-                (StatusCode::CREATED, format!("{filename}"))
+                (StatusCode::CREATED, format!("stored_as: {filename}"))
             }
         };
         (status, Json(body)).into_response()
