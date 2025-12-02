@@ -2,7 +2,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 use omics_endpoint::run_with_config;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() {
     fmt()
         .with_env_filter(
             EnvFilter::from_default_env()

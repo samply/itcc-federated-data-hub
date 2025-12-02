@@ -1,16 +1,10 @@
-use axum::{body::Bytes, extract::State, http::{HeaderMap, StatusCode}, response::IntoResponse, routing::post, Json, Router};
-use serde::Serialize;
+use axum::{body::Bytes, extract::State, http::{HeaderMap}, routing::post, Router};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
 use tracing::error;
 use crate::AppState;
-
-#[derive(Serialize)]
-struct UploadResponse {
-    status: String,
-    stored_as: String,
-}
+use crate::utils::api_response::{ApiResult, ErrorType, SuccessType};
 
 pub fn routers() -> Router<AppState> {
     Router::new()
@@ -23,7 +17,7 @@ async fn upload_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
     body: Bytes
-) -> impl IntoResponse {
+) -> ApiResult {
     
     let header_name = headers
         .get("x-filename")
@@ -44,19 +38,11 @@ async fn upload_handler(
     let mut path: PathBuf = (*state.upload_dir).clone();
     path.push(&filename);
 
-    if let Err(e) = tokio_fs::write(&path, &body).await {
-        error!("Failed to write file {}: {}", path.display(), e);
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "failed to write file on server",
-        )
-            .into_response();
+    match tokio_fs::write(&path, &body).await {
+        Ok(_) => Ok(SuccessType::UploadResponse(filename)),
+        Err(e) => {
+            error!("Failed to write file {}: {}", path.display(), e);
+            Err(ErrorType::WriteFile)
+        }
     }
-
-    let resp = UploadResponse {
-        status: "ok".to_string(),
-        stored_as: filename,
-    };
-
-    (StatusCode::OK, Json(resp)).into_response()
 }

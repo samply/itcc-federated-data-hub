@@ -1,5 +1,6 @@
 mod controllers;
 mod config;
+pub mod utils;
 
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use axum::middleware::from_fn_with_state;
@@ -20,7 +21,7 @@ pub struct AppState {
     pub api_key: String,
 }
 
-pub async fn run_with_config() -> anyhow::Result<()> {
+pub async fn run_with_config() {
     let upload_dir = PathBuf::from(&CONFIG.upload_dir);
 
     fs::create_dir_all(&upload_dir).unwrap_or_else(|e| {
@@ -41,9 +42,8 @@ pub async fn run_with_config() -> anyhow::Result<()> {
     let addr: SocketAddr = SocketAddr::from(([0, 0, 0, 0], 8040));
     info!("Listening on http://{}", addr);
 
-    let listener = TcpListener::bind(addr).await?;
-    axum::serve(listener, app.await.into_make_service()).await?;
-    Ok(())
+    let listener = TcpListener::bind(addr).await.expect("Can't listen to port");
+    axum::serve(listener, app.await.into_make_service()).await.expect("Can't start server");
 }
 
 pub async fn create_router(app_state: AppState) -> Router {
