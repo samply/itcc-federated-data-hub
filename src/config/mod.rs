@@ -4,6 +4,6 @@ use clap::Parser;
 pub struct Config {
     #[clap(long, env)]
     pub api_key: String,
-    #[clap(long, env, default_value = "uploads")]
+    #[clap(long, env, default_value = "/data/uploads")]
     pub upload_dir: String,
 }
