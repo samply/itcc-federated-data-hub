@@ -1,6 +1,7 @@
 mod config;
 mod controllers;
 pub mod utils;
+pub mod validator;
 
 use crate::config::Config;
 use crate::controllers::extractors::api_key_check;
@@ -19,6 +20,7 @@ pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
 pub struct AppState {
     pub upload_dir: Arc<PathBuf>,
     pub api_key: String,
+    pub required_omics_columns: Vec<String>,
 }
 
 pub async fn run_with_config() {
@@ -30,6 +32,7 @@ pub async fn run_with_config() {
     let state = AppState {
         upload_dir: Arc::new(upload_dir),
         api_key: CONFIG.api_key.clone(),
+        required_omics_columns: CONFIG.required_omics_columns.clone(),
     };
 
     let app = create_router(state);

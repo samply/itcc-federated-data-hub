@@ -1,4 +1,4 @@
-use crate::utils::api_response::ErrorType;
+use crate::utils::error_type::ErrorType;
 use crate::AppState;
 use axum::extract::{Request, State};
 use axum::middleware;

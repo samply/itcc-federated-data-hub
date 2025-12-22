@@ -3,20 +3,14 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 
-// Type for successfull Response with data
-pub type ApiResult = Result<SuccessType, ErrorType>;
-
-#[derive(Deserialize, Serialize, Debug)]
-pub enum SuccessType {
-    Health,
-    UploadResponse(String),
-}
-
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ErrorType {
     WriteFile,
     NonEmptyDir,
     ApiKeyError,
+    MafEmptyHeader,
+    MafDuplicateHeader,
+    MafMissingColumn,
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -32,17 +26,14 @@ impl IntoResponse for ErrorType {
             ErrorType::ApiKeyError => {
                 (StatusCode::UNAUTHORIZED, "API key is not valid".to_string())
             }
-        };
-        (status, Json(body)).into_response()
-    }
-}
-
-impl IntoResponse for SuccessType {
-    fn into_response(self) -> Response {
-        let (status, body) = match self {
-            SuccessType::Health => (StatusCode::OK, "OK".to_string()),
-            SuccessType::UploadResponse(filename) => {
-                (StatusCode::CREATED, format!("stored_as: {filename}"))
+            ErrorType::MafEmptyHeader => {
+                (StatusCode::BAD_REQUEST, "Header is malformed".to_string())
+            }
+            ErrorType::MafDuplicateHeader => {
+                (StatusCode::CONFLICT, "Header already exists".to_string())
+            }
+            ErrorType::MafMissingColumn => {
+                (StatusCode::BAD_REQUEST, "Column is missing".to_string())
             }
         };
         (status, Json(body)).into_response()

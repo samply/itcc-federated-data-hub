@@ -1,6 +1,11 @@
-use crate::utils::api_response::{ApiResult, ErrorType, SuccessType};
+use crate::utils::error_type::ErrorType;
+use crate::validator::schema::Schema;
 use crate::AppState;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use axum::{body::Bytes, extract::State, http::HeaderMap, routing::post, Router};
+use csv::ReaderBuilder;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
@@ -15,7 +20,7 @@ async fn upload_handler(
     State(state): State<AppState>,
     headers: HeaderMap,
     body: Bytes,
-) -> ApiResult {
+) -> Response {
     let header_name = headers
         .get("x-filename")
         .and_then(|v| v.to_str().ok())
@@ -35,11 +40,27 @@ async fn upload_handler(
     let mut path: PathBuf = (*state.upload_dir).clone();
     path.push(&filename);
 
+    let mut rdr = ReaderBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .flexible(false)
+        .from_reader(Cursor::new(body.as_ref()));
+
+    let header = match rdr.headers() {
+        Ok(h) => h.clone(),
+        Err(e) => {
+            tracing::error!("Failed to read headers: {e}");
+            return ErrorType::MafEmptyHeader.into_response();
+        }
+    };
+    if let Err(e) = Schema::validate(&header, &state.required_omics_columns) {
+        return e.into_response();
+    }
     match tokio_fs::write(&path, &body).await {
-        Ok(_) => Ok(SuccessType::UploadResponse(filename)),
+        Ok(_) => (StatusCode::CREATED, format!("stored_as: {filename}")).into_response(),
         Err(e) => {
             error!("Failed to write file {}: {}", path.display(), e);
-            Err(ErrorType::WriteFile)
+            ErrorType::WriteFile.into_response()
         }
     }
 }
