@@ -3,10 +3,8 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 #[tokio::main]
 async fn main() {
-    fmt()
-        .with_env_filter(
-            EnvFilter::from_default_env().add_directive("omics_endpoint=info".parse().unwrap()),
-        )
-        .init();
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("omics_endpoint=info"));
+    fmt().with_env_filter(filter).init();
     run_with_config().await
 }

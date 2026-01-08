@@ -1,6 +1,7 @@
 use crate::utils::error_type::ErrorType;
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};
+use tracing::debug;
 
 pub struct HeaderInfo {
     pub index: HashMap<String, usize>,
@@ -21,13 +22,19 @@ impl Schema {
         let mut names = vec![];
 
         for (i, h) in header.iter().enumerate() {
+            debug!("index: {}", i);
+            debug!("name: {}", h);
             let name = h.trim().to_string();
             if name.is_empty() {
+                debug!("Header {} is empty", i);
                 Err(ErrorType::MafEmptyHeader)?
             }
             if !seen.insert(name.clone()) {
+                debug!("duplicate header name: {}", name);
                 Err(ErrorType::MafDuplicateHeader)?
             }
+            index.insert(name.clone(), i);
+            names.push(name)
         }
         Ok(HeaderInfo { index, names })
     }
@@ -35,6 +42,8 @@ impl Schema {
     fn validate_required_columns(h: &HeaderInfo, required: &Vec<String>) -> Result<(), ErrorType> {
         for r in required {
             if !h.index.contains_key(r) {
+                debug!("index does not exist {}", r);
+                debug!("index contains {}", r);
                 Err(ErrorType::MafMissingColumn)?
             }
         }

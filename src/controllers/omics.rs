@@ -1,6 +1,7 @@
 use crate::utils::error_type::ErrorType;
 use crate::validator::schema::Schema;
 use crate::AppState;
+use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{body::Bytes, extract::State, http::HeaderMap, routing::post, Router};
@@ -9,10 +10,12 @@ use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
-use tracing::error;
+use tracing::{debug, error};
 
 pub fn routers() -> Router<AppState> {
-    Router::new().route("/omics/upload", post(upload_handler))
+    Router::new()
+        .route("/omics/upload", post(upload_handler))
+        .layer(DefaultBodyLimit::max(200 * 1024 * 1024))
 }
 
 // POST /omics/upload
@@ -42,6 +45,7 @@ async fn upload_handler(
 
     let mut rdr = ReaderBuilder::new()
         .delimiter(b'\t')
+        .comment(Some(b'#'))
         .has_headers(true)
         .flexible(false)
         .from_reader(Cursor::new(body.as_ref()));
