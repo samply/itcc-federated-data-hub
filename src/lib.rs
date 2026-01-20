@@ -1,7 +1,7 @@
 mod config;
 mod controllers;
+pub mod omics_data;
 pub mod utils;
-pub mod validator;
 
 use crate::config::Config;
 use crate::controllers::extractors::api_key_check;

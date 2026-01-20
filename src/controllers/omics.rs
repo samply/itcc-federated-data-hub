@@ -1,5 +1,5 @@
+use crate::omics_data::validator;
 use crate::utils::error_type::ErrorType;
-use crate::validator::schema::Schema;
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
@@ -57,7 +57,7 @@ async fn upload_handler(
             return ErrorType::MafEmptyHeader.into_response();
         }
     };
-    if let Err(e) = Schema::validate(&header, &state.required_omics_columns) {
+    if let Err(e) = validator::schema_validate(&header, &state.required_omics_columns) {
         return e.into_response();
     }
     match tokio_fs::write(&path, &body).await {
