@@ -1,18 +1,18 @@
+pub mod beam;
 mod config;
 mod controllers;
 pub mod omics_data;
 pub mod utils;
-pub mod beam;
 
 use crate::config::Config;
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
+use beam_lib::{AppId, BeamClient};
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
-use beam_lib::{AppId, BeamClient};
 use tokio::net::TcpListener;
 use tracing::info;
 

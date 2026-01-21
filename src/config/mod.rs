@@ -1,6 +1,6 @@
 use anyhow::anyhow;
-use beam_lib::AppId;
 use beam_lib::reqwest::Url;
+use beam_lib::AppId;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 
