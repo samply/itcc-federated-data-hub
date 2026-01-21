@@ -11,6 +11,8 @@ pub enum ErrorType {
     MafEmptyHeader,
     MafDuplicateHeader,
     MafMissingColumn,
+    BeamError,
+    BeamStreamFileError
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -34,6 +36,12 @@ impl IntoResponse for ErrorType {
             }
             ErrorType::MafMissingColumn => {
                 (StatusCode::BAD_REQUEST, "Column is missing".to_string())
+            }
+            ErrorType::BeamError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "beam error".to_string())
+            }
+            ErrorType::BeamStreamFileError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "beam stream error".to_string())
             }
         };
         (status, Json(body)).into_response()

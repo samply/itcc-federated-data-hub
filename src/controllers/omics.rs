@@ -1,6 +1,5 @@
 use crate::omics_data::validator;
 use crate::utils::error_type::ErrorType;
-use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -11,6 +10,9 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs as tokio_fs;
 use tracing::{debug, error};
+use crate::AppState;
+#[cfg(feature = "beam-sender")]
+use crate::beam;
 
 pub fn routers() -> Router<AppState> {
     Router::new()
@@ -58,7 +60,11 @@ async fn upload_handler(
         }
     };
     if let Err(e) = validator::schema_validate(&header, &state.required_omics_columns) {
-        return e.into_response();
+        return e.into_response()
+    }
+    #[cfg(feature = "beam-sender")]    
+    if let Err(e) = beam::send_file(state.data_lake_id, "test", &body).await {
+        return e.into_response()
     }
     match tokio_fs::write(&path, &body).await {
         Ok(_) => (StatusCode::CREATED, format!("stored_as: {filename}")).into_response(),

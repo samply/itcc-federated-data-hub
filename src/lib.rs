@@ -2,6 +2,7 @@ mod config;
 mod controllers;
 pub mod omics_data;
 pub mod utils;
+pub mod beam;
 
 use crate::config::Config;
 use crate::controllers::extractors::api_key_check;
@@ -11,16 +12,24 @@ use axum::Router;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
+use beam_lib::{AppId, BeamClient};
 use tokio::net::TcpListener;
 use tracing::info;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
-
+pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+    BeamClient::new(
+        &CONFIG.beam_id,
+        &CONFIG.beam_secret,
+        CONFIG.beam_url.clone(),
+    )
+});
 #[derive(Clone)]
 pub struct AppState {
     pub upload_dir: Arc<PathBuf>,
     pub api_key: String,
     pub required_omics_columns: Vec<String>,
+    pub data_lake_id: AppId,
 }
 
 pub async fn run_with_config() {
@@ -33,6 +42,7 @@ pub async fn run_with_config() {
         upload_dir: Arc::new(upload_dir),
         api_key: CONFIG.api_key.clone(),
         required_omics_columns: CONFIG.required_omics_columns.clone(),
+        data_lake_id: CONFIG.data_lake_id.clone(),
     };
 
     let app = create_router(state);
