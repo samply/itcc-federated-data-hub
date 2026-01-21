@@ -34,4 +34,5 @@ Cargo.lock
 .dockerignore
 uploads/
 .cargo/config.toml
-dev
+dev/data
+dev/uploads

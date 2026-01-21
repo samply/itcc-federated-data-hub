@@ -1,9 +1,7 @@
 
 services:
   omics-endpoint:
-    build:
-      context: ..
-      dockerfile: Dockerfile.beam
+    build: ../
     image: samply/itcc-omics-ingest
     ports:
       - "6080:6080"
@@ -18,6 +16,23 @@ services:
     volumes:
       - ./uploads:/data/uploads
 
+  downloader:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: samply/beam-file
+    container_name: receiver
+    command: ["receive", "save", "-o", "/data", "-p", "%f_%t_%n"]
+    volumes:
+      - ./data:/data
+    environment:
+      - BEAM_ID=app1.proxy2.broker
+      - BEAM_SECRET=App1Secret
+      - BEAM_URL=http://proxy2:8082
+    networks:
+      - dev_default
+      - default
+    
 networks:
   dev_default:
     external: true
