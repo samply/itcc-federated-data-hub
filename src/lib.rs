@@ -1,10 +1,7 @@
 pub mod beam;
-mod config;
 mod controllers;
 pub mod omics_data;
 pub mod utils;
-
-use crate::config::Config;
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
 use axum::middleware::from_fn_with_state;
@@ -15,6 +12,7 @@ use once_cell::sync::Lazy;
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::net::TcpListener;
 use tracing::info;
+use crate::utils::config::Config;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
