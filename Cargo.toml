@@ -16,6 +16,4 @@ csv = "1.4.0"
 beam-lib = { git = "https://github.com/samply/beam", branch = "push-uqnktkpvqlmk", features = ["http-util", "sockets"] }
 serde_json = "1.0.145"
 anyhow = "1"
-
-[features]
-beam-sender = []
+zstd = "0.13.3"

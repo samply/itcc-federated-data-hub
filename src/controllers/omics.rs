@@ -1,5 +1,5 @@
-#[cfg(feature = "beam-sender")]
 use crate::beam;
+use crate::omics_data::compression::compress_zstd;
 use crate::omics_data::validator;
 use crate::utils::error_type::ErrorType;
 use crate::AppState;
@@ -9,9 +9,8 @@ use axum::response::{IntoResponse, Response};
 use axum::{body::Bytes, extract::State, http::HeaderMap, routing::post, Router};
 use csv::ReaderBuilder;
 use std::io::Cursor;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::fs as tokio_fs;
 use tracing::{debug, error};
 
 pub fn routers() -> Router<AppState> {
@@ -40,10 +39,7 @@ async fn upload_handler(
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    let filename = format!("{ts}_{sanitized_name}");
-
-    let mut path: PathBuf = (*state.upload_dir).clone();
-    path.push(&filename);
+    let filename = format!("{ts}_{sanitized_name}.zst");
 
     let mut rdr = ReaderBuilder::new()
         .delimiter(b'\t')
@@ -62,15 +58,15 @@ async fn upload_handler(
     if let Err(e) = validator::schema_validate(&header, &state.required_omics_columns) {
         return e.into_response();
     }
-    #[cfg(feature = "beam-sender")]
-    if let Err(e) = beam::send_file(state.data_lake_id, "test", &body).await {
+    let compressed_vec = match compress_zstd(body.as_ref(), &state.zstd_level) {
+        Ok(v) => v,
+        Err(e) => return e.into_response(),
+    };
+    let compressed = Bytes::from(compressed_vec);
+
+    if let Err(e) = beam::send_file(state.data_lake_id, "test", &compressed).await {
         return e.into_response();
     }
-    match tokio_fs::write(&path, &body).await {
-        Ok(_) => (StatusCode::CREATED, format!("stored_as: {filename}")).into_response(),
-        Err(e) => {
-            error!("Failed to write file {}: {}", path.display(), e);
-            ErrorType::WriteFile.into_response()
-        }
-    }
+
+    (StatusCode::CREATED, format!("stored_as: {filename}")).into_response()
 }

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ErrorType {
     WriteFile,
+    CompressFile,
     NonEmptyDir,
     ApiKeyError,
     MafEmptyHeader,
@@ -41,6 +42,10 @@ impl IntoResponse for ErrorType {
             ErrorType::BeamStreamFileError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "beam stream error".to_string(),
+            ),
+            ErrorType::CompressFile => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "compression error".to_string(),
             ),
         };
         (status, Json(body)).into_response()

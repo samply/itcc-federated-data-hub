@@ -20,8 +20,8 @@ pub struct Config {
     /// The app id of the central data lake(receiver)
     #[clap(long, env, value_parser = parse_beam_id)]
     pub data_lake_id: AppId,
-    #[clap(long, env, default_value = "/data/uploads")]
-    pub upload_dir: String,
+    #[clap(long, env, default_value = "3")]
+    pub zstd_level: i32,
     #[clap(
         long,
         env,

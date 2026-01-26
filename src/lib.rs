@@ -1,9 +1,12 @@
 pub mod beam;
 mod controllers;
 pub mod omics_data;
+mod test;
 pub mod utils;
+
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
+use crate::utils::config::Config;
 use axum::middleware::from_fn_with_state;
 use axum::Router;
 use beam_lib::{AppId, BeamClient};
@@ -12,7 +15,6 @@ use once_cell::sync::Lazy;
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::net::TcpListener;
 use tracing::info;
-use crate::utils::config::Config;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
@@ -24,21 +26,16 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
 });
 #[derive(Clone)]
 pub struct AppState {
-    pub upload_dir: Arc<PathBuf>,
     pub api_key: String,
+    pub zstd_level: i32,
     pub required_omics_columns: Vec<String>,
     pub data_lake_id: AppId,
 }
 
 pub async fn run_with_config() {
-    let upload_dir = PathBuf::from(&CONFIG.upload_dir);
-
-    fs::create_dir_all(&upload_dir)
-        .unwrap_or_else(|e| panic!("Failed to create upload dir {}: {e}", upload_dir.display()));
-
     let state = AppState {
-        upload_dir: Arc::new(upload_dir),
         api_key: CONFIG.api_key.clone(),
+        zstd_level: CONFIG.zstd_level,
         required_omics_columns: CONFIG.required_omics_columns.clone(),
         data_lake_id: CONFIG.data_lake_id.clone(),
     };

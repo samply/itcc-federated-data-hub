@@ -5,8 +5,15 @@ services:
     build: .
     image: samply/itcc-omics-ingest
     ports:
-      - "8080:8080"
+      - "6080:6080"
     environment:
-      - UPLOAD_DIR=/data/uploads
-    volumes:
-      - ./uploads:/data/uploads
+      - API_KEY=omics
+      - RUST_LOG=debug
+      - BEAM_ID=app1.proxy1.broker
+      - BEAM_SECRET=App1Secret
+      - BEAM_URL=http://proxy1:8083
+      - DATA_LAKE_ID=app1.proxy2.broker
+
+networks:
+  dev_default:
+    external: true

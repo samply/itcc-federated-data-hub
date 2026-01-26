@@ -1,2 +1,2 @@
-pub mod error_type;
 pub mod config;
+pub mod error_type;

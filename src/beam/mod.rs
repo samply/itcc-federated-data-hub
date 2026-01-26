@@ -1,3 +1,4 @@
+use crate::utils::config::FileMeta;
 use crate::utils::error_type::ErrorType;
 use crate::utils::error_type::ErrorType::{BeamError, BeamStreamFileError};
 use crate::BEAM_CLIENT;
@@ -5,7 +6,6 @@ use axum::body::Bytes;
 use beam_lib::AppId;
 use tokio::io::AsyncWriteExt;
 use tracing::error;
-use crate::utils::config::FileMeta;
 
 pub async fn send_file(
     data_lake_id: AppId,
