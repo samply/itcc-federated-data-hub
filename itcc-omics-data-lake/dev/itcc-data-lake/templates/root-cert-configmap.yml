@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-cert
+  namespace: {{ .Values.namespace }}
+data:
+  root.crt.pem: |
+{{ .Values.config.rootCrtPem | indent 4 }}

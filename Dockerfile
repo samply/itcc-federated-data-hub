@@ -1,21 +1,11 @@
-FROM lukemathwalker/cargo-chef:latest-rust-bookworm AS chef
-WORKDIR /app
+FROM alpine AS chmodder
+ARG FEATURE
+ARG TARGETARCH
+ARG COMPONENT
+COPY /artifacts/binaries-$TARGETARCH$FEATURE/$COMPONENT /app/$COMPONENT
+RUN chmod +x /app/*
 
-FROM chef AS planner
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
-
-FROM chef AS builder
-WORKDIR /app
-
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-
-COPY . .
-RUN cargo build --release --bin omics_endpoint
-
-FROM gcr.io/distroless/cc-debian12 AS runtime
-
-COPY --from=builder /app/target/release/omics_endpoint /usr/local/bin/omics_endpoint
-
-ENTRYPOINT ["/usr/local/bin/omics_endpoint"]
+FROM gcr.io/distroless/cc-debian12
+ARG COMPONENT
+COPY --from=chmodder /app/$COMPONENT /usr/local/bin/$COMPONENT
+ENTRYPOINT [ "/usr/local/bin/$COMPONENT" ]

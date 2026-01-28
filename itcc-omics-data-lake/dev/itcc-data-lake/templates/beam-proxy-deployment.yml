@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beam-proxy
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beam-proxy
+  template:
+    metadata:
+      labels:
+        app: beam-proxy
+    spec:
+      containers:
+        - name: beam-proxy
+          image: {{ .Values.beamProxy.image | quote }}
+          ports:
+            - containerPort: {{ .Values.beamProxy.port }}
+          env:
+            - name: BROKER_URL
+              value: {{ .Values.beamProxy.brokerUrl | quote }}
+            - name: PROXY_ID
+              value: {{ .Values.beamProxy.proxyId | quote }}
+            - name: {{ .Values.beamProxy.appKeyName | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: omics-beam-secret
+                  key: BEAM_SECRET
+            - name: PRIVKEY_FILE
+              value: "/run/secrets/proxy.pem"
+            - name: ROOTCERT_FILE
+              value: "/conf/root.crt.pem"
+            - name: ALL_PROXY
+              value: {{ .Values.beamProxy.allProxy | quote }}
+          volumeMounts:
+            - name: proxy-key
+              mountPath: /run/secrets
+              readOnly: true
+            - name: root-cert
+              mountPath: /conf/root.crt.pem
+              subPath: root.crt.pem
+              readOnly: true
+      volumes:
+        - name: proxy-key
+          secret:
+            secretName: beam-proxy-key
+            items:
+              - key: proxy.pem
+                path: proxy.pem
+        - name: root-cert
+          configMap:
+            name: root-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beam-proxy
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: beam-proxy
+  ports:
+    - name: http
+      port: {{ .Values.beamProxy.port }}
+      targetPort: {{ .Values.beamProxy.port }}

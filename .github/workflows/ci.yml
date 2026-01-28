@@ -16,7 +16,7 @@ jobs:
       statuses: read
     with:
       image-prefix: "samply/"
-      components: '[ "itcc-omics-ingest" ]'
+      components: '[ "itcc-omics-ingest", "itcc-omics-data-lake" ]'
       architectures: '[ "amd64"]'
       #profile: debug
       test-via-script: false

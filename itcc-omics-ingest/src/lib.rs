@@ -1,12 +1,18 @@
-mod config;
+pub mod beam;
 mod controllers;
+mod fhir;
+pub mod omics_data;
+mod pseudonym;
+#[cfg(test)]
+mod test;
 pub mod utils;
 
-use crate::config::Config;
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
+use crate::utils::config::{AppState, Config};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
+use beam_lib::{AppId, BeamClient};
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -14,22 +20,20 @@ use tokio::net::TcpListener;
 use tracing::info;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
-
-#[derive(Clone)]
-pub struct AppState {
-    pub upload_dir: Arc<PathBuf>,
-    pub api_key: String,
-}
+pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+    BeamClient::new(
+        &CONFIG.beam_id,
+        &CONFIG.beam_secret,
+        CONFIG.beam_url.clone(),
+    )
+});
 
 pub async fn run_with_config() {
-    let upload_dir = PathBuf::from(&CONFIG.upload_dir);
-
-    fs::create_dir_all(&upload_dir)
-        .unwrap_or_else(|e| panic!("Failed to create upload dir {}: {e}", upload_dir.display()));
-
     let state = AppState {
-        upload_dir: Arc::new(upload_dir),
         api_key: CONFIG.api_key.clone(),
+        zstd_level: CONFIG.zstd_level,
+        required_omics_columns: CONFIG.required_omics_columns.clone(),
+        data_lake_id: CONFIG.data_lake_id.clone(),
     };
 
     let app = create_router(state);

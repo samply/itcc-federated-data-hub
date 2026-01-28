@@ -1,0 +1,7 @@
+[env]
+API_KEY="omics"
+RUST_LOG="debug"
+BEAM_ID="app1.proxy1.broker"
+BEAM_SECRET="App1Secret"
+BEAM_URL="http://proxy1:8083"
+DATA_LAKE_ID="app1.proxy2.broker"

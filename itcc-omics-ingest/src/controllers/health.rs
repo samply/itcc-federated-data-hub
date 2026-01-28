@@ -1,5 +1,5 @@
-use crate::utils::api_response::SuccessType;
 use crate::AppState;
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
@@ -10,5 +10,5 @@ pub fn routers() -> Router<AppState> {
 
 // GET /omics/health
 async fn health() -> impl IntoResponse {
-    SuccessType::Health
+    (StatusCode::OK, "OK".to_string())
 }
