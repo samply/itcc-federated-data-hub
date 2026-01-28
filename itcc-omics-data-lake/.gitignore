@@ -34,3 +34,5 @@ Cargo.lock
 .dockerignore
 uploads/
 .cargo/config.toml
+dev/garage-data
+dev/meta

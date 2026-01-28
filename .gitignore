@@ -35,10 +35,9 @@ Cargo.lock
 # project
 uploads/
 .cargo/config.toml
-dev/data
-dev/uploads
+*/dev/data
+
 .DS_Store
 dev/pki/*
-uploads/
 .cargo/config.toml
-dev/
+*/dev/uploads
