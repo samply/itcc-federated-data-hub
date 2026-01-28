@@ -1,12 +1,15 @@
 pub mod beam;
 mod controllers;
+mod fhir;
 pub mod omics_data;
+mod pseudonym;
+#[cfg(test)]
 mod test;
 pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
-use crate::utils::config::Config;
+use crate::utils::config::{AppState, Config};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
 use beam_lib::{AppId, BeamClient};
@@ -24,13 +27,6 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
         CONFIG.beam_url.clone(),
     )
 });
-#[derive(Clone)]
-pub struct AppState {
-    pub api_key: String,
-    pub zstd_level: i32,
-    pub required_omics_columns: Vec<String>,
-    pub data_lake_id: AppId,
-}
 
 pub async fn run_with_config() {
     let state = AppState {

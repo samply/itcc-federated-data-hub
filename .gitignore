@@ -38,3 +38,7 @@ uploads/
 dev/data
 dev/uploads
 .DS_Store
+dev/pki/*
+uploads/
+.cargo/config.toml
+dev/

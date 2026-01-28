@@ -4,6 +4,25 @@ use beam_lib::AppId;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone)]
+pub struct AppState {
+    pub api_key: String,
+    pub zstd_level: i32,
+    pub required_omics_columns: Vec<String>,
+    pub data_lake_id: AppId,
+}
+
+impl From<&Config> for AppState {
+    fn from(c: &Config) -> Self {
+        Self {
+            api_key: c.api_key.clone(),
+            zstd_level: c.zstd_level,
+            required_omics_columns: c.required_omics_columns.clone(),
+            data_lake_id: c.data_lake_id.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Parser, Clone)]
 pub struct Config {
     #[clap(long, env)]
@@ -11,6 +30,10 @@ pub struct Config {
     /// Url of the local beam proxy which is required to have sockets enabled
     #[clap(env, long, default_value = "http://beam-proxy:8081")]
     pub beam_url: Url,
+    #[clap(long, env, default_value = "http://host.docker.internal:8081")]
+    pub blaze_url: Url,
+    #[clap(long, env, default_value = "http://host.docker.internal:7878")]
+    pub mainzelliste_url: Url,
     /// Beam api key
     #[clap(env, long)]
     pub beam_secret: String,
