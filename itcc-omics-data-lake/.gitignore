@@ -32,9 +32,5 @@ Cargo.lock
 .vscode/*
 .idea/*
 .dockerignore
-# project
 uploads/
 .cargo/config.toml
-dev/data
-dev/uploads
-.DS_Store
