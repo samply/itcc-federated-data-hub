@@ -41,3 +41,5 @@ uploads/
 dev/pki/*
 .cargo/config.toml
 */dev/uploads
+dev/meta
+dev/garage-data

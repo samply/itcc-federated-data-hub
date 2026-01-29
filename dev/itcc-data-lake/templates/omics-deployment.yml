@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omics-data-lake
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omics-data-lake
+  template:
+    metadata:
+      labels:
+        app: omics-data-lake
+    spec:
+      containers:
+        - name: omics-data-lake
+          image: {{ .Values.omics.image | quote }}
+          env:
+            - name: BEAM_ID
+              value: {{ .Values.omics.beamId | quote }}
+            - name: BEAM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omics-beam-secret
+                  key: BEAM_SECRET
+            - name: BEAM_URL
+              value: {{ .Values.omics.beamUrl | quote }}
+
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3-credentials
+                  key: S3_SECRET_ACCESS_KEY
+
+            - name: S3_DEFAULT_REGION
+              value: {{ .Values.omics.s3.region | quote }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.omics.s3.endpointUrl | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.omics.s3.bucket | quote }}
+            - name: RUST_LOG
+              value: {{ .Values.omics.rustLog | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: omics-data
