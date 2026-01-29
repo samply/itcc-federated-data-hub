@@ -1,0 +1,67 @@
+
+services:
+  omics-endpoint:
+    build:
+      context: ..
+      dockerfile: Dockerfile.dev.ingest
+    image: samply/itcc-omics-ingest
+    ports:
+      - "6080:6080"
+    environment:
+      - API_KEY=omics
+      - RUST_LOG=debug
+      - BEAM_ID=app1.proxy1.broker
+      - BEAM_SECRET=App1Secret
+      - BEAM_URL=http://proxy1:8083
+      - DATA_LAKE_ID=app1.proxy2.broker
+
+  db:
+    image: postgres:15
+    container_name: mzl-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mainzelliste
+      POSTGRES_USER: mainzelliste
+      POSTGRES_PASSWORD: PleasePutASafePasswordHere
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  mainzelliste:
+    image: medicalinformatics/mainzelliste:latest
+    container_name: mainzelliste
+    restart: unless-stopped
+    depends_on:
+      - db
+
+    platform: linux/amd64
+
+    ports:
+      - 7887:8080
+
+    environment:
+      ML_API_KEY: changeme1
+      ML_DB_HOST: db
+      ML_DB_PORT: "5432"
+      ML_DB_NAME: mainzelliste
+      ML_DB_USER: mainzelliste
+      ML_DB_PASS: PleasePutASafePasswordHere
+      ML_LOG_LEVEL: INFO
+    volumes:
+      - ./config/mainzelliste.conf:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/mainzelliste.conf
+
+  blaze:
+    image: samply/blaze:latest
+    ports:
+      - 8008:8080
+    healthcheck:
+      test: curl -f http://localhost:8008/fhir/metadata
+      start_period: 1m
+
+volumes:
+  db_data:
+
+networks:
+  dev_default:
+    external: true
