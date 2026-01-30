@@ -5,8 +5,6 @@ This repository documents and implements a secure, federated genomics data inges
 The design follows a bridgehead pattern:
 partners keep control over their data, while pseudonymised data is transferred securely into a central lake for analytics and downstream services.
 
-⸻
-
 # High-Level Architecture
 
 Flow (top → bottom):
@@ -16,8 +14,6 @@ Flow (top → bottom):
 4.	Data lands in a central FHIR Blaze and genomic data in S3 store  
 5.	Genomic data is transformed into Parquet/Iceberg for analytics
 6.	Optional: exports for cBioPortal, Beacon, or other consumers
-
-⸻
 
 # Components
 
@@ -59,8 +55,6 @@ Exporter / APIs Generate:
 - cBioPortal import packages (MAF + meta files)
 - Beacon-compatible projections
 - Analytics datasets
-
-⸻
 
 # Why This Architecture?
 
