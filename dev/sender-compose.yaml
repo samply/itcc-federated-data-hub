@@ -35,8 +35,6 @@ services:
     depends_on:
       - db
 
-    platform: linux/amd64
-
     ports:
       - 7887:8080
 
@@ -49,7 +47,8 @@ services:
       ML_DB_PASS: PleasePutASafePasswordHere
       ML_LOG_LEVEL: INFO
     volumes:
-      - ./config/mainzelliste.conf:/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/mainzelliste.conf
+      - ./config/mainzelliste.conf:/etc/mainzelliste/mainzelliste.conf
+      - ./config/keyset_siv.json:/etc/resources/keys/symmetric_key.der
 
   blaze:
     image: samply/blaze:latest
