@@ -1,6 +1,0 @@
-apiVersion: v2
-name: itcc-data-lake
-description: ITCC Omics Data Lake stack (Garage S3 + WebUI + Beam Proxy + Omics service)
-type: application
-version: 0.1.0
-appVersion: "0.1.0"

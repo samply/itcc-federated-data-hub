@@ -13,12 +13,13 @@ use once_cell::sync::Lazy;
 use tokio::sync::OnceCell;
 use tracing::info;
 
-pub static CONFIG: Lazy<Config> = Lazy::new(Config::parse);
+pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
+    once_cell::sync::Lazy::new(|| Config::parse());
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
-        &CONFIG.beam_id,
-        &CONFIG.beam_secret,
-        CONFIG.beam_url.clone(),
+        &DATALAKE_CONFIG.beam_id,
+        &DATALAKE_CONFIG.beam_secret,
+        DATALAKE_CONFIG.beam_url.clone(),
     )
 });
 
@@ -29,10 +30,10 @@ pub async fn s3_client() -> &'static Client {
         .get_or_init(|| async {
             info!("Initializing S3 client");
             let cfg = aws_config::defaults(BehaviorVersion::latest())
-                .region(Region::new(CONFIG.s3_default_region.clone()))
+                .region(Region::new(DATALAKE_CONFIG.s3_default_region.clone()))
                 .credentials_provider(Credentials::new(
-                    CONFIG.s3_access_key_id.clone(),
-                    CONFIG.s3_secret_access_key.clone(),
+                    DATALAKE_CONFIG.s3_access_key_id.clone(),
+                    DATALAKE_CONFIG.s3_secret_access_key.clone(),
                     None,
                     None,
                     "static",
@@ -40,7 +41,7 @@ pub async fn s3_client() -> &'static Client {
                 .load()
                 .await;
             let s3_conifg = aws_sdk_s3::config::Builder::from(&cfg)
-                .endpoint_url(CONFIG.s3_endpoint_url.clone())
+                .endpoint_url(DATALAKE_CONFIG.s3_endpoint_url.clone())
                 .force_path_style(true)
                 .build();
             Client::from_conf(s3_conifg)
@@ -50,12 +51,12 @@ pub async fn s3_client() -> &'static Client {
 pub async fn run_with_config() -> anyhow::Result<()> {
     info!(
         "S3_ACCESS_KEY_ID='{}' len={}",
-        CONFIG.s3_access_key_id,
-        CONFIG.s3_access_key_id.len()
+        DATALAKE_CONFIG.s3_access_key_id,
+        DATALAKE_CONFIG.s3_access_key_id.len()
     );
     info!(
         "S3_SECRET_ACCESS_KEY len={}",
-        CONFIG.s3_secret_access_key.len()
+        DATALAKE_CONFIG.s3_secret_access_key.len()
     );
     tokio::select! {
         res = run_socket_polling() => res?,

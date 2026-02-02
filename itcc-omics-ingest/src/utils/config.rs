@@ -10,6 +10,7 @@ pub struct AppState {
     pub zstd_level: i32,
     pub required_omics_columns: Vec<String>,
     pub data_lake_id: AppId,
+    pub partner_id: String,
 }
 
 impl From<&Config> for AppState {
@@ -19,6 +20,7 @@ impl From<&Config> for AppState {
             zstd_level: c.zstd_level,
             required_omics_columns: c.required_omics_columns.clone(),
             data_lake_id: c.data_lake_id.clone(),
+            partner_id: c.partner_id.clone(),
         }
     }
 }
@@ -30,6 +32,8 @@ pub struct Config {
     /// Url of the local beam proxy which is required to have sockets enabled
     #[clap(env, long, default_value = "http://beam-proxy:8081")]
     pub beam_url: Url,
+    #[clap(env, long, default_value = "itcc-inform")]
+    pub partner_id: String,
     #[clap(long, env, default_value = "http://host.docker.internal:8081")]
     pub blaze_url: Url,
     #[clap(long, env, default_value = "http://host.docker.internal:7878")]
@@ -84,7 +88,7 @@ fn deserialize_filename<'de, D: serde::Deserializer<'de>>(
 pub fn validate_filename(name: &str) -> anyhow::Result<&str> {
     if name
         .chars()
-        .all(|c| c.is_alphanumeric() || ['_', '.', '-'].contains(&c))
+        .all(|c| c.is_alphanumeric() || ['_', '.', '-', '/'].contains(&c))
     {
         Ok(name)
     } else {

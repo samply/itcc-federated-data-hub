@@ -1,6 +1,8 @@
 services:
-  omics-data-lake:
-    build: .
+  itcc-omics-data-lake:
+    build:
+      context: ..
+      dockerfile: Dockerfile.dev.datalake
     image: samply/itcc-omics-data-lake
     volumes:
       - ./data:/data
@@ -51,6 +53,33 @@ services:
       - dev_default
       - default
 
+  lakekeeper-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: lakekeeper
+      POSTGRES_PASSWORD: lakekeeper
+      POSTGRES_DB: lakekeeper
+    ports:
+      - "5432:5432"   # optional; remove if you don't need host access
+    networks:
+      - dev_default
+      - default
+
+  lakekeeper:
+    image: vakamo/lakekeeper:latest-main
+    depends_on:
+      - lakekeeper-db
+    environment:
+      # Lakekeeper needs a Postgres URL
+      DATABASE_URL: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
+      # Make it listen on all interfaces
+      BIND_ADDR: "0.0.0.0:8181"
+      RUST_LOG: "info"
+    ports:
+      - "8181:8181"
+    networks:
+      - dev_default
+      - default
 networks:
   dev_default:
     external: true
