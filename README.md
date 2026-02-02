@@ -171,7 +171,7 @@ docker compose -f dev/receiver-compose.yaml up
 ```
 - [development setup](dev)
 - [development omics ingest](dev/sender-compose.yaml)
-- [development data lake](dev/reciever-compose.yml)
+- [development data lake](dev/reciever-compose.yaml)
 
 Notes:
 - Docker builds must use the workspace root as the build context

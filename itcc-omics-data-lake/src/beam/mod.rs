@@ -1,10 +1,8 @@
 use crate::s3::upload_stream_to_s3;
 use crate::utils::config::FileMeta;
-use crate::{BEAM_CLIENT, CONFIG};
+use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::Context;
-use aws_sdk_s3::Client;
-use beam_lib::{AppId, SocketTask};
-use std::path::Path;
+use beam_lib::SocketTask;
 use tokio::io::AsyncRead;
 use tracing::{error, info};
 
@@ -35,7 +33,7 @@ async fn save_file_as_s3(
         .join(".");
     let meta: FileMeta =
         serde_json::from_value(socket_task.metadata).context("Failed to deserialize metadata")?;
-    upload_stream_to_s3(&CONFIG.s3_bucket, &CONFIG.s3_key, incoming).await
+    upload_stream_to_s3(&DATALAKE_CONFIG.s3_bucket, incoming, meta.suggested_name.unwrap()).await
     // let mut file = tokio::fs::File::create(dir.join(meta.suggested_name.unwrap_or("study_id".to_string()))).await?;
     // tokio::io::copy(&mut incoming, &mut file).await?;
 }

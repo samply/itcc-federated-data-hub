@@ -14,6 +14,7 @@ services:
       - BEAM_SECRET=App1Secret
       - BEAM_URL=http://proxy1:8083
       - DATA_LAKE_ID=app1.proxy2.broker
+      - PARTNER_ID=itcc-inform
 
   db:
     image: postgres:15

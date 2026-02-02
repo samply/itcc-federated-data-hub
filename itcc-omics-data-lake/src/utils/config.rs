@@ -25,8 +25,6 @@ pub struct Config {
     pub s3_default_region: String,
     #[clap(env, long, default_value = "omics")]
     pub s3_bucket: String,
-    #[clap(env, long, default_value = "maf/test/sample.maf.zstd")]
-    pub s3_key: String,
 }
 
 fn parse_beam_id(id: &str) -> Result<AppId, String> {
@@ -59,7 +57,7 @@ fn deserialize_filename<'de, D: serde::Deserializer<'de>>(
 pub fn validate_filename(name: &str) -> anyhow::Result<&str> {
     if name
         .chars()
-        .all(|c| c.is_alphanumeric() || ['_', '.', '-'].contains(&c))
+        .all(|c| c.is_alphanumeric() || ['_', '.', '-', '/'].contains(&c))
     {
         Ok(name)
     } else {
