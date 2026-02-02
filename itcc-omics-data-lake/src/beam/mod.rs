@@ -33,7 +33,12 @@ async fn save_file_as_s3(
         .join(".");
     let meta: FileMeta =
         serde_json::from_value(socket_task.metadata).context("Failed to deserialize metadata")?;
-    upload_stream_to_s3(&DATALAKE_CONFIG.s3_bucket, incoming, meta.suggested_name.unwrap()).await
+    upload_stream_to_s3(
+        &DATALAKE_CONFIG.s3_bucket,
+        incoming,
+        meta.suggested_name.unwrap(),
+    )
+    .await
     // let mut file = tokio::fs::File::create(dir.join(meta.suggested_name.unwrap_or("study_id".to_string()))).await?;
     // tokio::io::copy(&mut incoming, &mut file).await?;
 }

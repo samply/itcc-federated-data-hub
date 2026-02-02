@@ -35,12 +35,14 @@ pub async fn upload_stream_to_s3(
     Ok(())
 }
 
-pub async fn get_object(
-    bucket: &str,
-    filename: &str,
-) -> anyhow::Result<()> {
+pub async fn get_object(bucket: &str, filename: &str) -> anyhow::Result<()> {
     let client: &Client = s3_client().await;
-    let resp = client.get_object().bucket(bucket).key(filename).send().await?;
+    let resp = client
+        .get_object()
+        .bucket(bucket)
+        .key(filename)
+        .send()
+        .await?;
     debug!("s3 response: {:?}", resp);
     Ok(())
 }

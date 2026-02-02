@@ -13,7 +13,8 @@ use once_cell::sync::Lazy;
 use tokio::sync::OnceCell;
 use tracing::info;
 
-pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> = once_cell::sync::Lazy::new(|| Config::parse());
+pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
+    once_cell::sync::Lazy::new(|| Config::parse());
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
         &DATALAKE_CONFIG.beam_id,
