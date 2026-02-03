@@ -2,7 +2,7 @@ pub mod beam;
 mod controllers;
 mod fhir;
 pub mod omics_data;
-mod pseudonym;
+pub mod pseudonym;
 #[cfg(test)]
 mod test;
 pub mod utils;
@@ -17,7 +17,6 @@ use beam_lib::BeamClient;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
-use beam_lib::reqwest::Client;
 use tokio::net::TcpListener;
 use tracing::info;
 
@@ -29,7 +28,7 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
         CONFIG_INGEST.beam_url.clone(),
     )
 });
-pub static CLIENT: Lazy<Client> = Lazy::new(Client::new);
+pub static CLIENT: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
 
 pub async fn run_with_config() {
     let state = AppState {
@@ -38,6 +37,9 @@ pub async fn run_with_config() {
         required_omics_columns: CONFIG_INGEST.required_omics_columns.clone(),
         data_lake_id: CONFIG_INGEST.data_lake_id.clone(),
         partner_id: CONFIG_INGEST.partner_id.clone(),
+        mzl_url: CONFIG_INGEST.blaze_url.clone(),
+        api_mzl_key: CONFIG_INGEST.api_mzl_key.clone(),
+        blaze_url: CONFIG_INGEST.mainzelliste_url.clone(),
     };
 
     let app = create_router(state);

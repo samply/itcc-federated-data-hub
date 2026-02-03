@@ -1,5 +1,6 @@
 use anyhow::anyhow;
-use beam_lib::reqwest::Url;
+use beam_lib::reqwest::Url as beam_Url;
+use reqwest::Url;
 use beam_lib::AppId;
 use clap::Parser;
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,9 @@ pub struct AppState {
     pub required_omics_columns: Vec<String>,
     pub data_lake_id: AppId,
     pub partner_id: String,
+    pub mzl_url: Url,
+    pub api_mzl_key: String,
+    pub blaze_url: Url,
 }
 
 impl From<&Config> for AppState {
@@ -21,6 +25,9 @@ impl From<&Config> for AppState {
             required_omics_columns: c.required_omics_columns.clone(),
             data_lake_id: c.data_lake_id.clone(),
             partner_id: c.partner_id.clone(),
+            mzl_url: c.blaze_url.clone(),
+            api_mzl_key: c.api_mzl_key.clone(),
+            blaze_url: c.blaze_url.clone(),
         }
     }
 }
@@ -31,13 +38,15 @@ pub struct Config {
     pub api_key: String,
     /// Url of the local beam proxy which is required to have sockets enabled
     #[clap(env, long, default_value = "http://beam-proxy:8081")]
-    pub beam_url: Url,
+    pub beam_url: beam_Url,
     #[clap(env, long, default_value = "itcc-inform")]
     pub partner_id: String,
     #[clap(long, env, default_value = "http://host.docker.internal:8081")]
     pub blaze_url: Url,
     #[clap(long, env, default_value = "http://host.docker.internal:7878")]
     pub mainzelliste_url: Url,
+    #[clap(long, env)]
+    pub api_mzl_key: String,
     /// Beam api key
     #[clap(env, long)]
     pub beam_secret: String,

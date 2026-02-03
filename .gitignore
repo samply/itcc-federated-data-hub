@@ -39,7 +39,7 @@ uploads/
 
 .DS_Store
 dev/pki/*
-.cargo/config.toml
+*.cargo/config.toml
 */dev/uploads
 dev/meta
 dev/garage-data

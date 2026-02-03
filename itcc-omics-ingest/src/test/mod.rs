@@ -1,16 +1,22 @@
 mod transfer;
+mod pseudonym;
 
 use crate::utils::config::{AppState, Config};
 use beam_lib::reqwest::Url;
 use beam_lib::AppId;
 
 fn test_config() -> Config {
+    let _ = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_test_writer()
+        .try_init();
     Config {
         api_key: "omics".to_string(),
         beam_url: Url::parse("http://beam-proxy:8081").unwrap(),
         partner_id: "itcc-inform".to_string(),
         blaze_url: Url::parse("http://host.docker.internal:8081/fhir").unwrap(),
-        mainzelliste_url: Url::parse("http://host.docker.internal:7878").unwrap(),
+        mainzelliste_url: Url::parse("http://localhost:7887/").unwrap(),
+        api_mzl_key: "changeme1".to_string(),
         beam_secret: "App1Secret".to_string(),
         beam_id: AppId::new_unchecked("app1.proxy1.broker"),
         data_lake_id: AppId::new_unchecked("app1.proxy2.broker"),
