@@ -12,8 +12,11 @@ pub enum ErrorType {
     MafEmptyHeader,
     MafDuplicateHeader,
     MafMissingColumn,
+    CsvError,
     BeamError,
     BeamStreamFileError,
+    PseudoError,
+    MafWriteError,
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -46,6 +49,15 @@ impl IntoResponse for ErrorType {
             ErrorType::CompressFile => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "compression error".to_string(),
+            ),
+            ErrorType::CsvError => (StatusCode::INTERNAL_SERVER_ERROR, "csv error".to_string()),
+            ErrorType::PseudoError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "error by providing pseudomiesation".to_string(),
+            ),
+            ErrorType::MafWriteError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "error writing MAF".to_string(),
             ),
         };
         (status, Json(body)).into_response()
