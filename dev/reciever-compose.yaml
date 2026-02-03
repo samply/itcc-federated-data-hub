@@ -15,7 +15,7 @@ services:
       - S3_DEFAULT_REGION=garage
       - S3_ENDPOINT_URL=http://garage:3900
       - S3_BUCKET=omics
-      - RUST_LOG=info
+      - RUST_LOG=debug
     networks:
       - dev_default
       - default
@@ -67,19 +67,35 @@ services:
 
   lakekeeper:
     image: vakamo/lakekeeper:latest-main
+    command: [ "serve" ]
     depends_on:
       - lakekeeper-db
     environment:
-      # Lakekeeper needs a Postgres URL
-      DATABASE_URL: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
-      # Make it listen on all interfaces
       BIND_ADDR: "0.0.0.0:8181"
+      LAKEKEEPER__PG_DATABASE_URL_READ: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
+      LAKEKEEPER__PG_ENCRYPTION_KEY: "dev-dev-dev-dev-dev-dev-dev-dev-dev-dev-32bytes"
       RUST_LOG: "info"
     ports:
       - "8181:8181"
     networks:
       - dev_default
       - default
+
+  lakekeeper-migrate:
+    image: vakamo/lakekeeper:latest-main
+    depends_on:
+      - lakekeeper-db
+    command: [ "migrate" ]
+    environment:
+      LAKEKEEPER__PG_DATABASE_URL_READ: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: "postgres://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper"
+      LAKEKEEPER__PG_ENCRYPTION_KEY: "dev-dev-dev-dev-dev-dev-dev-dev-dev-dev-32bytes"
+    networks:
+      - dev_default
+      - default
+
+
 networks:
   dev_default:
     external: true

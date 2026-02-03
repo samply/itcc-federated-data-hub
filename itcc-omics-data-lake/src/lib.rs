@@ -12,6 +12,7 @@ use clap::Parser;
 use once_cell::sync::Lazy;
 use tokio::sync::OnceCell;
 use tracing::info;
+use crate::s3::{get_object, show_buckets};
 
 pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
     once_cell::sync::Lazy::new(|| Config::parse());
@@ -58,6 +59,7 @@ pub async fn run_with_config() -> anyhow::Result<()> {
         "S3_SECRET_ACCESS_KEY len={}",
         DATALAKE_CONFIG.s3_secret_access_key.len()
     );
+    show_buckets().await?;
     tokio::select! {
         res = run_socket_polling() => res?,
         _ = tokio::signal::ctrl_c() => tracing::info!("Shutting down"),

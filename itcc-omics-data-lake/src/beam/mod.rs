@@ -1,4 +1,4 @@
-use crate::s3::upload_stream_to_s3;
+use crate::s3::{get_object, save_files_s3};
 use crate::utils::config::FileMeta;
 use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::Context;
@@ -11,7 +11,7 @@ pub async fn run_socket_polling() -> anyhow::Result<()> {
         .handle_sockets(|task, incoming| async move {
             info!("[Beam] Starting socket polling...");
             // print_file(task, incoming).await;
-            if let Err(e) = save_file_as_s3(task, incoming).await {
+            if let Err(e) = beam_save_generate(task, incoming).await {
                 tracing::error!("save_file_as_s3 failed: {e:#}");
             }
             Ok(())
@@ -20,7 +20,7 @@ pub async fn run_socket_polling() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn save_file_as_s3(
+async fn beam_save_generate(
     socket_task: SocketTask,
     mut incoming: impl AsyncRead + Unpin,
 ) -> anyhow::Result<()> {
@@ -33,12 +33,14 @@ async fn save_file_as_s3(
         .join(".");
     let meta: FileMeta =
         serde_json::from_value(socket_task.metadata).context("Failed to deserialize metadata")?;
-    upload_stream_to_s3(
+    save_files_s3(
         &DATALAKE_CONFIG.s3_bucket,
         incoming,
-        meta.suggested_name.unwrap(),
+        &meta.suggested_name.clone().unwrap(),
     )
-    .await
+    .await?;
+    get_object(&DATALAKE_CONFIG.s3_bucket, &meta.suggested_name.unwrap()).await?;
+    Ok(())
     // let mut file = tokio::fs::File::create(dir.join(meta.suggested_name.unwrap_or("study_id".to_string()))).await?;
     // tokio::io::copy(&mut incoming, &mut file).await?;
 }
