@@ -1,16 +1,13 @@
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
 use crate::omics_data::compression::compress_zstd;
-use crate::omics_data::validator;
-use crate::utils::error_type::ErrorType;
+use crate::omics_data::transfer::{build_pseudo_map, read_validate_scan, sanitize_maf_bytes};
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::HeaderMap, routing::post, Router};
-use csv::ReaderBuilder;
-use std::io::Cursor;
-use tracing::{debug, error};
+use tracing::{error, info};
 
 pub fn routers() -> Router<AppState> {
     Router::new()
@@ -29,31 +26,27 @@ async fn upload_handler(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("omics_payload.bin");
 
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b'\t')
-        .comment(Some(b'#'))
-        .has_headers(true)
-        .flexible(false)
-        .from_reader(Cursor::new(&body));
-
-    let header = match rdr.headers() {
-        Ok(h) => h.clone(),
-        Err(e) => {
-            tracing::error!("Failed to read headers: {e}");
-            return ErrorType::MafEmptyHeader.into_response();
-        }
+    let res = match read_validate_scan(&body, &state).await {
+        Ok(v) => v,
+        Err(e) => return e.into_response(),
     };
-    if let Err(e) = validator::schema_validate(&header, &state.required_omics_columns) {
-        return e.into_response();
-    }
+    info!("Upload scan: {:?}", res);
+    let r = match build_pseudo_map(res).await {
+        Ok(v) => v,
+        Err(e) => return e.into_response(),
+    };
+    let psy_res = match sanitize_maf_bytes(&body, &r) {
+        Ok(v) => v,
+        Err(e) => return e.into_response(),
+    };
 
-    let compressed_vec = match compress_zstd(&body, &state.zstd_level) {
+    let compressed_vec = match compress_zstd(&psy_res, &state.zstd_level) {
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
     let compressed = bytes::Bytes::from(compressed_vec);
 
-    let filename = maf_key_from_bytes(&body, &state.partner_id);
+    let filename = maf_key_from_bytes(&psy_res, &state.partner_id);
     if let Err(e) = beam::send_file(state.data_lake_id, Some(filename.clone()), &compressed).await {
         return e.into_response();
     }

@@ -1,3 +1,5 @@
+mod transfer;
+
 use crate::utils::config::{AppState, Config};
 use beam_lib::reqwest::Url;
 use beam_lib::AppId;
