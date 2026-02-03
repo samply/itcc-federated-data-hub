@@ -1,6 +1,7 @@
 use crate::utils::error_type::ErrorType;
 use std::collections::{BTreeSet, HashMap};
 
+/*
 pub async fn build_pseudo_map(ids: BTreeSet<String>) -> Result<HashMap<String, String>, ErrorType> {
     let mut map = HashMap::new();
 
@@ -40,3 +41,5 @@ pub async fn build_pseudo_map(ids: BTreeSet<String>) -> Result<HashMap<String, S
 
     Ok(map)
 }
+
+ */

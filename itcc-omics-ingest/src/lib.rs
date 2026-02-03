@@ -17,8 +17,10 @@ use beam_lib::BeamClient;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
+use beam_lib::reqwest::Client;
 use tokio::net::TcpListener;
 use tracing::info;
+
 pub static CONFIG_INGEST: Lazy<IngestConfig> = Lazy::new(<IngestConfig as clap::Parser>::parse);
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
@@ -27,6 +29,7 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
         CONFIG_INGEST.beam_url.clone(),
     )
 });
+pub static CLIENT: Lazy<Client> = Lazy::new(Client::new);
 
 pub async fn run_with_config() {
     let state = AppState {
