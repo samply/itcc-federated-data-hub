@@ -60,9 +60,10 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "error writing MAF".to_string(),
             ),
-            ErrorType::MzlSessionError => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "session error".to_string())
-            }
+            ErrorType::MzlSessionError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "session error".to_string(),
+            ),
         };
         (status, Json(body)).into_response()
     }

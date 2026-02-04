@@ -1,11 +1,9 @@
 use crate::utils::config::AppState;
-use crate::CLIENT;
-use anyhow::{anyhow, Context, Result};
-use reqwest::Url;
+use crate::utils::error_type::ErrorType;
+use anyhow::Result;
 use serde::Deserialize;
 use tracing::debug;
 use uuid::Uuid;
-use crate::utils::error_type::ErrorType;
 
 #[derive(Debug, Deserialize)]
 struct CreateSessionResp {
@@ -13,19 +11,24 @@ struct CreateSessionResp {
     session_id: Uuid,
 }
 
-pub async fn create_session(mzl_base_url: &Url, api_mzl_key: &str) -> Result<(), ErrorType> {
-    let url_mzl = mzl_base_url.join("/sessions").expect("mainzelliste url should be present");
-    let session: CreateSessionResp = (&*CLIENT)
+pub async fn create_session(state: &AppState) -> Result<(), ErrorType> {
+    let url_mzl = state
+        .services
+        .ml_url
+        .join("/sessions")
+        .expect("mainzelliste url should be present");
+    let session: CreateSessionResp = state
+        .http
         .post(url_mzl)
-        .header("mainzellisteApiKey", api_mzl_key)
+        .header("mainzellisteApiKey", &state.services.ml_api_key)
         .send()
         .await
-        .map_err(|_|ErrorType::MzlSessionError)?
+        .map_err(|_| ErrorType::MzlSessionError)?
         .error_for_status()
-        .map_err(|_|ErrorType::MzlSessionError)?
+        .map_err(|_| ErrorType::MzlSessionError)?
         .json::<CreateSessionResp>()
         .await
-        .map_err(|_|ErrorType::MzlSessionError)?;
+        .map_err(|_| ErrorType::MzlSessionError)?;
 
     debug!("sessionId = {}", session.session_id);
 

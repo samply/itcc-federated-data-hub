@@ -3,14 +3,13 @@ mod controllers;
 mod fhir;
 pub mod omics_data;
 pub mod pseudonym;
-#[cfg(test)]
-mod test;
+pub mod test;
 pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
-use crate::utils::config::AppState;
 use crate::utils::config::Config as IngestConfig;
+use crate::utils::config::{AppState, Services};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
 use beam_lib::BeamClient;
@@ -28,18 +27,19 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
         CONFIG_INGEST.beam_url.clone(),
     )
 });
-pub static CLIENT: Lazy<reqwest::Client> = Lazy::new(reqwest::Client::new);
-
 pub async fn run_with_config() {
     let state = AppState {
+        http: reqwest::Client::new(),
         api_key: CONFIG_INGEST.api_key.clone(),
         zstd_level: CONFIG_INGEST.zstd_level,
         required_omics_columns: CONFIG_INGEST.required_omics_columns.clone(),
         data_lake_id: CONFIG_INGEST.data_lake_id.clone(),
         partner_id: CONFIG_INGEST.partner_id.clone(),
-        mzl_url: CONFIG_INGEST.blaze_url.clone(),
-        api_mzl_key: CONFIG_INGEST.api_mzl_key.clone(),
-        blaze_url: CONFIG_INGEST.mainzelliste_url.clone(),
+        services: Services {
+            ml_url: CONFIG_INGEST.ml_url.clone(),
+            ml_api_key: CONFIG_INGEST.ml_api_key.clone(),
+            blaze_url: CONFIG_INGEST.blaze_url.clone(),
+        },
     };
 
     let app = create_router(state);

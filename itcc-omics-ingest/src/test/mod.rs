@@ -1,9 +1,10 @@
-mod transfer;
 mod pseudonym;
+pub mod transfer;
 
 use crate::utils::config::{AppState, Config};
 use beam_lib::reqwest::Url;
 use beam_lib::AppId;
+use reqwest::Client;
 
 fn test_config() -> Config {
     let _ = tracing_subscriber::fmt()
@@ -15,8 +16,8 @@ fn test_config() -> Config {
         beam_url: Url::parse("http://beam-proxy:8081").unwrap(),
         partner_id: "itcc-inform".to_string(),
         blaze_url: Url::parse("http://host.docker.internal:8081/fhir").unwrap(),
-        mainzelliste_url: Url::parse("http://localhost:7887/").unwrap(),
-        api_mzl_key: "changeme1".to_string(),
+        ml_url: Url::parse("http://localhost:7887/").unwrap(),
+        ml_api_key: "changeme1".to_string(),
         beam_secret: "App1Secret".to_string(),
         beam_id: AppId::new_unchecked("app1.proxy1.broker"),
         data_lake_id: AppId::new_unchecked("app1.proxy2.broker"),
@@ -27,6 +28,23 @@ fn test_config() -> Config {
             "Start_Position".to_string(),
             "End_Position".to_string(),
         ],
+    }
+}
+
+fn test_app_state() -> AppState {
+    let cfg = test_config();
+    AppState {
+        http: Client::new(),
+        api_key: cfg.api_key,
+        zstd_level: cfg.zstd_level,
+        required_omics_columns: cfg.required_omics_columns,
+        data_lake_id: cfg.data_lake_id,
+        partner_id: cfg.partner_id,
+        services: crate::utils::config::Services {
+            ml_url: cfg.ml_url,
+            ml_api_key: cfg.ml_api_key,
+            blaze_url: cfg.blaze_url,
+        },
     }
 }
 

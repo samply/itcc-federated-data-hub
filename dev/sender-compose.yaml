@@ -15,6 +15,7 @@ services:
       - BEAM_URL=http://proxy1:8083
       - DATA_LAKE_ID=app1.proxy2.broker
       - PARTNER_ID=itcc-inform
+      - ML_API_KEY=changeme1
 
   db:
     image: postgres:15
