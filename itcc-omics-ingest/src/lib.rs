@@ -2,23 +2,23 @@ pub mod beam;
 mod controllers;
 mod fhir;
 pub mod omics_data;
-mod pseudonym;
-#[cfg(test)]
-mod test;
+pub mod pseudonym;
+pub mod test;
 pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
-use crate::utils::config::AppState;
 use crate::utils::config::Config as IngestConfig;
+use crate::utils::config::{AppState, Services};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
-use beam_lib::{AppId, BeamClient};
+use beam_lib::BeamClient;
 use clap::Parser;
 use once_cell::sync::Lazy;
-use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 use tracing::info;
+
 pub static CONFIG_INGEST: Lazy<IngestConfig> = Lazy::new(<IngestConfig as clap::Parser>::parse);
 pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
@@ -27,14 +27,19 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
         CONFIG_INGEST.beam_url.clone(),
     )
 });
-
 pub async fn run_with_config() {
     let state = AppState {
+        http: reqwest::Client::new(),
         api_key: CONFIG_INGEST.api_key.clone(),
         zstd_level: CONFIG_INGEST.zstd_level,
         required_omics_columns: CONFIG_INGEST.required_omics_columns.clone(),
         data_lake_id: CONFIG_INGEST.data_lake_id.clone(),
         partner_id: CONFIG_INGEST.partner_id.clone(),
+        services: Services {
+            ml_url: CONFIG_INGEST.ml_url.clone(),
+            ml_api_key: CONFIG_INGEST.ml_api_key.clone(),
+            blaze_url: CONFIG_INGEST.blaze_url.clone(),
+        },
     };
 
     let app = create_router(state);
