@@ -16,7 +16,8 @@ pub enum ErrorType {
     BeamError,
     BeamStreamFileError,
     PseudoError,
-    MzlSessionError,
+    MlSessionError,
+    MlTokenError,
     MafWriteError,
 }
 impl IntoResponse for ErrorType {
@@ -60,9 +61,13 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "error writing MAF".to_string(),
             ),
-            ErrorType::MzlSessionError => (
+            ErrorType::MlSessionError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "session error".to_string(),
+                "mainzelliste session error".to_string(),
+            ),
+            ErrorType::MlTokenError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "mainzelliste token error".to_string(),
             ),
         };
         (status, Json(body)).into_response()
