@@ -6,6 +6,9 @@ license = "Apache-2.0"
 
 [dependencies]
 axum = { version = "0.8", features = ["json", "macros"] }
+sha2 = "0.11.0-rc.4"
+hex = "0.4.3"
+bytes = "1.11.0"
 tokio = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
@@ -17,6 +20,5 @@ beam-lib = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 zstd = { workspace = true }
-sha2 = "0.11.0-rc.4"
-hex = "0.4.3"
-bytes = "1.11.0"
+uuid = { workspace = true }
+reqwest = { workspace = true }

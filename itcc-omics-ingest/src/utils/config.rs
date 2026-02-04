@@ -1,26 +1,45 @@
 use anyhow::anyhow;
-use beam_lib::reqwest::Url;
+use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::AppId;
 use clap::Parser;
+use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
 pub struct AppState {
+    pub http: reqwest::Client,
     pub api_key: String,
     pub zstd_level: i32,
     pub required_omics_columns: Vec<String>,
     pub data_lake_id: AppId,
     pub partner_id: String,
+    pub services: Services,
+}
+#[derive(Clone)]
+pub struct Services {
+    pub ml_url: Url,
+    pub ml_api_key: String,
+    pub blaze_url: Url,
 }
 
 impl From<&Config> for AppState {
     fn from(c: &Config) -> Self {
+        let http = Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .build()
+            .expect("reqwest client build failed");
         Self {
+            http,
             api_key: c.api_key.clone(),
             zstd_level: c.zstd_level,
             required_omics_columns: c.required_omics_columns.clone(),
             data_lake_id: c.data_lake_id.clone(),
             partner_id: c.partner_id.clone(),
+            services: Services {
+                ml_url: c.ml_url.clone(),
+                ml_api_key: c.ml_api_key.clone(),
+                blaze_url: c.blaze_url.clone(),
+            },
         }
     }
 }
@@ -31,13 +50,15 @@ pub struct Config {
     pub api_key: String,
     /// Url of the local beam proxy which is required to have sockets enabled
     #[clap(env, long, default_value = "http://beam-proxy:8081")]
-    pub beam_url: Url,
+    pub beam_url: beam_Url,
     #[clap(env, long, default_value = "itcc-inform")]
     pub partner_id: String,
     #[clap(long, env, default_value = "http://host.docker.internal:8081")]
     pub blaze_url: Url,
     #[clap(long, env, default_value = "http://host.docker.internal:7878")]
-    pub mainzelliste_url: Url,
+    pub ml_url: Url,
+    #[clap(long, env)]
+    pub ml_api_key: String,
     /// Beam api key
     #[clap(env, long)]
     pub beam_secret: String,
