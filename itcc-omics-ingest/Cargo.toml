@@ -22,3 +22,4 @@ anyhow = { workspace = true }
 zstd = { workspace = true }
 uuid = { workspace = true }
 reqwest = { workspace = true }
+itcc-omics-lib = { workspace = true }

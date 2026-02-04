@@ -1,7 +1,5 @@
 [workspace]
-members = [
-    "itcc-omics-ingest", "itcc-omics-data-lake"
-]
+members = ["itcc-omics-ingest", "itcc-omics-data-lake", "itcc-omics-lib"]
 
 resolver = "2"
 [workspace.dependencies]
@@ -17,4 +15,5 @@ serde_json = "1.0.145"
 anyhow = "1"
 zstd = "0.13.3"
 uuid = "1.20.0"
-reqwest = { version = "0.13.1", features = ["json"]}
+reqwest = { version = "0.13.1", features = ["json"] }
+itcc-omics-lib = { path = "itcc-omics-lib" }

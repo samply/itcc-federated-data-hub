@@ -1,8 +1,10 @@
 pub mod beam;
+pub mod data;
 pub mod s3;
 pub mod utils;
 
 use crate::beam::run_socket_polling;
+use crate::s3::{get_object, show_buckets};
 use crate::utils::config::Config;
 use aws_config::{BehaviorVersion, Region};
 use aws_credential_types::Credentials;
@@ -12,7 +14,6 @@ use clap::Parser;
 use once_cell::sync::Lazy;
 use tokio::sync::OnceCell;
 use tracing::info;
-use crate::s3::{get_object, show_buckets};
 
 pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
     once_cell::sync::Lazy::new(|| Config::parse());
