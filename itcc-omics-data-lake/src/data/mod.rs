@@ -38,8 +38,8 @@ pub async fn process_maf_object_to_parquet_and_cbio(
     let cbio_meta_key = format!("{}/meta_mutations_extended.txt", meta_data.maf_id);
 
     upload_to_s3(bucket, &parquet_key, &parquet_path).await?;
-    upload_to_s3(bucket, &cbio_data_key, &cbio_data).await?;
-    upload_to_s3(bucket, &cbio_meta_key, &cbio_meta).await?;
+    //upload_to_s3(bucket, &cbio_data_key, &cbio_data).await?;
+    //upload_to_s3(bucket, &cbio_meta_key, &cbio_meta).await?;
 
     Ok(())
 }
