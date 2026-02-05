@@ -4,7 +4,7 @@ pub mod s3;
 pub mod utils;
 
 use crate::beam::run_socket_polling;
-use crate::s3::{get_object, show_buckets};
+use crate::s3::{ensure_bucket, get_object, show_buckets};
 use crate::utils::config::Config;
 use aws_config::{BehaviorVersion, Region};
 use aws_credential_types::Credentials;
@@ -60,6 +60,7 @@ pub async fn run_with_config() -> anyhow::Result<()> {
         "S3_SECRET_ACCESS_KEY len={}",
         DATALAKE_CONFIG.s3_secret_access_key.len()
     );
+    ensure_bucket(&DATALAKE_CONFIG.s3_bucket).await?;
     show_buckets().await?;
     tokio::select! {
         res = run_socket_polling() => res?,

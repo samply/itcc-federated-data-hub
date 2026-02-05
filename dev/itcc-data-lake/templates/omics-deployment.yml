@@ -16,6 +16,7 @@ spec:
       containers:
         - name: omics-data-lake
           image: {{ .Values.omics.image | quote }}
+          imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
           env:
             - name: BEAM_ID
               value: {{ .Values.omics.beamId | quote }}
@@ -26,18 +27,6 @@ spec:
                   key: BEAM_SECRET
             - name: BEAM_URL
               value: {{ .Values.omics.beamUrl | quote }}
-
-            - name: S3_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: s3-credentials
-                  key: S3_ACCESS_KEY_ID
-            - name: S3_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: s3-credentials
-                  key: S3_SECRET_ACCESS_KEY
-
             - name: S3_DEFAULT_REGION
               value: {{ .Values.omics.s3.region | quote }}
             - name: S3_ENDPOINT_URL

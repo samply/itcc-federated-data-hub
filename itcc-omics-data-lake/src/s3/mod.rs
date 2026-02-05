@@ -70,3 +70,13 @@ pub async fn show_buckets() -> anyhow::Result<()> {
     debug!("s3 response: {:?}", res);
     Ok(())
 }
+
+pub async fn ensure_bucket(bucket: &str) -> anyhow::Result<()> {
+    let client: &Client = s3_client().await;
+    let exists = client.head_bucket().bucket(bucket).send().await.is_ok();
+
+    if !exists {
+        client.create_bucket().bucket(bucket).send().await?;
+    }
+    Ok(())
+}
