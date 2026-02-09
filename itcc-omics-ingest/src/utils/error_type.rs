@@ -18,6 +18,7 @@ pub enum ErrorType {
     PseudoError,
     MlSessionError,
     MlTokenError,
+    MLCreatePatientError,
     MafWriteError,
 }
 impl IntoResponse for ErrorType {
@@ -68,6 +69,10 @@ impl IntoResponse for ErrorType {
             ErrorType::MlTokenError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "mainzelliste token error".to_string(),
+            ),
+            ErrorType::MLCreatePatientError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "patient creation error".to_string(),
             ),
         };
         (status, Json(body)).into_response()

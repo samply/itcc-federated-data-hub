@@ -68,11 +68,7 @@ pub async fn create_token(
         token_type: "addPatient".to_string(),
         allowed_uses: Some(allowed_uses),
         data: TokenData {
-            idtypes: vec![
-                "pid".to_string(),
-                "localid".to_string(),
-                "cryptoid".to_string(),
-            ],
+            idtypes: vec!["localid".to_string(), "cryptoid".to_string()],
         },
     };
     let token_url = state
@@ -97,4 +93,58 @@ pub async fn create_token(
 
     debug!("tokenId = {}", token.id);
     Ok(token)
+}
+#[derive(Debug, Serialize)]
+pub struct CreatePatientReq {
+    pub ids: Ids,
+}
+#[derive(Debug, Serialize)]
+pub struct Ids {
+    pub localid: String,
+}
+
+pub type CreatePatientResp = Vec<TypeId>;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TypeId {
+    #[serde(rename = "idType")]
+    pub id_type: String,
+    #[serde(rename = "idString")]
+    pub id_string: String,
+    pub tentative: bool,
+    pub uri: String,
+}
+
+pub async fn create_patient(
+    state: &AppState,
+    token: &Uuid,
+    patient_id: &str,
+) -> Result<(), ErrorType> {
+    let patient_id = CreatePatientReq {
+        ids: Ids {
+            localid: patient_id.to_string(),
+        },
+    };
+    let patient_url = state
+        .services
+        .ml_url
+        .join("patients")
+        .expect("mainzelliste url should be present");
+
+    let pseudo = state
+        .http
+        .post(patient_url)
+        .query(&["tokenId", token.to_string().as_str()])
+        .header("mainzellisteApiKey", &state.services.ml_api_key)
+        .header("mainzellisteApiVersion", "2.0")
+        .json(&patient_id)
+        .send()
+        .await
+        .map_err(|_| ErrorType::MLCreatePatientError)?
+        .error_for_status()
+        .map_err(|_| ErrorType::MLCreatePatientError)?
+        .json::<CreatePatientResp>()
+        .await
+        .map_err(|_| ErrorType::MLCreatePatientError)?;
+    Ok(())
 }
