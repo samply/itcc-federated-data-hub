@@ -76,7 +76,7 @@ pub async fn create_token(
         .ml_url
         .join(&format!("/sessions/{session_id}/tokens"))
         .expect("mainzelliste url should be present");
-
+    
     let token: CreateTokenResp = state
         .http
         .post(token_url)
@@ -131,7 +131,8 @@ pub async fn create_patient(
         .join("patients")
         .expect("mainzelliste url should be present");
 
-    let pseudo = state
+    debug!("patientId = {}", patient_id);
+    let p = state
         .http
         .post(patient_url)
         .query(&["tokenId", token.to_string().as_str()])
@@ -140,6 +141,7 @@ pub async fn create_patient(
         .json(&patient_id)
         .send()
         .await
+        let pseudo = p
         .map_err(|_| ErrorType::MLCreatePatientError)?
         .error_for_status()
         .map_err(|_| ErrorType::MLCreatePatientError)?
