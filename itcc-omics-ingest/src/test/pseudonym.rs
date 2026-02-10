@@ -25,6 +25,6 @@ async fn test_create_patient() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let session_id = create_session(&app_state).await?;
     let token: CreateTokenResp = create_token(&app_state, &session_id, 6).await?;
-    let psy = create_patient(&app_state, &session_id, &token.id.to_string().as_str()).await?;
+    let psy = create_patient(&app_state, &token.id, "LOCAL_ID").await?;
     Ok(())
 }

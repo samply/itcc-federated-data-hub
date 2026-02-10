@@ -131,22 +131,30 @@ pub async fn create_patient(
         .join("patients")
         .expect("mainzelliste url should be present");
 
-    debug!("patientId = {}", patient_id);
     let p = state
         .http
         .post(patient_url)
-        .query(&["tokenId", token.to_string().as_str()])
+        .query(&[("tokenId", token)])
         .header("mainzellisteApiKey", &state.services.ml_api_key)
         .header("mainzellisteApiVersion", "2.0")
         .json(&patient_id)
-        .send()
-        .await
-        let pseudo = p
-        .map_err(|_| ErrorType::MLCreatePatientError)?
+        .send();
+    let pseudo = p.await
+        .map_err(|e| {
+tracing::error!(error = %e, "create_patient request failed");
+ErrorType::MLCreatePatientError
+})?
         .error_for_status()
-        .map_err(|_| ErrorType::MLCreatePatientError)?
+        .map_err(|e| {
+tracing::error!(error = %e, "create_patient request failed");
+ErrorType::MLCreatePatientError
+})?
         .json::<CreatePatientResp>()
         .await
-        .map_err(|_| ErrorType::MLCreatePatientError)?;
+        .map_err(|e| {
+tracing::error!(error = %e, "create_patient request failed");
+ErrorType::MLCreatePatientError
+})?;
+    debug!("pseudo = {}", pseudo);
     Ok(())
 }
