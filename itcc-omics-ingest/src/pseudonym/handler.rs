@@ -1,6 +1,7 @@
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use tracing::debug;
 use uuid::Uuid;
 
@@ -76,7 +77,7 @@ pub async fn create_token(
         .ml_url
         .join(&format!("/sessions/{session_id}/tokens"))
         .expect("mainzelliste url should be present");
-    
+
     let token: CreateTokenResp = state
         .http
         .post(token_url)
@@ -119,8 +120,8 @@ pub async fn create_patient(
     state: &AppState,
     token: &Uuid,
     patient_id: &str,
-) -> Result<(), ErrorType> {
-    let patient_id = CreatePatientReq {
+) -> Result<CreatePatientResp, ErrorType> {
+    let body = CreatePatientReq {
         ids: Ids {
             localid: patient_id.to_string(),
         },
@@ -131,30 +132,36 @@ pub async fn create_patient(
         .join("patients")
         .expect("mainzelliste url should be present");
 
-    let p = state
+    let pseudo: CreatePatientResp = state
         .http
         .post(patient_url)
         .query(&[("tokenId", token)])
         .header("mainzellisteApiKey", &state.services.ml_api_key)
         .header("mainzellisteApiVersion", "2.0")
-        .json(&patient_id)
-        .send();
-    let pseudo = p.await
-        .map_err(|e| {
-tracing::error!(error = %e, "create_patient request failed");
-ErrorType::MLCreatePatientError
-})?
+        .json(&body)
+        .send()
+        .await
+        .map_err(|_| ErrorType::MLCreatePatientError)?
         .error_for_status()
-        .map_err(|e| {
-tracing::error!(error = %e, "create_patient request failed");
-ErrorType::MLCreatePatientError
-})?
+        .map_err(|_| ErrorType::MLCreatePatientError)?
         .json::<CreatePatientResp>()
         .await
-        .map_err(|e| {
-tracing::error!(error = %e, "create_patient request failed");
-ErrorType::MLCreatePatientError
-})?;
-    debug!("pseudo = {}", pseudo);
-    Ok(())
+        .map_err(|_| ErrorType::MLCreatePatientError)?;
+    debug!("pseudo = {:?}", pseudo);
+    Ok(pseudo)
+}
+
+pub async fn create_patients(
+    state: &AppState,
+    token: &Uuid,
+    patient_ids: Vec<String>,
+) -> Result<Vec<CreatePatientResp>, ErrorType> {
+    let mut out = Vec::with_capacity(patient_ids.len());
+
+    for pid in patient_ids {
+        let resp = create_patient(state, token, pid.as_str()).await?;
+        out.push(resp);
+    }
+
+    Ok(out)
 }
