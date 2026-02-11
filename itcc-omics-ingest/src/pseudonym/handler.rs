@@ -160,7 +160,7 @@ pub async fn create_patients(
     let mut out = Vec::with_capacity(patient_ids.len());
 
     for pid in patient_ids {
-        let resp = create_patient(state, token, pid.as_str()).await?;
+        let resp: CreatePatientResp = create_patient(state, token, pid.as_str()).await?;
         out.push(resp);
     }
 

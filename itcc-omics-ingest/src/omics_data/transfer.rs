@@ -127,7 +127,7 @@ pub fn filter_patient_id(ids: &HashSet<String>) -> HashSet<String> {
     ids.into_iter().map(|id| split_base(id)).collect()
 }
 
-fn split_base(sample: &str) -> String {
+pub fn split_base(sample: &str) -> String {
     sample
         .split_once("_")
         .map(|x| x.0)

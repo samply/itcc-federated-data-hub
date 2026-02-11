@@ -53,9 +53,9 @@ pub struct Config {
     pub beam_url: beam_Url,
     #[clap(env, long, default_value = "itcc-inform")]
     pub partner_id: String,
-    #[clap(long, env, default_value = "http://host.docker.internal:8081")]
+    #[clap(long, env, default_value = "http://blaze:8080")]
     pub blaze_url: Url,
-    #[clap(long, env, default_value = "http://host.docker.internal:7878")]
+    #[clap(long, env, default_value = "http://mainzelliste:8080")]
     pub ml_url: Url,
     #[clap(long, env)]
     pub ml_api_key: String,
