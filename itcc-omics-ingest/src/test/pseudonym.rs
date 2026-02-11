@@ -3,6 +3,7 @@ use crate::pseudonym::handler::{
 };
 use crate::test::{test_app_state, test_config};
 use crate::utils::error_type::ErrorType;
+use std::collections::HashSet;
 
 #[ignore = "Require mainzelliste"]
 #[tokio::test]
@@ -33,14 +34,17 @@ async fn test_create_patient() -> Result<(), ErrorType> {
 #[tokio::test]
 async fn test_create_patients() -> Result<(), ErrorType> {
     let app_state = test_app_state();
-    let patient_ids: Vec<String> = vec![
-        "PATIENT-1".to_string(),
-        "PATIENT-2".to_string(),
-        "PATIENT-3".to_string(),
-        "PATIENT-4".to_string(),
-        "PATIENT-5".to_string(),
-        "PATIENT-6".to_string(),
-    ];
+    let patient_ids: HashSet<String> = [
+        "PATIENT-1",
+        "PATIENT-2",
+        "PATIENT-3",
+        "PATIENT-4",
+        "PATIENT-5",
+        "PATIENT-6",
+    ]
+    .into_iter()
+    .map(|s| s.to_string())
+    .collect();
     let session_id = create_session(&app_state).await?;
     let token: CreateTokenResp = create_token(&app_state, &session_id, 6).await?;
     let psy = create_patients(&app_state, &token.id, patient_ids).await?;

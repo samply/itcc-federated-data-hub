@@ -1,6 +1,7 @@
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fmt::Debug;
 use tracing::debug;
 use uuid::Uuid;
@@ -41,7 +42,7 @@ pub struct CreateTokenReq {
     token_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "allowedUses")]
-    allowed_uses: Option<u32>,
+    allowed_uses: Option<usize>,
     data: TokenData,
 }
 
@@ -63,7 +64,7 @@ pub struct CreateTokenResp {
 pub async fn create_token(
     state: &AppState,
     session_id: &Uuid,
-    allowed_uses: u32,
+    allowed_uses: usize,
 ) -> Result<CreateTokenResp, ErrorType> {
     let token_req = CreateTokenReq {
         token_type: "addPatient".to_string(),
@@ -154,7 +155,7 @@ pub async fn create_patient(
 pub async fn create_patients(
     state: &AppState,
     token: &Uuid,
-    patient_ids: Vec<String>,
+    patient_ids: HashSet<String>,
 ) -> Result<Vec<CreatePatientResp>, ErrorType> {
     let mut out = Vec::with_capacity(patient_ids.len());
 
