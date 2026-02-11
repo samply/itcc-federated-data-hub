@@ -13,6 +13,8 @@ services:
       - BEAM_ID=app1.proxy1.broker
       - BEAM_SECRET=App1Secret
       - BEAM_URL=http://proxy1:8083
+      - ML_URL=http://mainzelliste:8080
+      - BLAZE_URL=http://blaze:8080
       - DATA_LAKE_ID=app1.proxy2.broker
       - PARTNER_ID=itcc-inform
       - ML_API_KEY=changeme1

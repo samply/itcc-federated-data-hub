@@ -7,5 +7,5 @@ RUN chmod +x /app/*
 
 FROM gcr.io/distroless/cc-debian12
 ARG COMPONENT
-COPY --from=chmodder /app/$COMPONENT /usr/local/bin/$COMPONENT
-ENTRYPOINT [ "/usr/local/bin/$COMPONENT" ]
+COPY --from=chmodder /app/$COMPONENT /usr/local/bin/samply
+ENTRYPOINT [ "/usr/local/bin/samply" ]

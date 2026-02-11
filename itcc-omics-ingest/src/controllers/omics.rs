@@ -1,8 +1,8 @@
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
 use crate::omics_data::compression::compress_zstd;
-use crate::omics_data::transfer::{read_validate_scan, sanitize_maf_bytes};
-use crate::test::transfer::build_pseudo_map;
+use crate::omics_data::transfer::{filter_patient_id, read_validate_scan, sanitize_maf_bytes};
+use crate::pseudonym::build_pseudo_map;
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
@@ -33,7 +33,8 @@ async fn upload_handler(
         Err(e) => return e.into_response(),
     };
     info!("Upload scan: {:?}", res);
-    let r = match build_pseudo_map(res).await {
+
+    let r = match build_pseudo_map(&state, res).await {
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
