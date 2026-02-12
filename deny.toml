@@ -1,0 +1,6 @@
+[bans]
+multiple-versions = "warn"
+
+[[bans.skip]]
+name = "core-foundation"
+version = "0.9.4"
