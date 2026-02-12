@@ -14,8 +14,8 @@ once_cell = { workspace = true }
 beam-lib = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
+zstd = { workspace = true }
+itcc-omics-lib = { workspace = true }
 aws-config = "1.8.12"
 aws-sdk-s3 = "1.120.0"
 tempfile = "3.24.0"
-zstd = { workspace = true }
-itcc-omics-lib = { workspace = true }

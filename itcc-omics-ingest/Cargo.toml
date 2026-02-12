@@ -6,7 +6,7 @@ license = "Apache-2.0"
 
 [dependencies]
 axum = { version = "0.8", features = ["json", "macros"] }
-sha2 = "0.11.0-rc.4"
+sha2 = "0.10.9"
 hex = "0.4.3"
 bytes = "1.11.0"
 tokio = { workspace = true }
