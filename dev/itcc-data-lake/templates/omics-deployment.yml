@@ -33,6 +33,16 @@ spec:
               value: {{ .Values.omics.s3.endpointUrl | quote }}
             - name: S3_BUCKET
               value: {{ .Values.omics.s3.bucket | quote }}
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_SECRET_ACCESS_KEY
             - name: RUST_LOG
               value: {{ .Values.omics.rustLog | quote }}
           volumeMounts:
