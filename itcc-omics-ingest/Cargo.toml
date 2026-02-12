@@ -8,7 +8,7 @@ license = "Apache-2.0"
 axum = { version = "0.8", features = ["json", "macros"] }
 sha2 = "0.10.9"
 hex = "0.4.3"
-bytes = "1.11.0"
+bytes = "1.11.1"
 tokio = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
