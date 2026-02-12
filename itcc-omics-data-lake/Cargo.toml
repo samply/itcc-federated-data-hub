@@ -19,5 +19,4 @@ aws-sdk-s3 = "1.120.0"
 tempfile = "3.24.0"
 aws-credential-types = "1.2.11"
 zstd = { workspace = true }
-polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet", "lazy", "fmt"]}
 itcc-omics-lib = { workspace = true }

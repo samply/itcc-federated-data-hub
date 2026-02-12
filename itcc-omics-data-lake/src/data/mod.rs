@@ -1,7 +1,7 @@
 mod cbio;
 mod handler;
 
-use crate::data::handler::{decompress_zstd_to_tempfile, maf_to_parquet};
+use crate::data::handler::decompress_zstd_to_tempfile;
 use crate::s3::{get_object, upload_to_s3};
 use itcc_omics_lib::MetaData;
 use std::path::{Path, PathBuf};
@@ -24,7 +24,7 @@ pub async fn process_maf_object_to_parquet_and_cbio(
     };
 
     let parquet_path = work_path.join("mutations.parquet");
-    maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
+    // maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
 
     // cBioPortal files
     let cbio_data = work_path.join("data_mutations_extended.txt");

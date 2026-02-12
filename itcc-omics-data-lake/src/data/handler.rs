@@ -1,10 +1,9 @@
 use anyhow::Context;
-use polars::prelude::*;
-use polars::prelude::{CsvParseOptions, CsvReadOptions, CsvReader, ParquetWriter};
 use std::fs::File;
 use std::io::{BufReader, Write};
 use tempfile::NamedTempFile;
 
+/*
 pub fn maf_to_parquet(
     maf_path: &std::path::Path,
     parquet_path: &std::path::Path,
@@ -32,6 +31,8 @@ pub fn maf_to_parquet(
 
     Ok(())
 }
+
+ */
 
 pub fn decompress_zstd_to_tempfile(
     zst_path: &std::path::Path,
