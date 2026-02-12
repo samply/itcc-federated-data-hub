@@ -60,8 +60,6 @@ pub async fn run_with_config() -> anyhow::Result<()> {
         "S3_SECRET_ACCESS_KEY len={}",
         DATALAKE_CONFIG.s3_secret_access_key.len()
     );
-    ensure_bucket(&DATALAKE_CONFIG.s3_bucket).await?;
-    show_buckets().await?;
     tokio::select! {
         res = run_socket_polling() => res?,
         _ = tokio::signal::ctrl_c() => tracing::info!("Shutting down"),

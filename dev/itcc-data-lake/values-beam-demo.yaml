@@ -50,7 +50,7 @@ webui:
 
 omics:
   image: docker.io/samply/itcc-omics-data-lake:latest
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Never
   beamId: "app1.proxy2.broker"
   beamUrl: "http://proxy2:8082"
   s3:
@@ -63,6 +63,6 @@ omics:
 secrets:
   # You can set these via helm --set / --set-file in real deployments
   beamSecret: "App1Secret"
-  s3AccessKeyId: "GKd269d8c1039442973029f248"
-  s3SecretAccessKey: "7272adb4e28ec2bf9fd2b4b8025f4f6a1fd99d8f934e5c17d2ebc969cb36b92f"
+  s3AccessKeyId: "GK19292f65d0841e37c3ca9650"
+  s3SecretAccessKey: "f6b10fa86f1d0c7ec15a28ede8c7751e4865591b047ea60701b319bb80822a66"
 config:

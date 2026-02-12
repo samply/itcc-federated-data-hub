@@ -38,6 +38,10 @@ async fn beam_save_generate(
         .suggested_name
         .clone()
         .ok_or_else(|| anyhow!("Missing suggested_name in FileMeta"))?;
+    info!(
+    "BEAM send_file metadata = {}",
+    serde_json::to_string(&file_meta).unwrap()
+    );
     let meta: MetaData = match file_meta.meta {
         Some(v) => serde_json::from_value(v).context("Failed to deserialize MetaData")?,
         None => return Err(anyhow!("Missing meta JSON in FileMeta.meta")),

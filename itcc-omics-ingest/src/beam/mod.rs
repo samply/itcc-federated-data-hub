@@ -1,10 +1,9 @@
-use crate::utils::config::FileMeta;
 use crate::utils::error_type::ErrorType;
 use crate::utils::error_type::ErrorType::{BeamError, BeamStreamFileError};
 use crate::BEAM_CLIENT;
 use axum::body::Bytes;
 use beam_lib::AppId;
-use itcc_omics_lib::MetaData;
+use itcc_omics_lib::{FileMeta, MetaData};
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
 use tracing::error;
