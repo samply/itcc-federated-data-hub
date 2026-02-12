@@ -1,4 +1,4 @@
-use crate::data::process_maf_object_to_parquet_and_cbio;
+use crate::data::process_maf_object_to_parquet;
 use crate::s3::save_files_s3;
 use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
@@ -55,7 +55,7 @@ async fn beam_save_generate(
     );
     let file_path = format!("{}/{}", meta.partner_id, suggested_name);
     save_files_s3(&DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
-    process_maf_object_to_parquet_and_cbio(&DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
+    process_maf_object_to_parquet(&DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
     Ok(())
 }
 
