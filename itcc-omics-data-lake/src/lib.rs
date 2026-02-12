@@ -4,10 +4,10 @@ pub mod s3;
 pub mod utils;
 
 use crate::beam::run_socket_polling;
-use crate::s3::{ensure_bucket, get_object, show_buckets};
+use crate::s3::get_object;
 use crate::utils::config::Config;
 use aws_config::{BehaviorVersion, Region};
-use aws_credential_types::Credentials;
+use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::Client;
 use beam_lib::BeamClient;
 use clap::Parser;
