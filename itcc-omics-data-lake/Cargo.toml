@@ -19,4 +19,4 @@ itcc-omics-lib = { workspace = true }
 aws-config = "1.8.14"
 aws-sdk-s3 = "1.123.0"
 tempfile = "3.25.0"
-polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet", "lazy", "fmt"]}
+polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}
