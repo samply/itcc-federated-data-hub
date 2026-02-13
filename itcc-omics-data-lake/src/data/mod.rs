@@ -24,8 +24,7 @@ pub async fn process_maf_object_to_parquet(
 
     let parquet_path = work_path.join("mutations.parquet");
     maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
-
-    let parquet_key = format!("{}.parquet", meta_data.maf_id);
+    let parquet_key = format!("{}/{}.parquet", meta_data.partner_id, meta_data.maf_id);
 
     upload_to_s3(bucket, &parquet_key, &parquet_path).await?;
     Ok(())
