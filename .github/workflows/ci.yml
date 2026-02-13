@@ -21,6 +21,7 @@ jobs:
       #profile: debug
       test-via-script: false
       cargo-fmt-check: true
+      use-project-deny: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
