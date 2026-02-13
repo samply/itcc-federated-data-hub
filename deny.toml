@@ -1,4 +1,0 @@
-[[bans.skip]]
-name = "ar_archive_writer"
-[[bans.skip]]
-name = "xxhash-rust"

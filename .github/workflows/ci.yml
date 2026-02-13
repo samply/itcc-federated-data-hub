@@ -16,12 +16,11 @@ jobs:
       statuses: read
     with:
       image-prefix: "samply/"
-      components: '[ "itcc-omics-ingest", "itcc-omics-data-lake" ]'
+      components: '[ "itcc-omics-ingest", "itcc-omics-data-lake", "itcc-omics-lib" ]'
       architectures: '[ "amd64"]'
       #profile: debug
       test-via-script: false
       cargo-fmt-check: true
-      use-project-deny: true
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
