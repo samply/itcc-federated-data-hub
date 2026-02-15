@@ -10,11 +10,14 @@ pub struct MetaData {
 }
 
 pub fn parse_beam_id(id: &str) -> Result<AppId, String> {
-    match id.split('.').collect::<Vec<_>>().as_slice() {
-        [app, proxy, broker] if !app.is_empty() && !proxy.is_empty() && !broker.is_empty() => {
-            Ok(AppId::new_unchecked(id))
-        }
-        _ => Err("beam-id must be <app>.<proxy>.<broker>".into()),
+    let mut it = id.splitn(3, '.'); // split into 3 parts max
+    let app = it.next().unwrap_or("");
+    let proxy = it.next().unwrap_or("");
+    let broker = it.next().unwrap_or("");
+    if !app.is_empty() && !proxy.is_empty() && !broker.is_empty() {
+        Ok(AppId::new_unchecked(id))
+    } else {
+        Err("beam-id must be <app>.<proxy>.<broker>".into())
     }
 }
 

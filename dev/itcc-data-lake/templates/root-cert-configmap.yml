@@ -1,12 +1,12 @@
 {{- with .Values.config }}
-  {{- if .rootCrtPem }}
+{{- if .rootCrtPem }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: root-cert
   namespace: {{ $.Release.Namespace }}
 data:
-  root.crt.pem: |
-  {{ .rootCrtPem | indent 4 }}
-  {{- end }}
-  {{- end }}
+  root.crt.pem: |-
+{{ .rootCrtPem | nindent 4 }}
+{{- end }}
+{{- end }}
