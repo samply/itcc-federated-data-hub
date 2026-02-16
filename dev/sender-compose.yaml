@@ -54,10 +54,9 @@ services:
       ML_ALLOWEDREMOTEADDRESSES: "0.0.0.0,::1,127.0.0.1,192.168.65.1"
 
     secrets:
-      - source: mainzelliste_conf
-        target: /etc/mainzelliste/mainzelliste.docker.conf
+      - mainzelliste.docker.conf
       - source: symmetric_key
-        target: /etc/resources/keys/symmetric_key.json
+        target: /etc/resources/keys/symmetric_key.der
 
   blaze:
     image: samply/blaze:latest
@@ -75,7 +74,7 @@ networks:
     external: true
 
 secrets:
-  mainzelliste_conf:
+  mainzelliste.docker.conf:
     file: ./config/mainzelliste.docker.conf
 
   symmetric_key:
