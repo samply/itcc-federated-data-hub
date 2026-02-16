@@ -1,7 +1,7 @@
-use anyhow::anyhow;
 use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::AppId;
 use clap::Parser;
+use itcc_omics_lib::parse_beam_id;
 use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 
@@ -77,13 +77,4 @@ pub struct Config {
         default_value = "Hugo_Symbol,Chromosome,Start_Position,End_Position,Variant_Classification,Variant_Type,Reference_Allele,Tumor_Seq_Allele1,Tumor_Seq_Allele2,Tumor_Sample_Barcode"
     )]
     pub required_omics_columns: Vec<String>,
-}
-
-fn parse_beam_id(id: &str) -> Result<AppId, String> {
-    match id.split('.').collect::<Vec<_>>().as_slice() {
-        [app, proxy, broker] if !app.is_empty() && !proxy.is_empty() && !broker.is_empty() => {
-            Ok(AppId::new_unchecked(id))
-        }
-        _ => Err("beam-id must be <app>.<proxy>.<broker>".into()),
-    }
 }
