@@ -57,7 +57,7 @@ services:
       - source: mainzelliste_conf
         target: /etc/mainzelliste/mainzelliste.docker.conf
       - source: symmetric_key
-        target: /etc/resources/keys/symmetric_key.der
+        target: /etc/resources/keys/symmetric_key.json
 
   blaze:
     image: samply/blaze:latest
