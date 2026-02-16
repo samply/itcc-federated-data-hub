@@ -14,7 +14,9 @@ once_cell = { workspace = true }
 beam-lib = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
-aws-config = "1.8.12"
-aws-sdk-s3 = "1.120.0"
-tempfile = "3.24.0"
-aws-credential-types = "1.2.11"
+zstd = { workspace = true }
+itcc-omics-lib = { workspace = true }
+aws-config = "1.8.14"
+aws-sdk-s3 = "1.123.0"
+tempfile = "3.25.0"
+polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}

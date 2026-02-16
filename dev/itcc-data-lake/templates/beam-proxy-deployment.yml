@@ -1,8 +1,9 @@
+{{- if .Values.beamProxy.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: beam-proxy
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -30,18 +31,26 @@ spec:
                   key: BEAM_SECRET
             - name: PRIVKEY_FILE
               value: "/run/secrets/proxy.pem"
+            {{- with .Values.config }}
+            {{- if .rootCrtPem }}
             - name: ROOTCERT_FILE
               value: "/conf/root.crt.pem"
+            {{- end }}
+            {{- end }}
             - name: ALL_PROXY
               value: {{ .Values.beamProxy.allProxy | quote }}
           volumeMounts:
             - name: proxy-key
               mountPath: /run/secrets
               readOnly: true
+            {{- with .Values.config }}
+            {{- if .rootCrtPem }}
             - name: root-cert
               mountPath: /conf/root.crt.pem
               subPath: root.crt.pem
               readOnly: true
+            {{- end }}
+            {{- end }}
       volumes:
         - name: proxy-key
           secret:
@@ -49,15 +58,19 @@ spec:
             items:
               - key: proxy.pem
                 path: proxy.pem
+        {{- with .Values.config }}
+        {{- if .rootCrtPem }}
         - name: root-cert
           configMap:
             name: root-cert
+        {{- end }}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: beam-proxy
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     app: beam-proxy
@@ -65,3 +78,4 @@ spec:
     - name: http
       port: {{ .Values.beamProxy.port }}
       targetPort: {{ .Values.beamProxy.port }}
+  {{- end }}

@@ -1,0 +1,12 @@
+[package]
+name = "itcc-omics-lib"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+beam-lib = { workspace = true }

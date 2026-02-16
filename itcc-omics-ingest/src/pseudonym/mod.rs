@@ -1,11 +1,10 @@
 use crate::omics_data::transfer::{filter_patient_id, insert_base, split_base};
 use crate::pseudonym::handler::{
-    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp, TypeId,
+    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
 };
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::hash::Hash;
+use std::collections::{HashMap, HashSet};
 use tracing::debug;
 
 pub mod handler;

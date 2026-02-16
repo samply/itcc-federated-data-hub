@@ -8,6 +8,7 @@ use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::HeaderMap, routing::post, Router};
+use itcc_omics_lib::MetaData;
 use tracing::{error, info};
 
 pub fn routers() -> Router<AppState> {
@@ -47,11 +48,22 @@ async fn upload_handler(
         Err(e) => return e.into_response(),
     };
     let compressed = bytes::Bytes::from(compressed_vec);
-
-    let filename = maf_key_from_bytes(&psy_res, &state.partner_id);
-    if let Err(e) = beam::send_file(state.data_lake_id, Some(filename.clone()), &compressed).await {
+    let file_sha = maf_key_from_bytes(&psy_res);
+    let filename = format!("{file_sha}.maf.zstd");
+    let meta_data = MetaData {
+        maf_id: file_sha.clone(),
+        partner_id: state.partner_id,
+        checked_fhir: true,
+    };
+    if let Err(e) =
+        beam::send_file(state.data_lake_id, Some(filename), meta_data, &compressed).await
+    {
         return e.into_response();
     }
 
-    (StatusCode::CREATED, format!("stored_as: {filename}")).into_response()
+    (
+        StatusCode::CREATED,
+        format!("stored_as: {file_sha}.maf.zstd"),
+    )
+        .into_response()
 }

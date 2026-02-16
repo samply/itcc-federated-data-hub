@@ -6,9 +6,9 @@ license = "Apache-2.0"
 
 [dependencies]
 axum = { version = "0.8", features = ["json", "macros"] }
-sha2 = "0.11.0-rc.4"
+sha2 = "0.10.9"
 hex = "0.4.3"
-bytes = "1.11.0"
+bytes = "1.11.1"
 tokio = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
@@ -21,5 +21,5 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 zstd = { workspace = true }
 uuid = { workspace = true }
-reqwest = { workspace = true, features = ["query"] }
-log = "0.4.29"
+reqwest = { workspace = true }
+itcc-omics-lib = { workspace = true }
