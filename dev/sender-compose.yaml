@@ -1,5 +1,5 @@
 services:
-  omics-endpoint:
+  itcc-omics-ingest:
     build:
       context: ..
       dockerfile: Dockerfile.dev.ingest

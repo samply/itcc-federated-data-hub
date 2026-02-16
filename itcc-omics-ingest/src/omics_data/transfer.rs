@@ -1,9 +1,9 @@
 use crate::omics_data::validator;
-use crate::pseudonym::handler::{create_patients, create_session, create_token, CreateTokenResp};
+use crate::pseudonym::handler::{create_session, create_token, CreateTokenResp};
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use csv::{ByteRecord, ReaderBuilder, WriterBuilder};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::io::Cursor;
 use tracing::{debug, info};
 

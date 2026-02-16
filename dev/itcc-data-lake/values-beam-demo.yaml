@@ -1,0 +1,68 @@
+namespace: itcc-data-lake
+
+beamProxy:
+  enabled: false
+
+garage:
+  image: dxflrs/garage:v2.1.0
+  s3Port: 3900
+  adminPort: 3903
+  extraPorts:
+    - name: admin3901
+      port: 3901
+    - name: rpc3902
+      port: 3902
+  storage:
+    metaSize: 1Gi
+    dataSize: 1Gi
+  garageToml: |
+    metadata_dir = "/var/lib/garage/meta"
+    data_dir = "/var/lib/garage/data"
+    db_engine = "sqlite"
+  
+    replication_factor = 1
+  
+    rpc_bind_addr = "[::]:3901"
+    rpc_public_addr = "garage:3901"
+    rpc_secret = "96fd277270ff3d9ff798f10922ea06dae0af0d35e6d009c9bf64e41dbe310447"
+  
+    [s3_api]
+    s3_region = "garage"
+    api_bind_addr = "[::]:3900"
+    root_domain = ".s3.garage.localhost"
+    
+    [s3_web]
+    bind_addr = "[::]:3902"
+    root_domain = ".web.garage.localhost"
+    index = "index.html"
+    
+    [k2v_api]
+    api_bind_addr = "[::]:3904"
+    
+    [admin]
+    api_bind_addr = "[::]:3903"
+    admin_token = "2aBq0eX2mOOZLsVjFllYLviVDGNbJp6/5sFgIoFmSGg="
+    metrics_token = "zsw7Lt3VeAHjkUQQpNW2FDp8BsuD5w65h1d3YokuSOw="
+
+webui:
+  image: khairul169/garage-webui:latest
+  port: 3909
+
+omics:
+  image: docker.io/samply/itcc-omics-data-lake:latest
+  imagePullPolicy: Never
+  beamId: "app1.proxy2.broker"
+  beamUrl: "http://proxy2:8082"
+  s3:
+    region: garage
+    endpointUrl: "http://garage:3900"
+    bucket: omics
+  rustLog: info
+  storageSize: 1Gi
+
+secrets:
+  # You can set these via helm --set / --set-file in real deployments
+  beamSecret: "App1Secret"
+  s3AccessKeyId: "GK19292f65d0841e37c3ca9650"
+  s3SecretAccessKey: "f6b10fa86f1d0c7ec15a28ede8c7751e4865591b047ea60701b319bb80822a66"
+config:
