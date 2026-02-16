@@ -16,7 +16,7 @@ fn test_config() -> Config {
         beam_url: Url::parse("http://beam-proxy:8081").unwrap(),
         partner_id: "itcc-inform".to_string(),
         blaze_url: Url::parse("http://host.docker.internal:8081/fhir").unwrap(),
-        ml_url: Url::parse("http://localhost:7887/").unwrap(),
+        ml_url: Url::parse("http://localhost:7887/ ").unwrap(),
         ml_api_key: "changeme1".to_string(),
         beam_secret: "App1Secret".to_string(),
         beam_id: AppId::new_unchecked("app1.proxy1.broker"),

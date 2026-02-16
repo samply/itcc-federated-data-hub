@@ -3,6 +3,7 @@ mod controllers;
 mod fhir;
 pub mod omics_data;
 pub mod pseudonym;
+#[cfg(test)]
 pub mod test;
 pub mod utils;
 

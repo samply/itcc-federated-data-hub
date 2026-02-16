@@ -1,15 +1,16 @@
 use crate::omics_data::validator;
+use crate::pseudonym::handler::{create_patients, create_session, create_token, CreateTokenResp};
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use csv::{ByteRecord, ReaderBuilder, WriterBuilder};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::io::Cursor;
 use tracing::{debug, info};
 
 pub async fn read_validate_scan(
     input: &axum::body::Bytes,
     state: &AppState,
-) -> Result<BTreeSet<String>, ErrorType> {
+) -> Result<HashSet<String>, ErrorType> {
     let mut rdr = ReaderBuilder::new()
         .delimiter(b'\t')
         .comment(Some(b'#'))
@@ -37,7 +38,7 @@ pub async fn read_validate_scan(
     debug!("Tumor_Sample_Barcode: {}", tumor_idx);
     debug!("Matched Norm_Sample_Barcode: {}", normal_idx);
 
-    let mut ids = BTreeSet::new();
+    let mut ids = HashSet::new();
     for row in rdr.records() {
         let rec = row.map_err(|_| ErrorType::CsvError)?;
         if let Some(v) = rec.get(tumor_idx) {
@@ -54,13 +55,6 @@ pub async fn read_validate_scan(
         }
     }
     Ok(ids)
-}
-
-pub async fn build_pseudo_map(ids: BTreeSet<String>) -> Result<HashMap<String, String>, ErrorType> {
-    let list: Vec<String> = ids.into_iter().collect();
-    // call mainzellist
-    // mainzellist_batch(list).await
-    todo!()
 }
 
 pub fn sanitize_maf_bytes(
@@ -127,4 +121,24 @@ pub fn sanitize_maf_bytes(
     drop(wtr);
     info!("Matched params and pseudomisation completed");
     Ok(out)
+}
+
+pub fn filter_patient_id(ids: &HashSet<String>) -> HashSet<String> {
+    ids.into_iter().map(|id| split_base(id)).collect()
+}
+
+pub fn split_base(sample: &str) -> String {
+    sample
+        .split_once("_")
+        .map(|x| x.0)
+        .unwrap_or(sample)
+        .to_string()
+}
+
+pub fn insert_base(sample: &str, crypto_id: &str) -> String {
+    sample
+        .split_once("_")
+        .map(|x| format!("{}_{}", crypto_id, x.1))
+        .unwrap_or(crypto_id.to_string())
+        .to_string()
 }
