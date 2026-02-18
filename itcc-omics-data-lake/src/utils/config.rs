@@ -2,7 +2,6 @@ use beam_lib::reqwest::Url;
 use beam_lib::AppId;
 use clap::Parser;
 use itcc_omics_lib::*;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Parser, Clone)]
 pub struct Config {

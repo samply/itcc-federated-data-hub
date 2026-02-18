@@ -16,7 +16,6 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 zstd = { workspace = true }
 itcc-omics-lib = { workspace = true }
-aws-config = "1.8.14"
-aws-sdk-s3 = "1.123.0"
-tempfile = "3.25.0"
+tempfile = { workspace = true }
 polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}
+aws-sdk-s3 = { workspace = true }

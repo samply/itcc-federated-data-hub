@@ -2,6 +2,8 @@ use anyhow::anyhow;
 use beam_lib::AppId;
 use serde::{Deserialize, Serialize};
 
+pub mod s3;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MetaData {
     pub maf_id: String,

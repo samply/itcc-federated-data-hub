@@ -1,8 +1,8 @@
-use crate::data::process_maf_object_to_parquet;
-use crate::s3::save_files_s3;
+use crate::data::{process_maf_object_to_parquet, save_files_s3};
 use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
 use beam_lib::SocketTask;
+use itcc_omics_lib::s3::client::s3_client;
 use itcc_omics_lib::{FileMeta, MetaData};
 use tokio::io::AsyncRead;
 use tracing::{error, info};
@@ -25,6 +25,7 @@ async fn beam_save_generate(
     socket_task: SocketTask,
     mut incoming: impl AsyncRead + Unpin,
 ) -> anyhow::Result<()> {
+    let s3_client: &aws_sdk_s3::Client = s3_client().await;
     let from = socket_task
         .from
         .as_ref()
@@ -54,8 +55,8 @@ async fn beam_save_generate(
         "[Beam] received file + metadata"
     );
     let file_path = format!("{}/{}", meta.partner_id, suggested_name);
-    save_files_s3(&DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
-    process_maf_object_to_parquet(&DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
+    save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
+    process_maf_object_to_parquet(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
     Ok(())
 }
 

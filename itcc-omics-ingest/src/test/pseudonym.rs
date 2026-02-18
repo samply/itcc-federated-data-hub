@@ -37,12 +37,12 @@ async fn test_create_patient() -> Result<(), ErrorType> {
 async fn test_create_patients() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let patient_ids: HashSet<String> = [
-        "PATIENT-1",
-        "PATIENT-2",
-        "PATIENT-3",
-        "PATIENT-4",
-        "PATIENT-5",
-        "PATIENT-6",
+        "patient-001",
+        "patient-002",
+        "patient-003",
+        "patient-004",
+        "patient-005",
+        "patient-006",
     ]
     .into_iter()
     .map(|s| s.to_string())

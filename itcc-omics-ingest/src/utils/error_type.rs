@@ -20,6 +20,8 @@ pub enum ErrorType {
     MlTokenError,
     MLCreatePatientError,
     MafWriteError,
+    BlazeError,
+    FhirCheckError,
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -73,6 +75,11 @@ impl IntoResponse for ErrorType {
             ErrorType::MLCreatePatientError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "patient creation error".to_string(),
+            ),
+            ErrorType::BlazeError => (StatusCode::INTERNAL_SERVER_ERROR, "blaze error".to_string()),
+            ErrorType::FhirCheckError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "fhir check error".to_string(),
             ),
         };
         (status, Json(body)).into_response()
