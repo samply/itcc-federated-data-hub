@@ -1,8 +1,10 @@
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
+use crate::fhir::handler::get_patient_by_id;
 use crate::omics_data::compression::compress_zstd;
 use crate::omics_data::transfer::{filter_patient_id, read_validate_scan, sanitize_maf_bytes};
 use crate::pseudonym::build_pseudo_map;
+use crate::utils::error_type::ErrorType::BeamError;
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
@@ -14,7 +16,7 @@ use tracing::{error, info};
 pub fn routers() -> Router<AppState> {
     Router::new()
         .route("/omics/upload", post(upload_handler))
-        .layer(DefaultBodyLimit::max(200 * 1024 * 1024))
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
 }
 
 // POST /omics/upload
@@ -52,12 +54,10 @@ async fn upload_handler(
     let filename = format!("{file_sha}.maf.zstd");
     let meta_data = MetaData {
         maf_id: file_sha.clone(),
-        partner_id: state.partner_id,
+        partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
-    if let Err(e) =
-        beam::send_file(state.data_lake_id, Some(filename), meta_data, &compressed).await
-    {
+    if let Err(e) = beam::send_file(&state, Some(filename), meta_data, &compressed).await {
         return e.into_response();
     }
 

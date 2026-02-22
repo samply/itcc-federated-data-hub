@@ -2,6 +2,8 @@ use anyhow::anyhow;
 use beam_lib::AppId;
 use serde::{Deserialize, Serialize};
 
+pub mod error_type;
+pub mod fhir;
 pub mod s3;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -21,6 +23,12 @@ pub fn parse_beam_id(id: &str) -> Result<AppId, String> {
     } else {
         Err("beam-id must be <app>.<proxy>.<broker>".into())
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Ack {
+    pub ok: bool,
+    pub message: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

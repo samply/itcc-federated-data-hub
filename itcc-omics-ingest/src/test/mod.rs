@@ -34,19 +34,7 @@ fn test_config() -> Config {
 
 fn test_app_state() -> AppState {
     let cfg = test_config();
-    AppState {
-        http: Client::new(),
-        api_key: cfg.api_key,
-        zstd_level: cfg.zstd_level,
-        required_omics_columns: cfg.required_omics_columns,
-        data_lake_id: cfg.data_lake_id,
-        partner_id: cfg.partner_id,
-        services: crate::utils::config::Services {
-            ml_url: cfg.ml_url,
-            ml_api_key: cfg.ml_api_key,
-            blaze_url: cfg.blaze_url,
-        },
-    }
+    AppState::from(&cfg)
 }
 
 #[test]

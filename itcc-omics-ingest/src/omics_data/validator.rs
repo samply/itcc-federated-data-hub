@@ -19,8 +19,8 @@ fn build_header_info(header: &StringRecord) -> Result<HeaderInfo, ErrorType> {
     let mut names = vec![];
 
     for (i, h) in header.iter().enumerate() {
-        debug!("index: {}", i);
-        debug!("name: {}", h);
+        //debug!("index: {}", i);
+        //debug!("name: {}", h);
         let name = h.trim().to_string();
         if name.is_empty() {
             debug!("Header {} is empty", i);

@@ -22,13 +22,13 @@ async fn test_token_pseudonym() -> Result<(), ErrorType> {
     Ok(())
 }
 
-#[ignore = "Require mainzelliste"]
+// #[ignore = "Require mainzelliste"]
 #[tokio::test]
 async fn test_create_patient() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let session_id = create_session(&app_state).await?;
     let token: CreateTokenResp = create_token(&app_state, &session_id, 1).await?;
-    let psy = create_patient(&app_state, &token.id, "LOCAL_ID").await?;
+    let psy = create_patient(&app_state, &token.id, "P0KRKM80V").await?;
     Ok(())
 }
 
@@ -38,8 +38,8 @@ async fn test_create_patients() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let patient_ids: HashSet<String> = [
         "patient-001",
-        "patient-002",
-        "patient-003",
+        "patient-001",
+        "patient-001",
         "patient-004",
         "patient-005",
         "patient-006",

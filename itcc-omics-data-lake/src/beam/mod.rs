@@ -1,11 +1,15 @@
 use crate::data::{process_maf_object_to_parquet, save_files_s3};
 use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
-use beam_lib::SocketTask;
+use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
+use futures::future::join_all;
+use itcc_omics_lib::fhir::bundle::Bundle;
+use itcc_omics_lib::fhir::FhirBundleTask;
 use itcc_omics_lib::s3::client::s3_client;
-use itcc_omics_lib::{FileMeta, MetaData};
+use itcc_omics_lib::{Ack, FileMeta, MetaData};
+use std::time::Duration;
 use tokio::io::AsyncRead;
-use tracing::{error, info};
+use tracing::{debug, error, info, warn};
 
 pub async fn run_socket_polling() -> anyhow::Result<()> {
     BEAM_CLIENT
@@ -68,4 +72,87 @@ async fn print_file(
     tokio::io::copy(&mut incoming, &mut tokio::io::stdout()).await?;
     info!("Done printing file from {}", socket_task.from);
     Ok(())
+}
+
+pub async fn run_task_polling() -> anyhow::Result<()> {
+    info!("Starting Beam task polling on {}", DATALAKE_CONFIG.beam_url);
+
+    let block_one = BlockingOptions::from_count(1);
+
+    loop {
+        match BEAM_CLIENT.poll_pending_tasks(&block_one).await {
+            Ok(tasks) => {
+                join_all(tasks.into_iter().map(|task| async move {
+                    let claimed = TaskResult {
+                        from: DATALAKE_CONFIG.beam_id.clone(),
+                        to: vec![task.from.clone()],
+                        task: task.id.clone(),
+                        status: WorkStatus::Claimed,
+                        body: (),
+                        metadata: ().into(),
+                    };
+
+                    if let Err(e) = BEAM_CLIENT.put_result(&claimed, &claimed.task).await {
+                        warn!("Failed to claim task from {}: {e}", claimed.to[0]);
+                        return;
+                    }
+
+                    tokio::spawn(handle_task(task));
+                }))
+                .await;
+            }
+
+            Err(beam_lib::BeamError::ReqwestError(e)) if e.is_connect() => {
+                warn!(
+                    "Failed to connect to beam proxy on {}. Retrying in 30s",
+                    DATALAKE_CONFIG.beam_url
+                );
+                tokio::time::sleep(Duration::from_secs(30)).await;
+            }
+
+            Err(e) => {
+                warn!("Error during task polling {e}");
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
+        }
+    }
+}
+
+async fn handle_task(task: TaskRequest<Vec<FhirBundleTask>>) {
+    let from = task.from.clone();
+
+    let results: Vec<Ack> = join_all(
+        task.body
+            .into_iter()
+            .map(|t| async move { handle_fhir_bundle(t.bundle).await }),
+    )
+    .await;
+
+    let put = BEAM_CLIENT
+        .put_result(
+            &TaskResult {
+                from: DATALAKE_CONFIG.beam_id.clone(),
+                to: vec![from],
+                task: task.id.clone(),
+                status: WorkStatus::Succeeded,
+                body: results,
+                metadata: ().try_into().unwrap(),
+            },
+            &task.id,
+        )
+        .await;
+
+    if let Err(e) = put {
+        warn!("Failed to respond to task: {e}");
+    }
+}
+
+async fn handle_fhir_bundle(_bundle: Bundle) -> Ack {
+    // store to blaze
+    debug!("Received Bundle Task");
+    debug!("Beam: {:#?}", _bundle);
+    Ack {
+        ok: true,
+        message: None,
+    }
 }

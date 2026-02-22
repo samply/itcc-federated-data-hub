@@ -1,6 +1,8 @@
-use crate::fhir::resources::{Bundle, Resource};
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
+use itcc_omics_lib::fhir::bundle::Bundle;
+use itcc_omics_lib::fhir::resources::Resource;
+use reqwest::StatusCode;
 use tracing::debug;
 
 pub async fn get_patient_by_id(state: &AppState, patient_id: &str) -> Result<Bundle, ErrorType> {
@@ -10,18 +12,27 @@ pub async fn get_patient_by_id(state: &AppState, patient_id: &str) -> Result<Bun
         .join(&format!("fhir/Patient/{}/$everything", patient_id))
         .expect("blaze url should be present");
 
-    let patient_details: Bundle = state
+    let resp = state
         .http
         .get(patient_url)
         .send()
         .await
-        .map_err(|_| ErrorType::BlazeError)?
-        .error_for_status()
-        .map_err(|_| ErrorType::BlazeError)?
-        .json::<Bundle>()
-        .await
         .map_err(|_| ErrorType::BlazeError)?;
-    Ok(patient_details)
+    let status = resp.status();
+
+    if status.is_success() {
+        let bundle = resp
+            .json::<Bundle>()
+            .await
+            .map_err(|_| ErrorType::BlazeError)?;
+        debug!("patient_details: {:?}", bundle);
+        return Ok(bundle);
+    }
+    if status == StatusCode::NOT_FOUND {
+        return Err(ErrorType::FhirPatientNotFound);
+    } else {
+        return Err(ErrorType::BlazeError);
+    }
 }
 
 pub async fn pseudomize_patient_by_id(

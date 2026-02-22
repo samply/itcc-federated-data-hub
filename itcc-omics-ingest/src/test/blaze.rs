@@ -49,7 +49,7 @@ async fn test_blaze_pseudo() -> Result<(), ErrorType> {
     Ok(())
 }
 
-// #[tokio::test]
+#[tokio::test]
 async fn check_blaze_pseudo() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let mut bundle = get_patient_by_id(&app_state, "patient-001").await?;

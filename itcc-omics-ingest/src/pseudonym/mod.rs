@@ -1,3 +1,5 @@
+use crate::beam;
+use crate::fhir::handler::get_patient_by_id;
 use crate::omics_data::transfer::{filter_patient_id, insert_base, split_base};
 use crate::pseudonym::handler::{
     create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
@@ -20,7 +22,15 @@ pub async fn build_pseudo_map(
         create_patients(&state, &token.id, patients_id).await?;
     let local_crypto_ids: HashMap<String, String> = extract_mapping(pseudonym_res)?;
 
-    debug!("{:#?}", local_crypto_ids);
+    debug!("Mapping: {:#?}", local_crypto_ids);
+    // fhir handling
+    for (patient_id, pseudo_id) in local_crypto_ids.iter() {
+        debug!("Patient: {}", patient_id);
+        debug!("Pseudo: {}", pseudo_id);
+        let mut bundle = get_patient_by_id(&state, patient_id.as_str()).await?;
+        bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
+        beam::send_fhir_bundle(&state, bundle).await?;
+    }
 
     let mut mapping_ids: HashMap<String, String> = HashMap::new();
 

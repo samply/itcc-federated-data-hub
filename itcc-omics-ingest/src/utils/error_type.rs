@@ -1,6 +1,7 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use itcc_omics_lib::error_type::LibError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -22,6 +23,7 @@ pub enum ErrorType {
     MafWriteError,
     BlazeError,
     FhirCheckError,
+    FhirPatientNotFound,
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -81,7 +83,23 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "fhir check error".to_string(),
             ),
+            ErrorType::FhirPatientNotFound => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "fhir data for patient not found please provide".to_string(),
+            ),
         };
         (status, Json(body)).into_response()
+    }
+}
+
+impl From<LibError> for ErrorType {
+    fn from(e: LibError) -> Self {
+        match e {
+            LibError::FhirCheckError | LibError::MissingFullUrl | LibError::PatientIdMismatch => {
+                ErrorType::FhirCheckError
+            }
+
+            LibError::Other(_) => ErrorType::BlazeError,
+        }
     }
 }
