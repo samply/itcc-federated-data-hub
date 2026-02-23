@@ -11,7 +11,8 @@ pub async fn get_patient_by_id(state: &AppState, patient_id: &str) -> Result<Bun
         .blaze_url
         .join(&format!("fhir/Patient/{}/$everything", patient_id))
         .expect("blaze url should be present");
-
+    debug!("Patient: {}", patient_id);
+    debug!("PatientUrl: {}", patient_url);
     let resp = state
         .http
         .get(patient_url)

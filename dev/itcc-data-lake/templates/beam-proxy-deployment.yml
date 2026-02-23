@@ -61,8 +61,8 @@ spec:
         {{- with .Values.config }}
         {{- if .rootCrtPem }}
         - name: root-cert
-          configMap:
-            name: root-cert
+          secret:
+            secretName: root-cert
         {{- end }}
         {{- end }}
 ---
