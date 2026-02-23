@@ -45,7 +45,7 @@ pub async fn pseudomize_patient_by_id(
         .blaze_url
         .join(&format!("fhir/Patient/{}/$everything", patient_id))
         .expect("blaze url should be present");
-
+    debug!("pseudomize_patient_details: {:?}", patient_url);
     let mut bundle: Bundle = state
         .http
         .get(patient_url)
@@ -57,6 +57,7 @@ pub async fn pseudomize_patient_by_id(
         .json::<Bundle>()
         .await
         .map_err(|_| ErrorType::BlazeError)?;
+    debug!("patient_details: {:?}", bundle);
     bundle.rename_patient_id_everywhere(patient_id, pseudonym);
     Ok(bundle)
 }
