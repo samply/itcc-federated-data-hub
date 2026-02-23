@@ -43,7 +43,7 @@ pub async fn pseudomize_patient_by_id(
     let patient_url = state
         .services
         .blaze_url
-        .join(&format!("fhir/Patient/{}/$everything", patient_id))
+        .join(&format!("Patient/{}/$everything", patient_id))
         .expect("blaze url should be present");
     debug!("pseudomize_patient_details: {:?}", patient_url);
     let mut bundle: Bundle = state

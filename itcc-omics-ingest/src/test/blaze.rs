@@ -9,7 +9,7 @@ use tracing::debug;
 async fn check_blaze() -> Result<(), reqwest::Error> {
     let cfg = test_config();
     let client = Client::new();
-    let url = format!("{}health", cfg.blaze_url);
+    let url = format!("http://localhost:8008/health");
     debug!("URl: {}", url);
 
     let res = client.get(url).send().await?;
