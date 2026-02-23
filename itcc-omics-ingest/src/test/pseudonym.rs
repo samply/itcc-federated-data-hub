@@ -22,7 +22,7 @@ async fn test_token_pseudonym() -> Result<(), ErrorType> {
     Ok(())
 }
 
-// #[ignore = "Require mainzelliste"]
+#[ignore = "Require mainzelliste"]
 #[tokio::test]
 async fn test_create_patient() -> Result<(), ErrorType> {
     let app_state = test_app_state();

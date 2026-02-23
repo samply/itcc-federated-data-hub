@@ -4,7 +4,8 @@ use crate::utils::error_type::ErrorType;
 use reqwest::Client;
 use tracing::debug;
 
-// #[tokio::test]
+#[ignore = "Require blaze"]
+#[tokio::test]
 async fn check_blaze() -> Result<(), reqwest::Error> {
     let cfg = test_config();
     let client = Client::new();
@@ -19,7 +20,9 @@ async fn check_blaze() -> Result<(), reqwest::Error> {
 
     Ok(())
 }
-// #[tokio::test]
+
+#[ignore = "Require blaze"]
+#[tokio::test]
 async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let id = "patient-001";
@@ -28,7 +31,8 @@ async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
     Ok(())
 }
 
-// #[tokio::test]
+#[ignore = "Require blaze"]
+#[tokio::test]
 async fn check_blaze_patient_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let id = "patient-001";
@@ -37,7 +41,9 @@ async fn check_blaze_patient_id() -> Result<(), ErrorType> {
     filter_patient_id_from_bundle(res).await?;
     Ok(())
 }
-// #[tokio::test]
+
+#[ignore = "Require blaze"]
+#[tokio::test]
 async fn test_blaze_pseudo() -> Result<(), ErrorType> {
     let patient_id = "patient-001";
     let pseudonym = "test-000";
@@ -49,6 +55,7 @@ async fn test_blaze_pseudo() -> Result<(), ErrorType> {
     Ok(())
 }
 
+#[ignore = "Require blaze"]
 #[tokio::test]
 async fn check_blaze_pseudo() -> Result<(), ErrorType> {
     let app_state = test_app_state();
