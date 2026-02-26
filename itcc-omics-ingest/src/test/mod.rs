@@ -21,6 +21,7 @@ fn test_config() -> Config {
         ml_api_key: "changeme1".to_string(),
         beam_secret: "App1Secret".to_string(),
         beam_id: AppId::new_unchecked("app1.proxy1.broker"),
+        enable_sockets: false,
         data_lake_id: AppId::new_unchecked("app1.proxy2.broker"),
         zstd_level: 3,
         required_omics_columns: vec![

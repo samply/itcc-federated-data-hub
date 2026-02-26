@@ -49,7 +49,7 @@ async fn upload_handler(
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
-    let compressed = bytes::Bytes::from(compressed_vec);
+    let compressed = bytes::Bytes::from(compressed_vec.clone());
     let file_sha = maf_key_from_bytes(&psy_res);
     let filename = format!("{file_sha}.maf.zstd");
     let meta_data = MetaData {
@@ -57,7 +57,9 @@ async fn upload_handler(
         partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
-    if let Err(e) = beam::send_file(&state, Some(filename), meta_data, &compressed).await {
+    if let Err(e) =
+        beam::send_file_via_task(&state, Some(filename), meta_data, &compressed_vec).await
+    {
         return e.into_response();
     }
 

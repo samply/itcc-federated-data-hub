@@ -2,7 +2,7 @@ use tokio::io::AsyncWriteExt;
 mod handler;
 
 use crate::data::handler::{decompress_zstd_to_tempfile, maf_to_parquet};
-use itcc_omics_lib::s3::{get_object, upload_to_s3};
+use itcc_omics_lib::s3::{get_object, upload_to_s3_from_path};
 use itcc_omics_lib::MetaData;
 use std::path::{Path, PathBuf};
 use tempfile::{NamedTempFile, TempDir};
@@ -22,7 +22,7 @@ pub async fn save_files_s3(
     let size_u64 = tokio::io::copy(&mut incoming, &mut f).await?;
     f.flush().await?;
     debug!("wrote {size_u64} bytes to temp");
-    upload_to_s3(client_s3, bucket, filename, path).await?;
+    upload_to_s3_from_path(client_s3, bucket, filename, path).await?;
     Ok(())
 }
 
@@ -47,6 +47,6 @@ pub async fn process_maf_object_to_parquet(
     maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
     let parquet_key = format!("{}/{}.parquet", meta_data.partner_id, meta_data.maf_id);
 
-    upload_to_s3(s3_client, bucket, &parquet_key, &parquet_path).await?;
+    upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path).await?;
     Ok(())
 }

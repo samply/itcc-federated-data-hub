@@ -6,11 +6,19 @@ pub mod error_type;
 pub mod fhir;
 pub mod s3;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MetaData {
     pub maf_id: String,
     pub partner_id: String,
     pub checked_fhir: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MafTask {
+    pub meta: MetaData,
+    pub suggested_name: Option<String>,
+    #[serde(with = "serde_bytes")]
+    pub bytes_b64: Vec<u8>,
 }
 
 pub fn parse_beam_id(id: &str) -> Result<AppId, String> {

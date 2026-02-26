@@ -6,8 +6,11 @@ use futures::future::join_all;
 use itcc_omics_lib::fhir::bundle::Bundle;
 use itcc_omics_lib::fhir::FhirBundleTask;
 use itcc_omics_lib::s3::client::s3_client;
-use itcc_omics_lib::{Ack, FileMeta, MetaData};
+use itcc_omics_lib::s3::{upload_to_s3_form_bytes, upload_to_s3_from_path};
+use itcc_omics_lib::{Ack, FileMeta, MafTask, MetaData};
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tempfile::NamedTempFile;
 use tokio::io::AsyncRead;
 use tracing::{debug, error, info, warn};
 
@@ -22,55 +25,6 @@ pub async fn run_socket_polling() -> anyhow::Result<()> {
             Ok(())
         })
         .await?;
-    Ok(())
-}
-
-async fn beam_save_generate(
-    socket_task: SocketTask,
-    mut incoming: impl AsyncRead + Unpin,
-) -> anyhow::Result<()> {
-    let s3_client: &aws_sdk_s3::Client = s3_client().await;
-    let from = socket_task
-        .from
-        .as_ref()
-        .split('.')
-        .take(2)
-        .collect::<Vec<_>>()
-        .join(".");
-    let file_meta: FileMeta =
-        serde_json::from_value(socket_task.metadata).context("Failed to deserialize metadata")?;
-    let suggested_name = file_meta
-        .suggested_name
-        .clone()
-        .ok_or_else(|| anyhow!("Missing suggested_name in FileMeta"))?;
-    info!(
-        "BEAM send_file metadata = {}",
-        serde_json::to_string(&file_meta).unwrap()
-    );
-    let meta: MetaData = match file_meta.meta {
-        Some(v) => serde_json::from_value(v).context("Failed to deserialize MetaData")?,
-        None => return Err(anyhow!("Missing meta JSON in FileMeta.meta")),
-    };
-    info!(
-        maf_id = %meta.maf_id,
-        partner_id = %meta.partner_id,
-        checked_fhir = meta.checked_fhir,
-        suggested_name = %suggested_name,
-        "[Beam] received file + metadata"
-    );
-    let file_path = format!("{}/{}", meta.partner_id, suggested_name);
-    save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
-    process_maf_object_to_parquet(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
-    Ok(())
-}
-
-async fn print_file(
-    socket_task: SocketTask,
-    mut incoming: impl AsyncRead + Unpin,
-) -> anyhow::Result<()> {
-    info!("Incoming file from {}", socket_task.from);
-    tokio::io::copy(&mut incoming, &mut tokio::io::stdout()).await?;
-    info!("Done printing file from {}", socket_task.from);
     Ok(())
 }
 
@@ -118,13 +72,93 @@ pub async fn run_task_polling() -> anyhow::Result<()> {
     }
 }
 
-async fn handle_task(task: TaskRequest<Vec<FhirBundleTask>>) {
+async fn beam_save_generate(
+    socket_task: SocketTask,
+    mut incoming: impl AsyncRead + Unpin,
+) -> anyhow::Result<()> {
+    let s3_client: &aws_sdk_s3::Client = s3_client().await;
+    let from = socket_task
+        .from
+        .as_ref()
+        .split('.')
+        .take(2)
+        .collect::<Vec<_>>()
+        .join(".");
+    let file_meta: FileMeta =
+        serde_json::from_value(socket_task.metadata).context("Failed to deserialize metadata")?;
+    let suggested_name = file_meta
+        .suggested_name
+        .clone()
+        .ok_or_else(|| anyhow!("Missing suggested_name in FileMeta"))?;
+    info!(
+        "BEAM send_file metadata = {}",
+        serde_json::to_string(&file_meta).unwrap()
+    );
+    let meta: MetaData = match file_meta.meta {
+        Some(v) => serde_json::from_value(v).context("Failed to deserialize MetaData")?,
+        None => return Err(anyhow!("Missing meta JSON in FileMeta.meta")),
+    };
+    info!(
+        maf_id = %meta.maf_id,
+        partner_id = %meta.partner_id,
+        checked_fhir = meta.checked_fhir,
+        suggested_name = %suggested_name,
+        "[Beam] received file + metadata"
+    );
+    let file_path = format!("{}/{}", meta.partner_id, suggested_name);
+    save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
+    process_maf_object_to_parquet(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind")]
+pub enum IngestTask {
+    Fhir { bundle: Bundle },
+    Maf(MafTask),
+}
+
+async fn handle_one(t: IngestTask) -> Ack {
+    match t {
+        IngestTask::Fhir { bundle } => handle_fhir_bundle(bundle).await,
+        IngestTask::Maf(maf) => handle_maf(maf).await,
+    }
+}
+
+async fn handle_maf(task: MafTask) -> Ack {
+    let s3_client = s3_client().await;
+
+    let filename = task
+        .suggested_name
+        .clone()
+        .unwrap_or_else(|| format!("{}.maf", task.meta.maf_id));
+
+    if let Err(e) = upload_to_s3_form_bytes(
+        &s3_client,
+        &DATALAKE_CONFIG.s3_bucket,
+        &filename,
+        task.bytes_b64,
+    )
+    .await
+    {
+        return Ack {
+            ok: false,
+            message: Some(e.to_string()),
+        };
+    }
+
+    Ack {
+        ok: true,
+        message: None,
+    }
+}
+async fn handle_task(task: TaskRequest<Vec<IngestTask>>) {
     let from = task.from.clone();
 
     let results: Vec<Ack> = join_all(
         task.body
             .into_iter()
-            .map(|t| async move { handle_fhir_bundle(t.bundle).await }),
+            .map(|t| async move { handle_one(t).await }),
     )
     .await;
 
@@ -155,4 +189,14 @@ async fn handle_fhir_bundle(_bundle: Bundle) -> Ack {
         ok: true,
         message: None,
     }
+}
+
+async fn print_file(
+    socket_task: SocketTask,
+    mut incoming: impl AsyncRead + Unpin,
+) -> anyhow::Result<()> {
+    info!("Incoming file from {}", socket_task.from);
+    tokio::io::copy(&mut incoming, &mut tokio::io::stdout()).await?;
+    info!("Done printing file from {}", socket_task.from);
+    Ok(())
 }

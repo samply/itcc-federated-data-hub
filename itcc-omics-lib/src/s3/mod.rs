@@ -7,7 +7,7 @@ use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tracing::{debug, info};
 
-pub async fn upload_to_s3(
+pub async fn upload_to_s3_from_path(
     client_s3: &Client,
     bucket: &str,
     filename: &str,
@@ -27,6 +27,27 @@ pub async fn upload_to_s3(
     info!("s3 saved");
     Ok(())
 }
+
+pub async fn upload_to_s3_form_bytes(
+    client_s3: &Client,
+    bucket: &str,
+    filename: &str,
+    task_bytes: Vec<u8>,
+) -> Result<(), anyhow::Error> {
+    debug!("[Beam] Saving file to s3...");
+    let body = ByteStream::from(task_bytes);
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(filename)
+        .content_type("text/plain; charset=utf-8")
+        .body(body)
+        .send()
+        .await?;
+    info!("s3 saved");
+    Ok(())
+}
+
 pub async fn get_object(
     client_s3: &Client,
     bucket: &str,

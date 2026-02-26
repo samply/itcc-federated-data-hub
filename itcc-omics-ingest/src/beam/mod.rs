@@ -6,11 +6,11 @@ use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::{BlockingOptions, MsgId, TaskRequest};
 use itcc_omics_lib::fhir::bundle::Bundle;
 use itcc_omics_lib::fhir::FhirBundleTask;
-use itcc_omics_lib::{Ack, FileMeta, MetaData};
+use itcc_omics_lib::{Ack, FileMeta, MafTask, MetaData};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
-use tracing::error;
+use tracing::{error, info};
 
 pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ack>, ErrorType> {
     let task = TaskRequest {
@@ -24,7 +24,7 @@ pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ac
     };
 
     state.beam_client.post_task(&task).await.map_err(|e| {
-        error!("Failed to tunnel request: {e}");
+        error!("Failed to task request: {e}");
         BeamError
     })?;
 
@@ -40,7 +40,7 @@ pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ac
     Ok(results.into_iter().map(|r| r.body).flatten().collect())
 }
 
-pub async fn send_file(
+pub async fn send_file_via_sockets(
     state: &AppState,
     suggested_name: Option<String>,
     meta_data: MetaData,
@@ -66,6 +66,45 @@ pub async fn send_file(
         BeamStreamFileError
     })?;
     Ok(())
+}
+
+pub async fn send_file_via_task(
+    state: &AppState,
+    suggested_name: Option<String>,
+    meta_data: MetaData,
+    body: &Vec<u8>,
+) -> Result<Vec<Ack>, ErrorType> {
+    let task_body = MafTask {
+        meta: meta_data,
+        suggested_name: suggested_name,
+        bytes_b64: body.clone(),
+    };
+    let task = TaskRequest {
+        id: MsgId::new(),
+        from: state.services.beam_id.clone(),
+        to: vec![state.data_lake_id.clone()],
+        body: vec![task_body],
+        ttl: "60s".to_string(),
+        failure_strategy: beam_lib::FailureStrategy::Discard,
+        metadata: ().try_into().unwrap(),
+    };
+    info!("Posting MAF task id={} to={:?}", task.id, task.to);
+
+    state.beam_client.post_task(&task).await.map_err(|e| {
+        error!("Failed to task request: {e}");
+        BeamError
+    })?;
+
+    let results = state
+        .beam_client
+        .poll_results::<Vec<Ack>>(&task.id, &BlockingOptions::from_count(1))
+        .await
+        .map_err(|e| {
+            error!("Failed to tunnel request: {e}");
+            BeamError
+        })?;
+
+    Ok(results.into_iter().map(|r| r.body).flatten().collect())
 }
 
 pub fn maf_key_from_bytes(bytes: &[u8]) -> String {

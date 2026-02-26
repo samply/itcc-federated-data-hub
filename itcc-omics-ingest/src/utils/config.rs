@@ -25,6 +25,7 @@ pub struct Services {
     pub beam_url: beam_Url,
     pub beam_id: AppId,
     pub beam_secret: String,
+    pub enable_sockets: bool,
 }
 
 impl From<&Config> for AppState {
@@ -49,6 +50,7 @@ impl From<&Config> for AppState {
                 beam_url: c.beam_url.clone(),
                 beam_id: c.beam_id.clone(),
                 beam_secret: c.beam_secret.to_string(),
+                enable_sockets: c.enable_sockets,
             },
         }
     }
@@ -75,6 +77,8 @@ pub struct Config {
     /// The app id of this application
     #[clap(long, env, value_parser = parse_beam_id)]
     pub beam_id: AppId,
+    #[clap(env, long, default_value_t = false)]
+    pub enable_sockets: bool,
     /// The app id of the central data lake(receiver)
     #[clap(long, env, value_parser = parse_beam_id)]
     pub data_lake_id: AppId,
