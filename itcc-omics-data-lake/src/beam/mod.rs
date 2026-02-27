@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context};
 use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
 use futures::future::join_all;
 use itcc_omics_lib::fhir::bundle::Bundle;
-use itcc_omics_lib::fhir::FhirBundleTask;
+use itcc_omics_lib::fhir::IngestTask;
 use itcc_omics_lib::s3::client::s3_client;
 use itcc_omics_lib::s3::{upload_to_s3_form_bytes, upload_to_s3_from_path};
 use itcc_omics_lib::{Ack, FileMeta, MafTask, MetaData};
@@ -111,13 +111,6 @@ async fn beam_save_generate(
     Ok(())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "kind")]
-pub enum IngestTask {
-    Fhir { bundle: Bundle },
-    Maf(MafTask),
-}
-
 async fn handle_one(t: IngestTask) -> Ack {
     match t {
         IngestTask::Fhir { bundle } => handle_fhir_bundle(bundle).await,
@@ -132,11 +125,12 @@ async fn handle_maf(task: MafTask) -> Ack {
         .suggested_name
         .clone()
         .unwrap_or_else(|| format!("{}.maf", task.meta.maf_id));
+    let file_path = format!("{}/{}", task.meta.partner_id, filename);
 
     if let Err(e) = upload_to_s3_form_bytes(
         &s3_client,
         &DATALAKE_CONFIG.s3_bucket,
-        &filename,
+        &file_path,
         task.bytes_b64,
     )
     .await

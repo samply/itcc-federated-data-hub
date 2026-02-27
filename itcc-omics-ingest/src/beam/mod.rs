@@ -5,7 +5,7 @@ use axum::body::Bytes;
 use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::{BlockingOptions, MsgId, TaskRequest};
 use itcc_omics_lib::fhir::bundle::Bundle;
-use itcc_omics_lib::fhir::FhirBundleTask;
+use itcc_omics_lib::fhir::IngestTask;
 use itcc_omics_lib::{Ack, FileMeta, MafTask, MetaData};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -17,7 +17,7 @@ pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ac
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
         to: vec![state.data_lake_id.clone()],
-        body: vec![FhirBundleTask { bundle }],
+        body: vec![IngestTask::Fhir { bundle }],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,
         metadata: ().try_into().unwrap(),
@@ -83,7 +83,7 @@ pub async fn send_file_via_task(
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
         to: vec![state.data_lake_id.clone()],
-        body: vec![task_body],
+        body: vec![IngestTask::Maf(task_body)],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,
         metadata: ().try_into().unwrap(),

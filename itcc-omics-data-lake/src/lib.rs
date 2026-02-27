@@ -38,7 +38,7 @@ pub async fn run_with_config() -> anyhow::Result<()> {
     };
     init_s3_client(custom_config).await;
     tokio::select! {
-        res = run_socket_polling() => res?,
+        //res = run_socket_polling() => res?,
         res = run_task_polling() => res?,
         _ = tokio::signal::ctrl_c() => tracing::info!("Shutting down"),
     }
