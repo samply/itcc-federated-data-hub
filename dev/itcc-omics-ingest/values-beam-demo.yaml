@@ -1,0 +1,30 @@
+namespace: itcc-ingest
+replicaCount: 1
+
+image:
+  repository: samply/itcc-omics-ingest
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: ClusterIP
+  port: 6080
+
+env:
+  API_KEY: "omics"
+  RUST_LOG: "debug"
+  BEAM_ID: "app1.proxy1.broker"
+  BEAM_SECRET: "App1Secret"
+  ML_URL: "http://mainzelliste:8080"
+  BLAZE_URL: "http://blaze:8080/fhir/"
+  DATA_LAKE_ID: "app1.proxy2.broker"
+  PARTNER_ID: "itcc-inform"
+  ML_API_KEY: "changeme1"
+
+beam:
+  enabled: true
+  namespace: "samply-beam-demo"
+  service: "beam-proxy-proxy1"
+  port: 8081
+  scheme: "http"
+  clusterDomain: "cluster.local"

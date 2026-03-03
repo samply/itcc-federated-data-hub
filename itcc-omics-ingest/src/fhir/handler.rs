@@ -26,7 +26,7 @@ pub async fn get_patient_by_id(state: &AppState, patient_id: &str) -> Result<Bun
             .json::<Bundle>()
             .await
             .map_err(|_| ErrorType::BlazeError)?;
-        debug!("patient_details: {:?}", bundle);
+        debug!("patient_details: {:#?}", bundle);
         return Ok(bundle);
     }
     if status == StatusCode::NOT_FOUND {

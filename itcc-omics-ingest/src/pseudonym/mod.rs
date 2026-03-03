@@ -29,6 +29,7 @@ pub async fn build_pseudo_map(
         debug!("Pseudo: {}", pseudo_id);
         let mut bundle = get_patient_by_id(&state, patient_id.as_str()).await?;
         bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
+        debug!("Bundle: {:#?}", bundle);
         beam::send_fhir_bundle(&state, bundle).await?;
     }
 
