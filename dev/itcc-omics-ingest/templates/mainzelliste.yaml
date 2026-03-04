@@ -54,8 +54,8 @@ spec:
               value: "0.0.0.0,::1,127.0.0.1,192.168.65.1,172.16.0.0/12"
           volumeMounts:
             - name: mainzelliste-config
-              mountPath: /etc/resources/mainzelliste.docker.conf
-              subPath: mainzelliste.docker.conf
+              mountPath: /etc/mainzelliste/mainzelliste.conf
+              subPath: mainzelliste.conf
             - name: symmetric-key
               mountPath: /etc/resources/keys/symmetric_key.der
               subPath: symmetric_key.der

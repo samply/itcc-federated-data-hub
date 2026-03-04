@@ -28,3 +28,11 @@ beam:
   port: 8081
   scheme: "http"
   clusterDomain: "cluster.local"
+
+blaze:
+  namespace: itcc-ingest
+  serviceName: blaze
+  port: 8080
+
+seed:
+  enabled: true
