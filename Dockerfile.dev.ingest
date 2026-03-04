@@ -9,6 +9,8 @@ FROM chef AS builder
 WORKDIR /app
 
 COPY --from=planner /app/recipe.json recipe.json
+COPY Cargo.toml Cargo.lock ./
+
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .

@@ -10,7 +10,7 @@ WORKDIR /app
 
 COPY --from=planner /app/recipe.json recipe.json
 COPY Cargo.toml Cargo.lock ./
-COPY crates/*/Cargo.toml crates/*/Cargo.toml
+
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
