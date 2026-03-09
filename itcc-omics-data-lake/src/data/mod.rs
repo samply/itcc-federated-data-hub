@@ -1,9 +1,9 @@
 use tokio::io::AsyncWriteExt;
-mod handler;
+pub mod handler;
 
 use crate::data::handler::{decompress_zstd_to_tempfile, maf_to_parquet};
+use itcc_omics_lib::beam::MetaData;
 use itcc_omics_lib::s3::{get_object, upload_to_s3_from_path};
-use itcc_omics_lib::MetaData;
 use std::path::{Path, PathBuf};
 use tempfile::{NamedTempFile, TempDir};
 use tokio::io::AsyncRead;

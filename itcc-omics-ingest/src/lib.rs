@@ -1,7 +1,6 @@
 pub mod beam;
 mod controllers;
-mod fhir;
-pub mod omics_data;
+pub mod data;
 pub mod pseudonym;
 #[cfg(test)]
 pub mod test;

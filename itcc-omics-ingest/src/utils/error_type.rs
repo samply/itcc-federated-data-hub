@@ -98,8 +98,9 @@ impl From<LibError> for ErrorType {
             LibError::FhirCheckError | LibError::MissingFullUrl | LibError::PatientIdMismatch => {
                 ErrorType::FhirCheckError
             }
-
             LibError::Other(_) => ErrorType::BlazeError,
+            LibError::BlazeError => ErrorType::BlazeError,
+            LibError::FhirPatientNotFound => ErrorType::FhirPatientNotFound,
         }
     }
 }

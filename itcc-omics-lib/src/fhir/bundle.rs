@@ -1,15 +1,28 @@
 use crate::error_type::LibError;
 use crate::fhir::resources::{Condition, Patient, Resource};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bundle {
+    #[serde(rename = "resourceType")]
     pub resourceType: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    #[serde(rename = "type")]
+
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub bundle_type: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub total: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub entry: Option<Vec<BundleEntry>>,
+
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 impl Bundle {
@@ -228,9 +241,13 @@ pub struct BundleEntry {
     pub fullUrl: Option<String>,
     pub resource: Resource,
     pub search: Option<SearchInfo>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchInfo {
     pub mode: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }

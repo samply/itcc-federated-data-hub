@@ -1,4 +1,4 @@
-use crate::omics_data::validator;
+use crate::data::validator;
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use csv::{ByteRecord, ReaderBuilder, WriterBuilder};

@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+
 use crate::error_type::LibError;
 use serde::{Deserialize, Serialize};
-
+use serde_json::Value;
+use std::collections::HashMap;
 // --------------------
 // Resource enum (mixed)
 // --------------------
@@ -38,7 +40,9 @@ impl Resource {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
     pub versionId: Option<String>,
-    pub lastUpdated: Option<String>, // keep as String; parse to DateTime if you prefer
+    pub lastUpdated: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,7 +53,7 @@ pub struct Identifier {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reference {
-    pub reference: Option<String>, // e.g. "Patient/abcde1"
+    pub reference: Option<String>,
 }
 
 impl Reference {
@@ -99,7 +103,9 @@ pub struct Patient {
     pub meta: Option<Meta>,
     pub id: Option<String>,
     pub identifier: Option<Vec<Identifier>>,
-    pub gender: Option<String>, // "Male" / "Female" / ...
+    pub gender: Option<String>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 // --------------------
@@ -115,6 +121,8 @@ pub struct Condition {
     pub extension: Option<Vec<Extension>>,
     pub code: Option<CodeableConcept>,
     pub subject: Option<Reference>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 impl Condition {
@@ -143,6 +151,8 @@ pub struct Observation {
 
     pub focus: Option<Vec<Reference>>,
     pub component: Option<Vec<ObservationComponent>>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -150,6 +160,8 @@ pub struct ObservationComponent {
     pub code: Option<CodeableConcept>,
     pub valueCodeableConcept: Option<CodeableConcept>,
     pub valueQuantity: Option<Quantity>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }
 
 // --------------------
@@ -167,4 +179,6 @@ pub struct Specimen {
     pub extension: Option<Vec<Extension>>,
     pub identifier: Option<Vec<Identifier>>,
     pub subject: Option<Reference>,
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }

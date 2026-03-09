@@ -1,13 +1,15 @@
 use beam_lib::reqwest::Url;
 use beam_lib::AppId;
 use clap::Parser;
-use itcc_omics_lib::*;
+use itcc_omics_lib::beam::parse_beam_id;
 
 #[derive(Debug, Parser, Clone)]
 pub struct Config {
     /// Url of the local beam proxy which is required to have sockets enabled
     #[clap(env, long, default_value = "http://beam-proxy:8081")]
     pub beam_url: Url,
+    #[clap(env, long, default_value = "http://blaze:8080/fhir/")]
+    pub blaze_url: Url,
     /// Beam api key
     #[clap(env, long)]
     pub beam_secret: String,

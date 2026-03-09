@@ -1,8 +1,7 @@
-use crate::CONFIG_INGEST;
 use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::{AppId, BeamClient};
 use clap::Parser;
-use itcc_omics_lib::parse_beam_id;
+use itcc_omics_lib::beam::parse_beam_id;
 use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 

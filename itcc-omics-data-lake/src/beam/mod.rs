@@ -1,16 +1,16 @@
+use crate::data::handler::handle_fhir_bundle;
 use crate::data::{process_maf_object_to_parquet, save_files_s3};
 use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
 use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
 use futures::future::join_all;
+use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
 use itcc_omics_lib::fhir::bundle::Bundle;
 use itcc_omics_lib::fhir::IngestTask;
-use itcc_omics_lib::s3::client::s3_client;
+use itcc_omics_lib::s3::client::{s3_client, CLIENT};
 use itcc_omics_lib::s3::{upload_to_s3_form_bytes, upload_to_s3_from_path};
-use itcc_omics_lib::{Ack, FileMeta, MafTask, MetaData};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use tempfile::NamedTempFile;
 use tokio::io::AsyncRead;
 use tracing::{debug, error, info, warn};
 
@@ -113,7 +113,9 @@ async fn beam_save_generate(
 
 async fn handle_one(t: IngestTask) -> Ack {
     match t {
-        IngestTask::Fhir { bundle } => handle_fhir_bundle(bundle).await,
+        IngestTask::Fhir { bundle } => {
+            handle_fhir_bundle(&CLIENT, &DATALAKE_CONFIG.blaze_url, bundle).await
+        }
         IngestTask::Maf(maf) => handle_maf(maf).await,
     }
 }
@@ -173,24 +175,4 @@ async fn handle_task(task: TaskRequest<Vec<IngestTask>>) {
     if let Err(e) = put {
         warn!("Failed to respond to task: {e}");
     }
-}
-
-async fn handle_fhir_bundle(_bundle: Bundle) -> Ack {
-    // store to blaze
-    debug!("Received Bundle Task");
-    debug!("Beam: {:#?}", _bundle);
-    Ack {
-        ok: true,
-        message: None,
-    }
-}
-
-async fn print_file(
-    socket_task: SocketTask,
-    mut incoming: impl AsyncRead + Unpin,
-) -> anyhow::Result<()> {
-    info!("Incoming file from {}", socket_task.from);
-    tokio::io::copy(&mut incoming, &mut tokio::io::stdout()).await?;
-    info!("Done printing file from {}", socket_task.from);
-    Ok(())
 }

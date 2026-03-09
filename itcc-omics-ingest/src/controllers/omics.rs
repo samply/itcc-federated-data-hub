@@ -1,16 +1,14 @@
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
-use crate::fhir::handler::get_patient_by_id;
-use crate::omics_data::compression::compress_zstd;
-use crate::omics_data::transfer::{filter_patient_id, read_validate_scan, sanitize_maf_bytes};
+use crate::data::compression::compress_zstd;
+use crate::data::transfer::{read_validate_scan, sanitize_maf_bytes};
 use crate::pseudonym::build_pseudo_map;
-use crate::utils::error_type::ErrorType::BeamError;
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, http::HeaderMap, routing::post, Router};
-use itcc_omics_lib::MetaData;
+use itcc_omics_lib::beam::MetaData;
 use tracing::{error, info};
 
 pub fn routers() -> Router<AppState> {
