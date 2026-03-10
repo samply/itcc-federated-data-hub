@@ -10,16 +10,16 @@ use tracing::{debug, info};
 pub async fn upload_to_s3_from_path(
     client_s3: &Client,
     bucket: &str,
-    filename: &str,
+    s3_key: &str,
     path: impl AsRef<Path>,
-) -> Result<(), anyhow::Error> {
+) -> anyhow::Result<()> {
     debug!("[Beam] Saving file to s3...");
     debug!("creating bytestream from path");
     let body = ByteStream::from_path(&path).await?;
     client_s3
         .put_object()
         .bucket(bucket)
-        .key(filename)
+        .key(s3_key)
         .content_type("text/plain; charset=utf-8")
         .body(body)
         .send()
@@ -31,7 +31,7 @@ pub async fn upload_to_s3_from_path(
 pub async fn upload_to_s3_form_bytes(
     client_s3: &Client,
     bucket: &str,
-    filename: &str,
+    s3_key: &str,
     task_bytes: Vec<u8>,
 ) -> Result<(), anyhow::Error> {
     debug!("[Beam] Saving file to s3...");
@@ -39,7 +39,7 @@ pub async fn upload_to_s3_form_bytes(
     client_s3
         .put_object()
         .bucket(bucket)
-        .key(filename)
+        .key(s3_key)
         .content_type("text/plain; charset=utf-8")
         .body(body)
         .send()

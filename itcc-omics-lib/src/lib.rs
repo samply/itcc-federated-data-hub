@@ -5,3 +5,4 @@ pub mod error_type;
 pub mod fhir;
 #[cfg(feature = "s3")]
 pub mod s3;
+pub mod patient_id;

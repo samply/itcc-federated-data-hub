@@ -81,6 +81,7 @@ async fn check_blaze_pseudo() -> Result<(), ErrorType> {
     Ok(())
 }
 
+#[ignore = "Require blaze"]
 #[tokio::test]
 async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
     let app_state = test_app_state();
