@@ -2,6 +2,11 @@ use std::collections::HashSet;
 use tokio::io::AsyncWriteExt;
 pub mod handler;
 
+use crate::cbio_portal::data::{
+    ClinicalPatientData, ClinicalPatientRow, ClinicalSampleData, ClinicalSampleRow, Diagnosis,
+    PatientId, SampleId,
+};
+use crate::cbio_portal::{generate_cbio_portal_data_min, generate_cbio_portal_meta_min};
 use crate::data::handler::{decompress_zstd_to_tempfile, maf_to_parquet};
 use itcc_omics_lib::beam::MetaData;
 use itcc_omics_lib::s3::{get_object, upload_to_s3_from_path};
@@ -9,8 +14,6 @@ use std::path::{Path, PathBuf};
 use tempfile::{NamedTempFile, TempDir};
 use tokio::io::AsyncRead;
 use tracing::debug;
-use crate::cbio_portal::{generate_cbio_portal_data_min, generate_cbio_portal_meta_min};
-use crate::cbio_portal::data::{ClinicalPatientData, ClinicalPatientRow, ClinicalSampleData, ClinicalSampleRow, Diagnosis, PatientId, SampleId};
 
 pub async fn save_files_s3(
     client_s3: &aws_sdk_s3::Client,
@@ -37,7 +40,7 @@ pub async fn process_and_generate_data(
 ) -> anyhow::Result<()> {
     // working dir
     let work = TempDir::new()?;
-    let work_path: &Path  = work.path();
+    let work_path: &Path = work.path();
     let downloaded = get_object(s3_client, bucket, key).await?;
 
     let maf_path: PathBuf = if key.ends_with(".zst") || key.ends_with(".zstd") {
@@ -47,20 +50,27 @@ pub async fn process_and_generate_data(
     };
 
     let parquet_path = work_path.join("mutations.parquet");
-    let sample_ids: HashSet<SampleId   > = maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
+    let sample_ids: HashSet<SampleId> = maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
     let parquet_key = format!("{}/{}.parquet", meta_data.partner_id, meta_data.maf_id);
     upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path).await?;
 
     let (sample_rows, patient_rows) = build_minimal_cbio_rows(&sample_ids)?;
-    
-    generate_cbio_portal_data_min(s3_client, bucket, work_path, &patient_rows, &sample_rows, &meta_data).await?;
+
+    generate_cbio_portal_data_min(
+        s3_client,
+        bucket,
+        work_path,
+        &patient_rows,
+        &sample_rows,
+        &meta_data,
+    )
+    .await?;
     generate_cbio_portal_meta_min(s3_client, bucket, work_path, &meta_data).await?;
     Ok(())
 }
 pub fn build_minimal_cbio_rows(
     sample_ids: &HashSet<SampleId>,
 ) -> anyhow::Result<(ClinicalSampleData, ClinicalPatientData)> {
-
     let mut sample_rows = Vec::new();
     let mut patient_ids: HashSet<PatientId> = HashSet::new();
 
@@ -69,7 +79,7 @@ pub fn build_minimal_cbio_rows(
         patient_ids.insert(patient_id.clone());
 
         sample_rows.push(ClinicalSampleRow {
-             sample_id: sample_id.clone(),
+            sample_id: sample_id.clone(),
             patient_id,
         });
     }

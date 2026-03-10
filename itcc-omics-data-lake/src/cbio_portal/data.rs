@@ -1,8 +1,8 @@
-use std::fmt::{self, Display};
-use std::path::Path;
 use itcc_omics_lib::beam::MetaData;
 use itcc_omics_lib::patient_id::split_base;
 use itcc_omics_lib::s3::upload_to_s3_from_path;
+use std::fmt::{self, Display};
+use std::path::Path;
 // --------------------
 // shared
 // --------------------
@@ -42,7 +42,6 @@ impl PatientId {
     pub fn to_patient_id(&self) -> anyhow::Result<PatientId> {
         PatientId::new(split_base(self.as_str()))
     }
-
 }
 
 impl Display for PatientId {

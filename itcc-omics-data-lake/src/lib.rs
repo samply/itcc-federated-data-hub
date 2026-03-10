@@ -1,7 +1,7 @@
 pub mod beam;
+pub mod cbio_portal;
 pub mod data;
 pub mod utils;
-pub mod cbio_portal;
 
 use crate::beam::{run_socket_polling, run_task_polling};
 use crate::utils::config::Config;

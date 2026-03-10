@@ -121,4 +121,3 @@ pub fn sanitize_maf_bytes(
     info!("Matched params and pseudomisation completed");
     Ok(out)
 }
-

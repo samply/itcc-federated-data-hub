@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use crate::cbio_portal::data::SampleId;
 use anyhow::Context;
 use beam_lib::SocketTask;
 use itcc_omics_lib::beam::Ack;
@@ -8,12 +8,12 @@ use polars::prelude::{
     CsvParseOptions, CsvReadOptions, CsvReader, ParquetCompression, ParquetWriter, SerReader,
 };
 use reqwest::Url;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, Write};
 use tempfile::NamedTempFile;
 use tokio::io::AsyncRead;
 use tracing::{debug, info};
-use crate::cbio_portal::data::SampleId;
 
 pub fn maf_to_parquet(
     maf_path: &std::path::Path,
@@ -42,7 +42,7 @@ pub fn maf_to_parquet(
         .flatten()
         .map(SampleId::new)
         .collect::<anyhow::Result<_>>()?;
-    
+
     let mut out = File::create(parquet_path)?;
     ParquetWriter::new(&mut out)
         .with_compression(ParquetCompression::Zstd(None))

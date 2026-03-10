@@ -103,7 +103,7 @@ async fn beam_save_generate(
         suggested_name = %suggested_name,
         "[Beam] received file + metadata"
     );
-    let file_path = format!("{}/{}/{}", meta.partner_id ,meta.maf_id ,suggested_name);
+    let file_path = format!("{}/{}/{}", meta.partner_id, meta.maf_id, suggested_name);
     save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
     process_and_generate_data(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
     Ok(())

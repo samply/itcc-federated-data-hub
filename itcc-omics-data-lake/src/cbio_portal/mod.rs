@@ -1,9 +1,9 @@
 use crate::cbio_portal::data::CbioWritable as dataCbioWritable;
-use crate::cbio_portal::meta::CbioWritable as metaCbioWritable;
-use std::path::Path;
-use itcc_omics_lib::beam::MetaData;
 use crate::cbio_portal::data::{ClinicalPatientData, ClinicalSampleData};
+use crate::cbio_portal::meta::CbioWritable as metaCbioWritable;
 use crate::cbio_portal::meta::{MetaClinical, MetaMutation, MetaStudy};
+use itcc_omics_lib::beam::MetaData;
+use std::path::Path;
 
 pub mod data;
 pub mod meta;
@@ -20,12 +20,13 @@ pub async fn generate_cbio_portal_meta_min(
         description: "INFORM OA DATASET".to_string(),
         ..Default::default()
     }
-        .write_to_s3(
-            &path.join("meta_study.txt"),
-            s3_client,
-            bucket,
-            &format!("{cbio_portal_base}meta_study.txt"),    
-        ).await?;
+    .write_to_s3(
+        &path.join("meta_study.txt"),
+        s3_client,
+        bucket,
+        &format!("{cbio_portal_base}meta_study.txt"),
+    )
+    .await?;
 
     MetaClinical::patient("itcc")
         .write_to_s3(
@@ -33,15 +34,17 @@ pub async fn generate_cbio_portal_meta_min(
             s3_client,
             bucket,
             &format!("{cbio_portal_base}meta_clinical_patient.txt"),
-        ).await?;
+        )
+        .await?;
 
     MetaClinical::sample("itcc")
         .write_to_s3(
             &path.join("meta_clinical_sample.txt"),
             s3_client,
             bucket,
-        &format!("{cbio_portal_base}meta_clinical_sample.txt"),
-        ).await?;
+            &format!("{cbio_portal_base}meta_clinical_sample.txt"),
+        )
+        .await?;
 
     MetaMutation {
         data_filename: format!("{}.maf", meta_data.maf_id),
@@ -51,12 +54,13 @@ pub async fn generate_cbio_portal_meta_min(
         show_profile_in_analysis_tab: true,
         ..Default::default()
     }
-        .write_to_s3(
-            &path.join("meta_mutation.txt"),
-            s3_client,
-            bucket,
-            &format!("{cbio_portal_base}meta_mutation.txt"),
-        ).await?;
+    .write_to_s3(
+        &path.join("meta_mutation.txt"),
+        s3_client,
+        bucket,
+        &format!("{cbio_portal_base}meta_mutation.txt"),
+    )
+    .await?;
 
     Ok(())
 }

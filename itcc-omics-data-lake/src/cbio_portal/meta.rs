@@ -1,7 +1,7 @@
-use std::fmt::{self, Display};
-use std::path::Path;
 use itcc_omics_lib::beam::MetaData;
 use itcc_omics_lib::s3::upload_to_s3_from_path;
+use std::fmt::{self, Display};
+use std::path::Path;
 // --------------------
 // shared
 // --------------------
