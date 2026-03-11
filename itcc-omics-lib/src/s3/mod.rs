@@ -7,45 +7,60 @@ use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tracing::{debug, info};
 
+fn content_type_for_path(path: &Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("txt") | Some("tsv") | Some("maf") => "text/plain; charset=utf-8",
+        Some("json") => "application/json",
+        Some("parquet") => "application/octet-stream",
+        Some("zst") | Some("zstd") => "application/zstd",
+        _ => "application/octet-stream",
+    }
+}
+
+async fn upload_body_to_s3(
+    client_s3: &Client,
+    bucket: &str,
+    s3_key: &str,
+    body: ByteStream,
+    content_type: &'static str,
+) -> anyhow::Result<()> {
+    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(s3_key)
+        .content_type(content_type)
+        .body(body)
+        .send()
+        .await?;
+
+    info!("s3 {s3_key} saved");
+    Ok(())
+}
+
 pub async fn upload_to_s3_from_path(
     client_s3: &Client,
     bucket: &str,
     s3_key: &str,
     path: impl AsRef<Path>,
 ) -> anyhow::Result<()> {
-    debug!("[Beam] Saving file to s3...");
-    debug!("creating bytestream from path");
-    let body = ByteStream::from_path(&path).await?;
-    client_s3
-        .put_object()
-        .bucket(bucket)
-        .key(s3_key)
-        .content_type("text/plain; charset=utf-8")
-        .body(body)
-        .send()
-        .await?;
-    info!("s3 saved");
-    Ok(())
+    let path = path.as_ref();
+    let content_type = content_type_for_path(path);
+    let body = ByteStream::from_path(path).await?;
+
+    upload_body_to_s3(client_s3, bucket, s3_key, body, content_type).await
 }
 
-pub async fn upload_to_s3_form_bytes(
+pub async fn upload_to_s3_from_bytes(
     client_s3: &Client,
     bucket: &str,
     s3_key: &str,
-    task_bytes: Vec<u8>,
-) -> Result<(), anyhow::Error> {
-    debug!("[Beam] Saving file to s3...");
-    let body = ByteStream::from(task_bytes);
-    client_s3
-        .put_object()
-        .bucket(bucket)
-        .key(s3_key)
-        .content_type("text/plain; charset=utf-8")
-        .body(body)
-        .send()
-        .await?;
-    info!("s3 saved");
-    Ok(())
+    bytes: Vec<u8>,
+    content_type: &'static str,
+) -> anyhow::Result<()> {
+    let body = ByteStream::from(bytes);
+    upload_body_to_s3(client_s3, bucket, s3_key, body, content_type).await
 }
 
 pub async fn get_object(

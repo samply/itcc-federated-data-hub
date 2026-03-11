@@ -13,7 +13,7 @@ use itcc_omics_lib::s3::{get_object, upload_to_s3_from_path};
 use std::path::{Path, PathBuf};
 use tempfile::{NamedTempFile, TempDir};
 use tokio::io::AsyncRead;
-use tracing::debug;
+use tracing::{debug, info};
 
 pub async fn save_files_s3(
     client_s3: &aws_sdk_s3::Client,
@@ -42,18 +42,17 @@ pub async fn process_and_generate_data(
     let work = TempDir::new()?;
     let work_path: &Path = work.path();
     let downloaded = get_object(s3_client, bucket, key).await?;
-
+    info!("downloaded maf");
     let maf_path: PathBuf = if key.ends_with(".zst") || key.ends_with(".zstd") {
         decompress_zstd_to_tempfile(&downloaded)?
     } else {
         downloaded
     };
-
-    let parquet_path = work_path.join("mutations.parquet");
+    let parquet_path = work_path.join("mutation.parquet");
     let sample_ids: HashSet<SampleId> = maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
     let parquet_key = format!("{}/{}.parquet", meta_data.partner_id, meta_data.maf_id);
     upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path).await?;
-
+    info!("uploading parquet to s3://{bucket}/{parquet_key}");
     let (sample_rows, patient_rows) = build_minimal_cbio_rows(&sample_ids)?;
 
     generate_cbio_portal_data_min(

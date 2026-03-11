@@ -15,6 +15,7 @@ pub async fn build_pseudo_map(
     app_state: &AppState,
     sample_ids: HashSet<String>,
 ) -> Result<HashMap<String, String>, ErrorType> {
+    // Mainzelliste
     let patients_id = filter_patient_id(&sample_ids);
     let session_id = create_session(&app_state).await?;
     let token: CreateTokenResp = create_token(&app_state, &session_id, patients_id.len()).await?;

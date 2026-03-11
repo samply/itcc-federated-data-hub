@@ -23,10 +23,7 @@ async fn upload_handler(
     headers: HeaderMap,
     body: axum::body::Bytes,
 ) -> Response {
-    let header_name = headers
-        .get("x-filename")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("omics_payload.bin");
+    let file_sha = maf_key_from_bytes(body.as_ref());
 
     let res = match read_validate_scan(&body, &state).await {
         Ok(v) => v,
@@ -48,10 +45,10 @@ async fn upload_handler(
         Err(e) => return e.into_response(),
     };
     let compressed = bytes::Bytes::from(compressed_vec.clone());
-    let file_sha = maf_key_from_bytes(&psy_res);
-    let filename = format!("{file_sha}.maf.zstd");
+    let pseudo_file_sha = maf_key_from_bytes(&psy_res);
+    let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
-        maf_id: file_sha.clone(),
+        maf_id: pseudo_file_sha.clone(),
         partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
@@ -61,9 +58,8 @@ async fn upload_handler(
         return e.into_response();
     }
 
-    (
-        StatusCode::CREATED,
-        format!("stored_as: {file_sha}.maf.zstd"),
-    )
+
+    (StatusCode::CREATED, format!("stored DHW as: {pseudo_file_sha}, (Optional)file sha256(provided maf file): {file_sha}"))
         .into_response()
+    
 }
