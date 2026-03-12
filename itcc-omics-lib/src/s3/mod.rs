@@ -17,28 +17,6 @@ fn content_type_for_path(path: &Path) -> &'static str {
     }
 }
 
-async fn upload_body_to_s3(
-    client_s3: &Client,
-    bucket: &str,
-    s3_key: &str,
-    body: ByteStream,
-    content_type: &'static str,
-) -> anyhow::Result<()> {
-    debug!("uploading to s3 key={s3_key} content_type={content_type}");
-
-    client_s3
-        .put_object()
-        .bucket(bucket)
-        .key(s3_key)
-        .content_type(content_type)
-        .body(body)
-        .send()
-        .await?;
-
-    info!("s3 {s3_key} saved");
-    Ok(())
-}
-
 pub async fn upload_to_s3_from_path(
     client_s3: &Client,
     bucket: &str,
@@ -47,11 +25,26 @@ pub async fn upload_to_s3_from_path(
 ) -> anyhow::Result<()> {
     let path = path.as_ref();
     let content_type = content_type_for_path(path);
-    let body = ByteStream::from_path(path).await?;
 
-    upload_body_to_s3(client_s3, bucket, s3_key, body, content_type).await
+    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+
+    let bytes = tokio::fs::read(path).await?;
+    let len = bytes.len() as i64;
+    let body = ByteStream::from(bytes);
+
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(s3_key)
+        .content_type(content_type)
+        .content_length(len)
+        .body(body)
+        .send()
+        .await?;
+
+    info!("s3 {s3_key} saved");
+    Ok(())
 }
-
 pub async fn upload_to_s3_from_bytes(
     client_s3: &Client,
     bucket: &str,
@@ -59,8 +52,23 @@ pub async fn upload_to_s3_from_bytes(
     bytes: Vec<u8>,
     content_type: &'static str,
 ) -> anyhow::Result<()> {
+    let len = bytes.len() as i64;
     let body = ByteStream::from(bytes);
-    upload_body_to_s3(client_s3, bucket, s3_key, body, content_type).await
+
+    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(s3_key)
+        .content_type(content_type)
+        .content_length(len)
+        .body(body)
+        .send()
+        .await?;
+
+    info!("s3 {s3_key} saved");
+    Ok(())
 }
 
 pub async fn get_object(

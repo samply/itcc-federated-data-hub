@@ -58,8 +58,6 @@ async fn upload_handler(
         return e.into_response();
     }
 
-
     (StatusCode::CREATED, format!("stored DHW as: {pseudo_file_sha}, (Optional)file sha256(provided maf file): {file_sha}"))
         .into_response()
-    
 }

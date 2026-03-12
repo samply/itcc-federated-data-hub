@@ -2,7 +2,7 @@ use crate::error_type::LibError;
 use crate::fhir::bundle::Bundle;
 use crate::fhir::resources::Resource;
 use reqwest::{StatusCode, Url};
-use tracing::debug;
+use tracing::{debug, error};
 
 pub async fn get_patient_by_id(
     client: &reqwest::Client,
@@ -26,7 +26,6 @@ pub async fn get_patient_by_id(
             .json::<Bundle>()
             .await
             .map_err(|_| LibError::BlazeError)?;
-        debug!("patient_details: {:#?}", bundle);
         return Ok(bundle);
     }
     if status == StatusCode::NOT_FOUND {
@@ -45,7 +44,6 @@ pub async fn pseudomize_patient_by_id(
     let patient_url = blaze_url
         .join(&format!("Patient/{}/$everything", patient_id))
         .expect("blaze url should be present");
-    debug!("pseudomize_patient_details: {:?}", patient_url);
     let mut bundle: Bundle = client
         .get(patient_url)
         .send()
@@ -56,7 +54,6 @@ pub async fn pseudomize_patient_by_id(
         .json::<Bundle>()
         .await
         .map_err(|_| LibError::BlazeError)?;
-    debug!("patient_details: {:?}", bundle);
     bundle.rename_patient_id_everywhere(patient_id, pseudonym);
     Ok(bundle)
 }
@@ -89,7 +86,6 @@ pub async fn post_patient_fhir_bundle(
     blaze_url: &Url,
     bundle: &Bundle,
 ) -> Result<(), LibError> {
-    debug!("PatientUrl: {:#?}", bundle);
     let resp = client
         .post(blaze_url.clone())
         .header("Content-Type", "application/fhir+json")
@@ -98,20 +94,20 @@ pub async fn post_patient_fhir_bundle(
         .await
         .map_err(|_| LibError::BlazeError)?;
     let status = &resp.status();
-    debug!("patient_details: {:#?}", status);
 
     if status.is_success() {
-        let bundle = resp
+        let res = resp
             .json::<Bundle>()
             .await
             .map_err(|_| LibError::BlazeError)?;
-        debug!("patient_details: {:#?}", bundle);
+        debug!("Post to blaze {:?}", res);
         return Ok(());
     }
     if status == &StatusCode::NOT_FOUND {
+        error!("Post to blaze {:?}", &resp);
         return Err(LibError::FhirPatientNotFound);
     } else {
+        error!("Post to blaze {:?}", &resp);
         return Err(LibError::BlazeError);
     }
-    Ok(())
 }

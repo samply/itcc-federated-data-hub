@@ -1,4 +1,3 @@
-use itcc_omics_lib::beam::MetaData;
 use itcc_omics_lib::patient_id::split_base;
 use itcc_omics_lib::s3::upload_to_s3_from_path;
 use std::fmt::{self, Display};

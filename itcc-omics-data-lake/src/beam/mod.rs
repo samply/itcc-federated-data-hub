@@ -7,7 +7,7 @@ use futures::future::join_all;
 use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
 use itcc_omics_lib::fhir::IngestTask;
 use itcc_omics_lib::s3::client::{s3_client, CLIENT};
-use itcc_omics_lib::s3::{upload_to_s3_from_bytes};
+use itcc_omics_lib::s3::upload_to_s3_from_bytes;
 use std::time::Duration;
 use tokio::io::AsyncRead;
 use tracing::{debug, error, info, warn};
@@ -72,7 +72,7 @@ pub async fn run_task_polling() -> anyhow::Result<()> {
 
 async fn beam_save_generate(
     socket_task: SocketTask,
-    mut incoming: impl AsyncRead + Unpin,
+    incoming: impl AsyncRead + Unpin,
 ) -> anyhow::Result<()> {
     let s3_client: &aws_sdk_s3::Client = s3_client().await;
     let _from = socket_task
@@ -132,11 +132,15 @@ async fn handle_maf(task: MafTask) -> Ack {
         &DATALAKE_CONFIG.s3_bucket,
         &s3_key,
         task.bytes_b64,
-        "application/zstd"
+        "application/zstd",
     )
-        .await {
+    .await
+    {
         Ok(_) => {
-            if let Err(e) = process_and_generate_data(s3_client, &DATALAKE_CONFIG.s3_bucket, &s3_key, task.meta).await {
+            if let Err(e) =
+                process_and_generate_data(s3_client, &DATALAKE_CONFIG.s3_bucket, &s3_key, task.meta)
+                    .await
+            {
                 return Ack {
                     ok: false,
                     message: Some(e.to_string()),
@@ -146,16 +150,14 @@ async fn handle_maf(task: MafTask) -> Ack {
                 ok: true,
                 message: None,
             }
-        },
-        Err(e) => {
-            Ack {
-                ok: false,
-                message: Some(e.to_string()),
-            }
         }
+        Err(e) => Ack {
+            ok: false,
+            message: Some(e.to_string()),
+        },
     }
 }
-    
+
 async fn handle_task(task: TaskRequest<Vec<IngestTask>>) {
     let from = task.from.clone();
 

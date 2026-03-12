@@ -91,7 +91,6 @@ async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
         bundle_type: Some("transaction".to_string()),
         total: None,
         entry: Some(vec![]),
-        extra: HashMap::new(),
     };
     let res =
         post_patient_fhir_bundle(&app_state.http, &app_state.services.blaze_url, &bundle).await?;

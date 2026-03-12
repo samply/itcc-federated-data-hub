@@ -20,9 +20,6 @@ pub struct Bundle {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entry: Option<Vec<BundleEntry>>,
-
-    #[serde(flatten)]
-    pub extra: HashMap<String, Value>,
 }
 
 impl Bundle {
@@ -112,16 +109,28 @@ impl Bundle {
         let from_ref = format!("Patient/{}", old_id);
         let to_ref = format!("Patient/{}", new_id);
 
-        self.rewrite_all_references(&from_ref, &to_ref);
+        self.rewrite_all_references(&from_ref.as_str(), &to_ref.as_str());
 
         if let Some(entries) = self.entry.as_mut() {
             for entry in entries {
+                entry.search = None;
                 if let Resource::Patient(p) = &mut entry.resource {
                     if p.id.as_deref() == Some(old_id) {
                         p.id = Some(new_id.to_string());
                     } else {
                         Err(LibError::FhirCheckError)?;
                     }
+
+                    if let Some(meta) = &mut p.meta {
+                        meta.versionId = None;
+                        meta.lastUpdated = None;
+                    }
+
+                    entry.request = Some(BundleRequest {
+                        method: "PUT".to_string(),
+                        url: format!("Patient/{}", new_id),
+                    });
+
                     if let Some(full) = entry.fullUrl.as_mut() {
                         *full = full.replace(
                             &format!("/Patient/{}", old_id),
@@ -133,6 +142,10 @@ impl Bundle {
                 }
             }
         }
+        // Importent to allow storing in DWH blaze
+        self.id = None;
+        self.total = None;
+        self.bundle_type = Some("transaction".to_string());
         Ok(())
     }
 
@@ -238,16 +251,25 @@ impl Bundle {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BundleEntry {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fullUrl: Option<String>,
+
     pub resource: Resource,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub search: Option<SearchInfo>,
-    #[serde(flatten)]
-    pub extra: HashMap<String, Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request: Option<BundleRequest>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleRequest {
+    pub method: String,
+    pub url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchInfo {
     pub mode: Option<String>,
-    #[serde(flatten)]
-    pub extra: HashMap<String, Value>,
 }

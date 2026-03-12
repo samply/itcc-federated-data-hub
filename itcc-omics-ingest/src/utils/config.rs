@@ -3,7 +3,6 @@ use beam_lib::{AppId, BeamClient};
 use clap::Parser;
 use itcc_omics_lib::beam::parse_beam_id;
 use reqwest::{Client, Url};
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
 pub struct AppState {

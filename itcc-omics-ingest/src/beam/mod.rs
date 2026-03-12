@@ -6,7 +6,6 @@ use beam_lib::{BlockingOptions, MsgId, TaskRequest};
 use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
 use itcc_omics_lib::fhir::bundle::Bundle;
 use itcc_omics_lib::fhir::IngestTask;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
 use tracing::{error, info};
