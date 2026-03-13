@@ -39,18 +39,24 @@ impl Resource {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
+    #[serde(rename = "versionId", skip_serializing_if = "Option::is_none")]
     pub versionId: Option<String>,
+
+    #[serde(rename = "lastUpdated", skip_serializing_if = "Option::is_none")]
     pub lastUpdated: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Identifier {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reference {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
 }
 
@@ -64,31 +70,40 @@ impl Reference {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Coding {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CodeableConcept {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub coding: Option<Vec<Coding>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Age {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Quantity {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Extension {
     pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valueReference: Option<Reference>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valueAge: Option<Age>,
 }
 
@@ -98,9 +113,13 @@ pub struct Extension {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Patient {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Meta>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub identifier: Option<Vec<Identifier>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub gender: Option<String>,
 }
 
@@ -110,12 +129,17 @@ pub struct Patient {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Condition {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Meta>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub onsetAge: Option<OnsetAge>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub extension: Option<Vec<Extension>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<CodeableConcept>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<Reference>,
 }
 
@@ -127,6 +151,7 @@ impl Condition {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OnsetAge {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
 }
 
@@ -136,21 +161,29 @@ pub struct OnsetAge {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Observation {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Meta>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<CodeableConcept>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valueCodeableConcept: Option<CodeableConcept>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<Reference>,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub focus: Option<Vec<Reference>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub component: Option<Vec<ObservationComponent>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ObservationComponent {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<CodeableConcept>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valueCodeableConcept: Option<CodeableConcept>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valueQuantity: Option<Quantity>,
 }
 
@@ -160,13 +193,17 @@ pub struct ObservationComponent {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Specimen {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<Meta>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub specimen_type: Option<CodeableConcept>,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub extension: Option<Vec<Extension>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub identifier: Option<Vec<Identifier>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<Reference>,
 }

@@ -26,8 +26,8 @@ pub struct Services {
     pub enable_sockets: bool,
 }
 
-impl From<&Config> for AppState {
-    fn from(c: &Config) -> Self {
+impl From<&IngestConfig> for AppState {
+    fn from(c: &IngestConfig) -> Self {
         let http = Client::builder()
             .timeout(std::time::Duration::from_secs(10))
             .build()
@@ -55,7 +55,7 @@ impl From<&Config> for AppState {
 }
 
 #[derive(Debug, Parser, Clone)]
-pub struct Config {
+pub struct IngestConfig {
     #[clap(long, env)]
     pub api_key: String,
     /// Url of the local beam proxy which is required to have sockets enabled

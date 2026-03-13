@@ -47,6 +47,10 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .port }}
             {{- end }}
+{{- with .Values.beamProxy.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: garage-config
               mountPath: /etc/garage.toml

@@ -114,31 +114,84 @@ impl Bundle {
         if let Some(entries) = self.entry.as_mut() {
             for entry in entries {
                 entry.search = None;
-                if let Resource::Patient(p) = &mut entry.resource {
-                    if p.id.as_deref() == Some(old_id) {
-                        p.id = Some(new_id.to_string());
-                    } else {
-                        Err(LibError::FhirCheckError)?;
+                match &mut entry.resource {
+                    Resource::Patient(p) => {
+                        p.meta = None;
+                        if p.id.as_deref() == Some(old_id) {
+                            p.id = Some(new_id.to_string());
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
+
+                        if let Some(meta) = &mut p.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+
+                        entry.request = Some(BundleRequest {
+                            method: "PUT".to_string(),
+                            url: format!("Patient/{}", new_id),
+                        });
+
+                        if let Some(full) = entry.fullUrl.as_mut() {
+                            *full = full.replace(
+                                &format!("/Patient/{}", old_id),
+                                &format!("/Patient/{}", new_id),
+                            );
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
                     }
 
-                    if let Some(meta) = &mut p.meta {
-                        meta.versionId = None;
-                        meta.lastUpdated = None;
+                    Resource::Condition(c) => {
+                        c.meta = None;
+                        if let Some(meta) = &mut c.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = c.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Condition/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
                     }
 
-                    entry.request = Some(BundleRequest {
-                        method: "PUT".to_string(),
-                        url: format!("Patient/{}", new_id),
-                    });
-
-                    if let Some(full) = entry.fullUrl.as_mut() {
-                        *full = full.replace(
-                            &format!("/Patient/{}", old_id),
-                            &format!("/Patient/{}", new_id),
-                        );
-                    } else {
-                        Err(LibError::FhirCheckError)?;
+                    Resource::Observation(o) => {
+                        o.meta = None;
+                        if let Some(meta) = &mut o.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = o.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Observation/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
                     }
+
+                    Resource::Specimen(s) => {
+                        s.meta = None;
+                        if let Some(meta) = &mut s.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = s.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Specimen/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
+                    }
+
+                    Resource::Unknown => {}
                 }
             }
         }

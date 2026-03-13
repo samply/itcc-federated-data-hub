@@ -17,6 +17,10 @@ spec:
         - name: omics-data-lake
           image: {{ .Values.omics.image | quote }}
           imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
+{{- with .Values.beamProxy.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           env:
             - name: BEAM_ID
               value: {{ .Values.omics.beamId | quote }}

@@ -2,17 +2,17 @@ mod blaze;
 mod pseudonym;
 pub mod transfer;
 
-use crate::utils::config::{AppState, Config};
+use crate::utils::config::{AppState, IngestConfig};
 use beam_lib::reqwest::Url;
 use beam_lib::AppId;
 use reqwest::Client;
 
-fn test_config() -> Config {
+fn test_config() -> IngestConfig {
     let _ = tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .with_test_writer()
         .try_init();
-    Config {
+    IngestConfig {
         api_key: "omics".to_string(),
         beam_url: Url::parse("http://beam-proxy:8081").unwrap(),
         partner_id: "itcc-inform".to_string(),

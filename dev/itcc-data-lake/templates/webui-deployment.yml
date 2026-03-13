@@ -18,6 +18,10 @@ spec:
           image: {{ .Values.webui.image | quote }}
           ports:
             - containerPort: {{ .Values.webui.port }}
+{{- with .Values.beamProxy.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           env:
             - name: API_BASE_URL
               value: "http://garage:{{ .Values.garage.adminPort }}"

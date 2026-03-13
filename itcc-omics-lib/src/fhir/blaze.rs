@@ -42,7 +42,10 @@ pub async fn pseudomize_patient_by_id(
     pseudonym: &str,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
-        .join(&format!("Patient/{}/$everything", patient_id))
+        .join(&format!(
+            "Patient?_id={}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject",
+            patient_id
+        ).as_str())
         .expect("blaze url should be present");
     let mut bundle: Bundle = client
         .get(patient_url)
@@ -54,7 +57,10 @@ pub async fn pseudomize_patient_by_id(
         .json::<Bundle>()
         .await
         .map_err(|_| LibError::BlazeError)?;
-    bundle.rename_patient_id_everywhere(patient_id, pseudonym);
+    if !bundle.contains_patient_id(patient_id) {
+        return Err(LibError::FhirCheckError);
+    }
+    bundle.rename_patient_id_everywhere(patient_id, pseudonym)?;
     Ok(bundle)
 }
 
@@ -103,11 +109,15 @@ pub async fn post_patient_fhir_bundle(
         debug!("Post to blaze {:?}", res);
         return Ok(());
     }
+    let body = resp
+        .text()
+        .await
+        .unwrap_or_else(|_| "could not read body".to_string());
     if status == &StatusCode::NOT_FOUND {
-        error!("Post to blaze {:?}", &resp);
-        return Err(LibError::FhirPatientNotFound);
+        error!("Post to blaze {:?}", body);
+        Err(LibError::FhirPatientNotFound)
     } else {
-        error!("Post to blaze {:?}", &resp);
-        return Err(LibError::BlazeError);
+        error!("Post to blaze {:?}", body);
+        Err(LibError::BlazeError)
     }
 }

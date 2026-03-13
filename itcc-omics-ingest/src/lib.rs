@@ -8,11 +8,10 @@ pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
-use crate::utils::config::Config as IngestConfig;
+use crate::utils::config::IngestConfig;
 use crate::utils::config::{AppState, Services};
 use axum::middleware::from_fn_with_state;
 use axum::Router;
-use beam_lib::BeamClient;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
@@ -20,13 +19,6 @@ use tokio::net::TcpListener;
 use tracing::info;
 
 pub static CONFIG_INGEST: Lazy<IngestConfig> = Lazy::new(<IngestConfig as clap::Parser>::parse);
-pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
-    BeamClient::new(
-        &CONFIG_INGEST.beam_id,
-        &CONFIG_INGEST.beam_secret,
-        CONFIG_INGEST.beam_url.clone(),
-    )
-});
 pub async fn run_with_config() {
     let state = AppState::from(&*CONFIG_INGEST);
 

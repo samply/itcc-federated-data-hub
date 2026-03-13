@@ -19,6 +19,10 @@ spec:
           image: {{ .Values.beamProxy.image | quote }}
           ports:
             - containerPort: {{ .Values.beamProxy.port }}
+          {{- with .Values.beamProxy.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           env:
             - name: BROKER_URL
               value: {{ .Values.beamProxy.brokerUrl | quote }}
