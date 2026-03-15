@@ -13,6 +13,8 @@ spec:
       labels:
         app: omics-data-lake
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: omics-data-lake
           image: {{ .Values.omics.image | quote }}
