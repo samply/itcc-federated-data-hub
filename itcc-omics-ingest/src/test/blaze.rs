@@ -1,7 +1,11 @@
-use crate::fhir::handler::{filter_patient_id_from_bundle, get_patient_by_id};
 use crate::test::{test_app_state, test_config};
 use crate::utils::error_type::ErrorType;
+use itcc_omics_lib::fhir::blaze::{
+    filter_patient_id_from_bundle, get_patient_by_id, post_patient_fhir_bundle,
+};
+use itcc_omics_lib::fhir::bundle::Bundle;
 use reqwest::Client;
+use std::collections::HashMap;
 use tracing::debug;
 
 #[ignore = "Require blaze"]
@@ -26,7 +30,7 @@ async fn check_blaze() -> Result<(), reqwest::Error> {
 async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let id = "patient-001";
-    let res = get_patient_by_id(&app_state, id).await?;
+    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, id).await?;
     //debug!("{:#?}", res);
     Ok(())
 }
@@ -36,7 +40,7 @@ async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
 async fn check_blaze_patient_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let id = "patient-001";
-    let res = get_patient_by_id(&app_state, id).await?;
+    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, id).await?;
     //debug!("{:#?}", res);
     filter_patient_id_from_bundle(res).await?;
     Ok(())
@@ -48,7 +52,8 @@ async fn test_blaze_pseudo() -> Result<(), ErrorType> {
     let patient_id = "patient-001";
     let pseudonym = "test-000";
     let app_state = test_app_state();
-    let mut bundle = get_patient_by_id(&app_state, patient_id).await?;
+    let mut bundle =
+        get_patient_by_id(&app_state.http, &app_state.services.blaze_url, patient_id).await?;
     bundle.rename_patient_id_everywhere(patient_id, pseudonym);
     debug!("{:#?}", bundle);
     assert!(bundle.patient_info().unwrap().0 == "test-000");
@@ -59,7 +64,12 @@ async fn test_blaze_pseudo() -> Result<(), ErrorType> {
 #[tokio::test]
 async fn check_blaze_pseudo() -> Result<(), ErrorType> {
     let app_state = test_app_state();
-    let mut bundle = get_patient_by_id(&app_state, "patient-001").await?;
+    let mut bundle = get_patient_by_id(
+        &app_state.http,
+        &app_state.services.blaze_url,
+        "patient-001",
+    )
+    .await?;
 
     bundle.rename_patient_id_everywhere("patient-001", "test-000");
 
@@ -68,5 +78,22 @@ async fn check_blaze_pseudo() -> Result<(), ErrorType> {
         "SECURITY ERROR: Original patient ID still present in bundle!"
     );
 
+    Ok(())
+}
+
+#[ignore = "Require blaze"]
+#[tokio::test]
+async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
+    let app_state = test_app_state();
+    let bundle = Bundle {
+        resourceType: "Bundle".to_string(),
+        id: None,
+        bundle_type: Some("transaction".to_string()),
+        total: None,
+        entry: Some(vec![]),
+    };
+    let res =
+        post_patient_fhir_bundle(&app_state.http, &app_state.services.blaze_url, &bundle).await?;
+    //debug!("{:#?}", res);
     Ok(())
 }

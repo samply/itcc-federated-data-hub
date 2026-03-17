@@ -1,0 +1,53 @@
+garage:
+  image: dxflrs/garage:v2.1.0
+  s3Port: 3900
+  adminPort: 3903
+  extraPorts:
+    - name: admin3901
+      port: 3901
+    - name: rpc3902
+      port: 3902
+  storage:
+    metaSize: 10Gi
+    dataSize: 200Gi
+  garageToml: |
+    # PASTE YOUR garage.toml HERE
+
+webui:
+  image: khairul169/garage-webui:latest
+  port: 3909
+
+beamProxy:
+  image: samply/beam-proxy:develop
+  port: 8081
+  brokerUrl: "https://test-no-real-data.broker.samply.de"
+  proxyId: "itcc-dwh.test-no-real-data.broker.samply.de"
+  allProxy: ""   # set if needed, e.g. http://forward-proxy:3128
+  appKeyName: "APP_itcc-data-lake_KEY"
+
+omics:
+  image: samply/itcc-omics-data-warehouse
+  beamId: "itcc-dwh.itcc-dwh.test-no-real-data.broker.samply.de"
+  beamUrl: "http://beam-proxy:8081"
+  s3:
+    region: garage
+    endpointUrl: "http://garage:3900"
+    bucket: omics
+  rustLog: info
+  storageSize: 50Gi
+
+secrets:
+  # You can set these via helm --set / --set-file in real deployments
+  s3AccessKeyId: "REPLACE"
+  s3SecretAccessKey: "REPLACE"
+  beamSecret: "REPLACE"
+  proxyPem: |
+    -----BEGIN PRIVATE KEY-----
+    REPLACE
+    -----END PRIVATE KEY-----
+
+config:
+  rootCrtPem: |
+    -----BEGIN CERTIFICATE-----
+    REPLACE
+    -----END CERTIFICATE-----

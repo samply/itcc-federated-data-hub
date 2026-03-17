@@ -1,4 +1,4 @@
-# Genomics Data Lake – Bridgehead Architecture
+# Genomics Data Warehouse – Bridgehead Architecture
 
 This repository documents and implements a secure, federated genomics data ingestion pipeline based on FHIR, pseudonymisation, and a central data lake.
 
@@ -36,12 +36,12 @@ Transfers:
 - metadata sidecars
 - No interpretation of data, transport only
 
-## Central Bridgehead / Data Lake
+## Central Bridgehead / Data Warehouse
 ### Clinical Data
 - FHIR Blaze (Central)
 - Stores pseudonymised FHIR resources
 - Acts as the canonical clinical/genomic API
-### Data Lake Genomic Data
+### Data warehouse Genomic Data
 - Raw Zone
 - Immutable storage of received payloads
 - Full auditability and replay capability
@@ -53,7 +53,6 @@ Iceberg tables for:
 - Optimised for analytics and large-scale queries
 Exporter / APIs Generate:
 - cBioPortal import packages (MAF + meta files)
-- Beacon-compatible projections
 - Analytics datasets
 
 # Why This Architecture?
@@ -91,7 +90,7 @@ Exporter / APIs Generate:
 | Partner ingest | MAF                    | genomic exchange         |
 | Transfer Beam  | FHIR Bundle / MAF file | Secure transport         |
 | Blaze FHIR     | Immutable files        | FHIR Data store          |
-| Data Lake      | Parquet + Iceberg      | Analytics & querying     |
+| Data warehouse | Parquet + Iceberg      | Analytics & querying     |
 | Export         | MAF + meta files       | cBioPortal compatibility |
 
 ## Architects working with:
@@ -151,8 +150,8 @@ To simplify this example, we use the same ApiKey `App1Secret` for both apps. Als
 
 ## Build and run the ingest service
 ```bash
-docker compose -f dev/sender-compose.yaml build
-docker compose -f dev/sender-compose.yaml up
+docker compose -f dev/ingest-compose.yaml build
+docker compose -f dev/ingest-compose.yaml up
 ```
 The ingest service will be available at:
 ```bash
@@ -164,14 +163,14 @@ Endpoints
   - Body: raw bytes (any file)
   - Optional header: `X-Filename`
 
-## Build and run the data lake (receiver)
+## Build and run the data-warehouse (receiver)
 ```bash
-docker compose -f dev/receiver-compose.yaml build
-docker compose -f dev/receiver-compose.yaml up
+docker compose -f dev/dwh-compose.yaml build
+docker compose -f dev/dwh-compose.yaml up
 ```
 - [development setup](dev)
-- [development omics ingest](dev/sender-compose.yaml)
-- [development data lake](dev/reciever-compose.yaml)
+- [development omics ingest](dev/ingest-compose.yaml)
+- [development Data Warehouse](dev/dwh-compose.yaml)
 
 Notes:
 - Docker builds must use the workspace root as the build context
@@ -180,6 +179,6 @@ Notes:
 
 Stop services:
 ```bash
-docker compose -f dev/sender-compose.yaml down
-docker compose -f dev/receiver-compose.yaml down
+docker compose -f dev/ingest-compose.yaml down
+docker compose -f dev/dwh-compose.yaml down
 ```

@@ -1,14 +1,24 @@
 use crate::error_type::LibError;
 use crate::fhir::resources::{Condition, Patient, Resource};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bundle {
+    #[serde(rename = "resourceType")]
     pub resourceType: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
-    #[serde(rename = "type")]
+
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub bundle_type: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub total: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub entry: Option<Vec<BundleEntry>>,
 }
 
@@ -99,27 +109,96 @@ impl Bundle {
         let from_ref = format!("Patient/{}", old_id);
         let to_ref = format!("Patient/{}", new_id);
 
-        self.rewrite_all_references(&from_ref, &to_ref);
+        self.rewrite_all_references(&from_ref.as_str(), &to_ref.as_str());
 
         if let Some(entries) = self.entry.as_mut() {
             for entry in entries {
-                if let Resource::Patient(p) = &mut entry.resource {
-                    if p.id.as_deref() == Some(old_id) {
-                        p.id = Some(new_id.to_string());
-                    } else {
-                        Err(LibError::FhirCheckError)?;
+                entry.search = None;
+                match &mut entry.resource {
+                    Resource::Patient(p) => {
+                        p.meta = None;
+                        if p.id.as_deref() == Some(old_id) {
+                            p.id = Some(new_id.to_string());
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
+
+                        if let Some(meta) = &mut p.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+
+                        entry.request = Some(BundleRequest {
+                            method: "PUT".to_string(),
+                            url: format!("Patient/{}", new_id),
+                        });
+
+                        if let Some(full) = entry.fullUrl.as_mut() {
+                            *full = full.replace(
+                                &format!("/Patient/{}", old_id),
+                                &format!("/Patient/{}", new_id),
+                            );
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
                     }
-                    if let Some(full) = entry.fullUrl.as_mut() {
-                        *full = full.replace(
-                            &format!("/Patient/{}", old_id),
-                            &format!("/Patient/{}", new_id),
-                        );
-                    } else {
-                        Err(LibError::FhirCheckError)?;
+
+                    Resource::Condition(c) => {
+                        c.meta = None;
+                        if let Some(meta) = &mut c.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = c.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Condition/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
                     }
+
+                    Resource::Observation(o) => {
+                        o.meta = None;
+                        if let Some(meta) = &mut o.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = o.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Observation/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
+                    }
+
+                    Resource::Specimen(s) => {
+                        s.meta = None;
+                        if let Some(meta) = &mut s.meta {
+                            meta.versionId = None;
+                            meta.lastUpdated = None;
+                        }
+                        if let Some(id) = s.id.as_deref() {
+                            entry.request = Some(BundleRequest {
+                                method: "PUT".to_string(),
+                                url: format!("Specimen/{}", id),
+                            });
+                        } else {
+                            return Err(LibError::FhirCheckError);
+                        }
+                    }
+
+                    Resource::Unknown => {}
                 }
             }
         }
+        // Importent to allow storing in DWH blaze
+        self.id = None;
+        self.total = None;
+        self.bundle_type = Some("transaction".to_string());
         Ok(())
     }
 
@@ -225,9 +304,22 @@ impl Bundle {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BundleEntry {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fullUrl: Option<String>,
+
     pub resource: Resource,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub search: Option<SearchInfo>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request: Option<BundleRequest>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleRequest {
+    pub method: String,
+    pub url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

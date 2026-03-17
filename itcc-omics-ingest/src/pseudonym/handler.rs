@@ -21,7 +21,7 @@ pub async fn create_session(state: &AppState) -> Result<Uuid, ErrorType> {
     let session: CreateSessionResp = state
         .http
         .post(url_mzl)
-        .header("mainzellisteApiKey", &state.services.ml_api_key)
+        .header("mainzellisteApiKey", state.services.ml_api_key.as_ref())
         .send()
         .await
         .map_err(|_| ErrorType::MlSessionError)?
@@ -82,7 +82,7 @@ pub async fn create_token(
     let token: CreateTokenResp = state
         .http
         .post(token_url)
-        .header("mainzellisteApiKey", &state.services.ml_api_key)
+        .header("mainzellisteApiKey", state.services.ml_api_key.as_ref())
         .json(&token_req)
         .send()
         .await
@@ -137,7 +137,7 @@ pub async fn create_patient(
         .http
         .post(patient_url)
         .query(&[("tokenId", token)])
-        .header("mainzellisteApiKey", &state.services.ml_api_key)
+        .header("mainzellisteApiKey", state.services.ml_api_key.as_ref())
         .header("mainzellisteApiVersion", "2.0")
         .json(&body)
         .send()

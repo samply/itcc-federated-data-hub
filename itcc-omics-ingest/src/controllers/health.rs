@@ -3,8 +3,9 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use std::sync::Arc;
 
-pub fn routers() -> Router<AppState> {
+pub fn routers() -> Router<Arc<AppState>> {
     Router::new().route("/omics/health", get(health))
 }
 

@@ -14,10 +14,9 @@ COPY Cargo.toml Cargo.lock ./
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
-RUN cargo build --release -p itcc-omics-ingest --bin itcc-omics-ingest
-
+RUN cargo build --release -p itcc-omics-data-warehouse --bin itcc-omics-data-warehouse
 FROM gcr.io/distroless/cc-debian12 AS runtime
 
-COPY --from=builder /app/target/release/itcc-omics-ingest /usr/local/bin/itcc-omics-ingest
+COPY --from=builder /app/target/release/itcc-omics-data-warehouse /usr/local/bin/itcc-omics-data-warehouse
 
-ENTRYPOINT ["/usr/local/bin/itcc-omics-ingest"]
+ENTRYPOINT ["/usr/local/bin/itcc-omics-data-warehouse"]

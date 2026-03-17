@@ -1,34 +1,26 @@
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
-use crate::fhir::handler::get_patient_by_id;
-use crate::omics_data::compression::compress_zstd;
-use crate::omics_data::transfer::{filter_patient_id, read_validate_scan, sanitize_maf_bytes};
+use crate::data::compression::compress_zstd;
+use crate::data::transfer::{read_validate_scan, sanitize_maf_bytes};
 use crate::pseudonym::build_pseudo_map;
-use crate::utils::error_type::ErrorType::BeamError;
 use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{extract::State, http::HeaderMap, routing::post, Router};
-use itcc_omics_lib::MetaData;
+use axum::{extract::State, routing::post, Router};
+use itcc_omics_lib::beam::MetaData;
+use std::sync::Arc;
 use tracing::{error, info};
 
-pub fn routers() -> Router<AppState> {
+pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
         .route("/omics/upload", post(upload_handler))
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
 }
 
 // POST /omics/upload
-async fn upload_handler(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    body: axum::body::Bytes,
-) -> Response {
-    let header_name = headers
-        .get("x-filename")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("omics_payload.bin");
+async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::Bytes) -> Response {
+    let file_sha = maf_key_from_bytes(body.as_ref());
 
     let res = match read_validate_scan(&body, &state).await {
         Ok(v) => v,
@@ -49,11 +41,11 @@ async fn upload_handler(
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
-    let compressed = bytes::Bytes::from(compressed_vec.clone());
-    let file_sha = maf_key_from_bytes(&psy_res);
-    let filename = format!("{file_sha}.maf.zstd");
+    let _compressed = bytes::Bytes::from(compressed_vec.clone());
+    let pseudo_file_sha = maf_key_from_bytes(&psy_res);
+    let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
-        maf_id: file_sha.clone(),
+        maf_id: pseudo_file_sha.clone(),
         partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
@@ -63,9 +55,6 @@ async fn upload_handler(
         return e.into_response();
     }
 
-    (
-        StatusCode::CREATED,
-        format!("stored_as: {file_sha}.maf.zstd"),
-    )
+    (StatusCode::CREATED, format!("stored DHW as: {pseudo_file_sha}, (Optional)file sha256(provided maf file): {file_sha}"))
         .into_response()
 }

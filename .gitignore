@@ -43,5 +43,5 @@ dev/pki/*
 */dev/uploads
 dev/meta
 dev/garage-data
-dev/itcc-data-lake/demo-test-broker.yaml
+dev/itcc-dwh/demo-test-broker.yaml
 dev/itcc-omics-ingest/files

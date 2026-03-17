@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omics-dwh
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omics-dwh
+  template:
+    metadata:
+      labels:
+        app: omics-dwh
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: omics-dwh
+          image: {{ .Values.omics.image | quote }}
+          imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
+{{- with .Values.beamProxy.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          env:
+            - name: BEAM_ID
+              value: {{ .Values.omics.beamId | quote }}
+            - name: BEAM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omics-beam-secret
+                  key: BEAM_SECRET
+            - name: BEAM_URL
+              value: {{ .Values.omics.beamUrl | quote }}
+            - name: S3_DEFAULT_REGION
+              value: {{ .Values.omics.s3.region | quote }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.omics.s3.endpointUrl | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.omics.s3.bucket | quote }}
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_SECRET_ACCESS_KEY
+            - name: RUST_LOG
+              value: {{ .Values.omics.rustLog | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: omics-data

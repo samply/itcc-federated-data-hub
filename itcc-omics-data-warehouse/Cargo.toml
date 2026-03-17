@@ -1,0 +1,24 @@
+[package]
+name = "itcc-omics-data-warehouse"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+once_cell = { workspace = true }
+beam-lib = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+zstd = { workspace = true }
+itcc-omics-lib = { workspace = true }
+tempfile = { workspace = true }
+reqwest = { workspace = true }
+polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}
+aws-sdk-s3 = { workspace = true }
+futures = "0.3.31"
+axum = { workspace = true }

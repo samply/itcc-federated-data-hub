@@ -1,0 +1,77 @@
+services:
+  omics-data-warehouse:
+    build: ../
+    image: samply/itcc-omics-data-warehouse
+    volumes:
+      - ./data:/data
+    environment:
+      - BEAM_ID=itcc-datalake.itcc-dwh.test-no-real-data.broker.samply.de
+      - BEAM_SECRET=itcc-datawarehouse
+      - BEAM_URL=http://beam-proxy:8081
+      - S3_ACCESS_KEY_ID=GK8a94a82939416153a900f006
+      - S3_SECRET_ACCESS_KEY=82ea80b92e838fe95b351b93a8f1d0a4bf16b187865c13702beee53cadb8b3a7
+      - S3_DEFAULT_REGION=garage
+      - S3_ENDPOINT_URL=http://garage:3900
+      - S3_BUCKET=omics
+      - RUST_LOG=info
+    networks:
+      - dev_default
+      - default
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    container_name: garage
+    volumes:
+      - ./garage.toml:/etc/garage.toml
+      - ./meta:/var/lib/garage/meta
+      - ./garage-data:/var/lib/garage/data
+    restart: unless-stopped
+    ports:
+      - "3900:3900"   # S3
+      - "3901:3901"   # Admin API
+      - "3902:3902"
+      - "3903:3903"
+    networks:
+      - dev_default
+      - default
+
+  webui:
+    image: khairul169/garage-webui:latest
+    container_name: garage-webui
+    restart: unless-stopped
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+    ports:
+      - 3909:3909
+    environment:
+      # Admin API
+      API_BASE_URL: "http://garage:3903"
+      S3_ENDPOINT_URL: "http://garage:3900"
+    networks:
+      - dev_default
+      - default
+
+  beam-proxy:
+    image: samply/beam-proxy:develop
+    environment:
+      BROKER_URL: https://test-no-real-data.broker.samply.de
+      PROXY_ID: itcc-datalake.test-no-real-data.broker.samply.de
+      APP_itcc-data-lake_KEY: itcc-datalake
+      PRIVKEY_FILE: /run/secrets/proxy.pem
+      ROOTCERT_FILE: /conf/root.crt.pem
+      ALL_PROXY: ${HTTPS_PROXY}
+    secrets:
+      - proxy.pem
+    volumes:
+      - /pki/root.crt.pem:/conf/root.crt.pem:ro
+
+
+secrets:
+  proxy.pem:
+    file: /pki/itcc-datalake.priv.pem
+
+networks:
+  dev_default:
+    external: true
+volumes:
+  data:

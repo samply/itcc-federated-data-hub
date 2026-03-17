@@ -12,6 +12,7 @@ pub struct ConfigS3 {
     pub s3_endpoint_url: String,
 }
 
+pub static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| reqwest::Client::new());
 pub static S3_CLIENT: Lazy<OnceCell<Client>> = Lazy::new(OnceCell::const_new);
 pub async fn init_s3_client(custom_conf: ConfigS3) -> &'static Client {
     S3_CLIENT
