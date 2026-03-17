@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
 use crate::data::compression::compress_zstd;
@@ -10,6 +9,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, routing::post, Router};
 use itcc_omics_lib::beam::MetaData;
+use std::sync::Arc;
 use tracing::{error, info};
 
 pub fn routers() -> Router<Arc<AppState>> {
@@ -19,10 +19,7 @@ pub fn routers() -> Router<Arc<AppState>> {
 }
 
 // POST /omics/upload
-async fn upload_handler(
-    State(state): State<Arc<AppState>>,
-    body: axum::body::Bytes,
-) -> Response {
+async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::Bytes) -> Response {
     let file_sha = maf_key_from_bytes(body.as_ref());
 
     let res = match read_validate_scan(&body, &state).await {

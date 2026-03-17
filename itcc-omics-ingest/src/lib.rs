@@ -10,12 +10,12 @@ use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics};
 use crate::utils::config::IngestConfig;
 use crate::utils::config::{AppState, Services};
+use axum::extract::State;
 use axum::middleware::from_fn_with_state;
 use axum::Router;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
-use axum::extract::State;
 use tokio::net::TcpListener;
 use tracing::info;
 

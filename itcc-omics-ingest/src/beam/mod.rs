@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use crate::utils::error_type::ErrorType::{BeamError, BeamStreamFileError};
@@ -8,6 +7,7 @@ use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
 use itcc_omics_lib::fhir::bundle::Bundle;
 use itcc_omics_lib::fhir::IngestTask;
 use sha2::{Digest, Sha256};
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tracing::{error, info};
 

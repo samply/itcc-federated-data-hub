@@ -1,9 +1,9 @@
-use std::sync::Arc;
 use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::{AppId, BeamClient};
 use clap::Parser;
 use itcc_omics_lib::beam::parse_beam_id;
 use reqwest::{Client, Url};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {

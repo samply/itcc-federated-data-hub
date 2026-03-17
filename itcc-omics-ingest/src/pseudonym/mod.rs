@@ -5,10 +5,10 @@ use crate::pseudonym::handler::{
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use itcc_omics_lib::fhir::blaze::get_patient_by_id;
+use itcc_omics_lib::fhir::crypto_id::cryptoid_to_fhir_id;
 use itcc_omics_lib::patient_id::{filter_patient_id, insert_base, split_base};
 use std::collections::{HashMap, HashSet};
 use tracing::debug;
-use itcc_omics_lib::fhir::crypto_id::cryptoid_to_fhir_id;
 
 pub mod handler;
 

@@ -1,9 +1,9 @@
-use std::sync::Arc;
 use crate::utils::error_type::ErrorType;
 use crate::AppState;
 use axum::extract::{Request, State};
 use axum::middleware;
 use axum::response::IntoResponse;
+use std::sync::Arc;
 
 pub async fn api_key_check(
     State(state): State<Arc<AppState>>,
