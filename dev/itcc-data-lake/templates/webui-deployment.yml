@@ -30,8 +30,8 @@ spec:
               readOnly: true
       volumes:
         - name: garage-config
-          configMap:
-            name: garage-config
+          secret:
+            secretName: garage-config
 ---
 apiVersion: v1
 kind: Service

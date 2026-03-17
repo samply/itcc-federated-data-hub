@@ -1,5 +1,4 @@
 use crate::omics_data::validator;
-use crate::pseudonym::handler::{create_session, create_token, CreateTokenResp};
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use csv::{ByteRecord, ReaderBuilder, WriterBuilder};

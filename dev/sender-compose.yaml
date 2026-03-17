@@ -11,9 +11,10 @@ services:
       - RUST_LOG=debug
       - BEAM_ID=app1.proxy1.broker
       - BEAM_SECRET=App1Secret
-      - BEAM_URL=http://proxy1:8083
+      #- BEAM_URL=http://proxy1:8083
+      - BEAM_URL=http://localhost:8083
       - ML_URL=http://mainzelliste:8080
-      - BLAZE_URL=http://blaze:8080
+      - BLAZE_URL=http://blaze:8080/fhir/
       - DATA_LAKE_ID=app1.proxy2.broker
       - PARTNER_ID=itcc-inform
       - ML_API_KEY=changeme1
@@ -51,13 +52,12 @@ services:
       ML_DB_DRIVER: org.postgresql.Driver
       ML_DB_TYPE: postgresql
       ML_LOG_LEVEL: INFO
-      ML_ALLOWEDREMOTEADDRESSES: "0.0.0.0,::1,127.0.0.1,192.168.65.1"
+      ML_ALLOWEDREMOTEADDRESSES: "0.0.0.0,::1,127.0.0.1,192.168.65.1,172.16.0.0/12"
 
     secrets:
-      - source: mainzelliste_conf
-        target: /etc/mainzelliste/mainzelliste.docker.conf
+      - mainzelliste.docker.conf
       - source: symmetric_key
-        target: /etc/resources/keys/symmetric_key.json
+        target: /etc/resources/keys/symmetric_key.der
 
   blaze:
     image: samply/blaze:latest
@@ -75,7 +75,7 @@ networks:
     external: true
 
 secrets:
-  mainzelliste_conf:
+  mainzelliste.docker.conf:
     file: ./config/mainzelliste.docker.conf
 
   symmetric_key:

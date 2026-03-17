@@ -29,19 +29,7 @@ pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     )
 });
 pub async fn run_with_config() {
-    let state = AppState {
-        http: reqwest::Client::new(),
-        api_key: CONFIG_INGEST.api_key.clone(),
-        zstd_level: CONFIG_INGEST.zstd_level,
-        required_omics_columns: CONFIG_INGEST.required_omics_columns.clone(),
-        data_lake_id: CONFIG_INGEST.data_lake_id.clone(),
-        partner_id: CONFIG_INGEST.partner_id.clone(),
-        services: Services {
-            ml_url: CONFIG_INGEST.ml_url.clone(),
-            ml_api_key: CONFIG_INGEST.ml_api_key.clone(),
-            blaze_url: CONFIG_INGEST.blaze_url.clone(),
-        },
-    };
+    let state = AppState::from(&*CONFIG_INGEST);
 
     let app = create_router(state);
 

@@ -28,7 +28,7 @@ async fn test_create_patient() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let session_id = create_session(&app_state).await?;
     let token: CreateTokenResp = create_token(&app_state, &session_id, 1).await?;
-    let psy = create_patient(&app_state, &token.id, "LOCAL_ID").await?;
+    let psy = create_patient(&app_state, &token.id, "P0KRKM80V").await?;
     Ok(())
 }
 
@@ -37,12 +37,12 @@ async fn test_create_patient() -> Result<(), ErrorType> {
 async fn test_create_patients() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let patient_ids: HashSet<String> = [
-        "PATIENT-1",
-        "PATIENT-2",
-        "PATIENT-3",
-        "PATIENT-4",
-        "PATIENT-5",
-        "PATIENT-6",
+        "patient-001",
+        "patient-001",
+        "patient-001",
+        "patient-004",
+        "patient-005",
+        "patient-006",
     ]
     .into_iter()
     .map(|s| s.to_string())

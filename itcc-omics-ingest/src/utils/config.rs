@@ -1,5 +1,6 @@
+use crate::CONFIG_INGEST;
 use beam_lib::reqwest::Url as beam_Url;
-use beam_lib::AppId;
+use beam_lib::{AppId, BeamClient};
 use clap::Parser;
 use itcc_omics_lib::parse_beam_id;
 use reqwest::{Client, Url};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone)]
 pub struct AppState {
     pub http: reqwest::Client,
+    pub beam_client: BeamClient,
     pub api_key: String,
     pub zstd_level: i32,
     pub required_omics_columns: Vec<String>,
@@ -20,6 +22,10 @@ pub struct Services {
     pub ml_url: Url,
     pub ml_api_key: String,
     pub blaze_url: Url,
+    pub beam_url: beam_Url,
+    pub beam_id: AppId,
+    pub beam_secret: String,
+    pub enable_sockets: bool,
 }
 
 impl From<&Config> for AppState {
@@ -28,8 +34,10 @@ impl From<&Config> for AppState {
             .timeout(std::time::Duration::from_secs(10))
             .build()
             .expect("reqwest client build failed");
+        let beam_client = BeamClient::new(&c.beam_id, c.beam_secret.as_str(), c.beam_url.clone());
         Self {
             http,
+            beam_client,
             api_key: c.api_key.clone(),
             zstd_level: c.zstd_level,
             required_omics_columns: c.required_omics_columns.clone(),
@@ -39,6 +47,10 @@ impl From<&Config> for AppState {
                 ml_url: c.ml_url.clone(),
                 ml_api_key: c.ml_api_key.clone(),
                 blaze_url: c.blaze_url.clone(),
+                beam_url: c.beam_url.clone(),
+                beam_id: c.beam_id.clone(),
+                beam_secret: c.beam_secret.to_string(),
+                enable_sockets: c.enable_sockets,
             },
         }
     }
@@ -65,6 +77,8 @@ pub struct Config {
     /// The app id of this application
     #[clap(long, env, value_parser = parse_beam_id)]
     pub beam_id: AppId,
+    #[clap(env, long, default_value_t = false)]
+    pub enable_sockets: bool,
     /// The app id of the central data lake(receiver)
     #[clap(long, env, value_parser = parse_beam_id)]
     pub data_lake_id: AppId,

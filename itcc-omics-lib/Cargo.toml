@@ -10,3 +10,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 beam-lib = { workspace = true }
+aws-config = "1.8.14"
+aws-sdk-s3 = { workspace = true }
+tracing = { workspace = true }
+once_cell = { workspace = true }
+tempfile = { workspace = true }
+thiserror = "2.0.18"
+axum = { workspace = true }
+serde_bytes = { workspace = true }
