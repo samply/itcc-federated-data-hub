@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use beam_lib::reqwest::Url as beam_Url;
 use beam_lib::{AppId, BeamClient};
 use clap::Parser;
@@ -8,21 +9,21 @@ use reqwest::{Client, Url};
 pub struct AppState {
     pub http: reqwest::Client,
     pub beam_client: BeamClient,
-    pub api_key: String,
+    pub api_key: Arc<str>,
     pub zstd_level: i32,
-    pub required_omics_columns: Vec<String>,
-    pub data_lake_id: AppId,
-    pub partner_id: String,
-    pub services: Services,
+    pub required_omics_columns: Arc<[String]>,
+    pub data_warehouse_id: AppId,
+    pub partner_id: Arc<str>,
+    pub services: Arc<Services>,
 }
 #[derive(Clone)]
 pub struct Services {
     pub ml_url: Url,
-    pub ml_api_key: String,
+    pub ml_api_key: Arc<str>,
     pub blaze_url: Url,
     pub beam_url: beam_Url,
     pub beam_id: AppId,
-    pub beam_secret: String,
+    pub beam_secret: Arc<str>,
     pub enable_sockets: bool,
 }
 
@@ -36,20 +37,20 @@ impl From<&IngestConfig> for AppState {
         Self {
             http,
             beam_client,
-            api_key: c.api_key.clone(),
+            api_key: Arc::from(c.api_key.as_str()),
             zstd_level: c.zstd_level,
-            required_omics_columns: c.required_omics_columns.clone(),
-            data_lake_id: c.data_lake_id.clone(),
-            partner_id: c.partner_id.clone(),
-            services: Services {
+            required_omics_columns: Arc::from(c.required_omics_columns.as_slice()),
+            data_warehouse_id: c.data_warehouse_id.clone(),
+            partner_id: Arc::from(c.partner_id.as_str()),
+            services: Arc::from(Services {
                 ml_url: c.ml_url.clone(),
-                ml_api_key: c.ml_api_key.clone(),
+                ml_api_key: Arc::from(c.ml_api_key.as_str()),
                 blaze_url: c.blaze_url.clone(),
                 beam_url: c.beam_url.clone(),
                 beam_id: c.beam_id.clone(),
-                beam_secret: c.beam_secret.to_string(),
+                beam_secret: Arc::from(c.beam_secret.as_str()),
                 enable_sockets: c.enable_sockets,
-            },
+            }),
         }
     }
 }
@@ -79,7 +80,7 @@ pub struct IngestConfig {
     pub enable_sockets: bool,
     /// The app id of the central data lake(receiver)
     #[clap(long, env, value_parser = parse_beam_id)]
-    pub data_lake_id: AppId,
+    pub data_warehouse_id: AppId,
     #[clap(long, env, default_value = "3")]
     pub zstd_level: i32,
     #[clap(

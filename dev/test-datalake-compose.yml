@@ -1,12 +1,12 @@
 services:
-  omics-data-lake:
+  omics-data-warehouse:
     build: ../
-    image: samply/itcc-omics-data-lake
+    image: samply/itcc-omics-data-warehouse
     volumes:
       - ./data:/data
     environment:
-      - BEAM_ID=itcc-datalake.itcc-data-lake.test-no-real-data.broker.samply.de
-      - BEAM_SECRET=itcc-datalake
+      - BEAM_ID=itcc-datalake.itcc-dwh.test-no-real-data.broker.samply.de
+      - BEAM_SECRET=itcc-datawarehouse
       - BEAM_URL=http://beam-proxy:8081
       - S3_ACCESS_KEY_ID=GK8a94a82939416153a900f006
       - S3_SECRET_ACCESS_KEY=82ea80b92e838fe95b351b93a8f1d0a4bf16b187865c13702beee53cadb8b3a7

@@ -1,9 +1,9 @@
 services:
-  itcc-omics-data-lake:
+  itcc-omics-data-warehouse:
     build:
       context: ..
-      dockerfile: Dockerfile.dev.datalake
-    image: samply/itcc-omics-data-lake
+      dockerfile: ../Dockerfile.dev.datawarehouse
+    image: samply/itcc-omics-data-warehouse
     volumes:
       - ./data:/data
     environment:

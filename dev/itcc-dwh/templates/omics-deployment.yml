@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: omics-data-lake
+  name: omics-dwh
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: omics-data-lake
+      app: omics-dwh
   template:
     metadata:
       labels:
-        app: omics-data-lake
+        app: omics-dwh
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - name: omics-data-lake
+        - name: omics-dwh
           image: {{ .Values.omics.image | quote }}
           imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
 {{- with .Values.beamProxy.resources }}

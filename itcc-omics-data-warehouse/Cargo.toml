@@ -1,5 +1,5 @@
 [package]
-name = "itcc-omics-data-lake"
+name = "itcc-omics-data-warehouse"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"

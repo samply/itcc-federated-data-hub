@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub mod blaze;
 pub mod bundle;
 pub mod resources;
+pub mod crypto_id;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind")]

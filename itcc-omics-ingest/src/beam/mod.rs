@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use crate::utils::error_type::ErrorType::{BeamError, BeamStreamFileError};
@@ -14,7 +15,7 @@ pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ac
     let task = TaskRequest {
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
-        to: vec![state.data_lake_id.clone()],
+        to: vec![state.data_warehouse_id.clone()],
         body: vec![IngestTask::Fhir { bundle }],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,
@@ -48,7 +49,7 @@ pub async fn send_file_via_sockets(
     let mut conn = state
         .beam_client
         .create_socket_with_metadata(
-            &state.data_lake_id,
+            &state.data_warehouse_id,
             FileMeta {
                 suggested_name,
                 meta: Some(meta_json),
@@ -70,17 +71,17 @@ pub async fn send_file_via_task(
     state: &AppState,
     suggested_name: Option<String>,
     meta_data: MetaData,
-    body: &Vec<u8>,
+    body: &[u8],
 ) -> Result<Vec<Ack>, ErrorType> {
     let task_body = MafTask {
         meta: meta_data,
-        suggested_name: suggested_name,
-        bytes_b64: body.clone(),
+        suggested_name,
+        bytes_b64: body.to_vec(),
     };
     let task = TaskRequest {
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
-        to: vec![state.data_lake_id.clone()],
+        to: vec![state.data_warehouse_id.clone()],
         body: vec![IngestTask::Maf(task_body)],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,

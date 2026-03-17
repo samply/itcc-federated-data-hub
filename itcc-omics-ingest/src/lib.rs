@@ -15,12 +15,13 @@ use axum::Router;
 use clap::Parser;
 use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
+use axum::extract::State;
 use tokio::net::TcpListener;
 use tracing::info;
 
 pub static CONFIG_INGEST: Lazy<IngestConfig> = Lazy::new(<IngestConfig as clap::Parser>::parse);
 pub async fn run_with_config() {
-    let state = AppState::from(&*CONFIG_INGEST);
+    let state = Arc::new(AppState::from(&*CONFIG_INGEST));
 
     let app = create_router(state);
 
@@ -29,12 +30,12 @@ pub async fn run_with_config() {
     info!("Listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.expect("Can't listen to port");
-    axum::serve(listener, app.await.into_make_service())
+    axum::serve(listener, app.into_make_service())
         .await
         .expect("Can't start server");
 }
 
-pub async fn create_router(app_state: AppState) -> Router {
+pub fn create_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .merge(omics::routers())
         .route_layer(from_fn_with_state(app_state.clone(), api_key_check))

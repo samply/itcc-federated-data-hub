@@ -21,13 +21,13 @@ beamProxy:
   image: samply/beam-proxy:develop
   port: 8081
   brokerUrl: "https://test-no-real-data.broker.samply.de"
-  proxyId: "itcc-data-lake.test-no-real-data.broker.samply.de"
+  proxyId: "itcc-dwh.test-no-real-data.broker.samply.de"
   allProxy: ""   # set if needed, e.g. http://forward-proxy:3128
   appKeyName: "APP_itcc-data-lake_KEY"
 
 omics:
-  image: samply/itcc-omics-data-lake
-  beamId: "itcc-data-lake.itcc-data-lake.test-no-real-data.broker.samply.de"
+  image: samply/itcc-omics-data-warehouse
+  beamId: "itcc-dwh.itcc-dwh.test-no-real-data.broker.samply.de"
   beamUrl: "http://beam-proxy:8081"
   s3:
     region: garage

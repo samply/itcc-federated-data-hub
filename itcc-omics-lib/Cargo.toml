@@ -18,6 +18,8 @@ tempfile = { workspace = true }
 thiserror = "2.0.18"
 serde_bytes = { workspace = true }
 reqwest = { workspace = true }
+base64 = "0.22.1"
+hex = "0.4.3"
 
 [features]
 fhir = []

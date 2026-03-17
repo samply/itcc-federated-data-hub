@@ -1,5 +1,5 @@
-use itcc_omics_data_lake::run_with_config;
 use tracing_subscriber::{fmt, EnvFilter};
+use itcc_omics_data_warehouse::run_with_config;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

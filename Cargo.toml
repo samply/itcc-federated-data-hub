@@ -1,5 +1,5 @@
 [workspace]
-members = ["itcc-omics-ingest", "itcc-omics-data-lake", "itcc-omics-lib"]
+members = ["itcc-omics-ingest", "itcc-omics-data-warehouse", "itcc-omics-lib"]
 
 resolver = "2"
 [workspace.dependencies]

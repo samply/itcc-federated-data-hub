@@ -1,4 +1,4 @@
-namespace: itcc-data-lake
+namespace: itcc-dwh
 
 beamProxy:
   enabled: false
@@ -25,7 +25,7 @@ webui:
   port: 3909
 
 omics:
-  image: docker.io/samply/itcc-omics-data-lake:latest
+  image: docker.io/samply/itcc-omics-data-warehouse:latest
   imagePullPolicy: Never
   beamId: "app1.proxy2.broker"
   beamUrl: "http://beam-proxy-proxy2.samply-beam-demo.svc.cluster.local:8082"

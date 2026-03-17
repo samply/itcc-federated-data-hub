@@ -14,7 +14,7 @@ services:
       - BEAM_URL=http://proxy1:8083
       - ML_URL=http://mainzelliste:8080
       - BLAZE_URL=http://blaze:8080/fhir/
-      - DATA_LAKE_ID=app1.proxy2.broker
+      - DATA_WAREHOUSE_ID=app1.proxy2.broker
       - PARTNER_ID=itcc-inform
       - ML_API_KEY=changeme1
 

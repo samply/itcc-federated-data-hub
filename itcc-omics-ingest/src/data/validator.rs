@@ -8,7 +8,7 @@ pub struct HeaderInfo {
     pub names: Vec<String>,
 }
 
-pub fn schema_validate(header: &StringRecord, required: &Vec<String>) -> Result<(), ErrorType> {
+pub fn schema_validate(header: &StringRecord, required: &[String]) -> Result<(), ErrorType> {
     let header_info = build_header_info(header)?;
     validate_required_columns(&header_info, required)
 }
@@ -36,7 +36,7 @@ fn build_header_info(header: &StringRecord) -> Result<HeaderInfo, ErrorType> {
     Ok(HeaderInfo { index, names })
 }
 
-fn validate_required_columns(h: &HeaderInfo, required: &Vec<String>) -> Result<(), ErrorType> {
+fn validate_required_columns(h: &HeaderInfo, required: &[String]) -> Result<(), ErrorType> {
     for r in required {
         if !h.index.contains_key(r) {
             debug!("index does not exist {}", r);

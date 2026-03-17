@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::beam;
 use crate::beam::maf_key_from_bytes;
 use crate::data::compression::compress_zstd;
@@ -7,11 +8,11 @@ use crate::AppState;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{extract::State, http::HeaderMap, routing::post, Router};
+use axum::{extract::State, routing::post, Router};
 use itcc_omics_lib::beam::MetaData;
 use tracing::{error, info};
 
-pub fn routers() -> Router<AppState> {
+pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
         .route("/omics/upload", post(upload_handler))
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
@@ -19,8 +20,7 @@ pub fn routers() -> Router<AppState> {
 
 // POST /omics/upload
 async fn upload_handler(
-    State(state): State<AppState>,
-    headers: HeaderMap,
+    State(state): State<Arc<AppState>>,
     body: axum::body::Bytes,
 ) -> Response {
     let file_sha = maf_key_from_bytes(body.as_ref());
@@ -44,7 +44,7 @@ async fn upload_handler(
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
-    let compressed = bytes::Bytes::from(compressed_vec.clone());
+    let _compressed = bytes::Bytes::from(compressed_vec.clone());
     let pseudo_file_sha = maf_key_from_bytes(&psy_res);
     let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
