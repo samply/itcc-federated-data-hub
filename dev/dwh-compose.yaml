@@ -2,7 +2,7 @@ services:
   itcc-omics-data-warehouse:
     build:
       context: ..
-      dockerfile: ../Dockerfile.dev.datawarehouse
+      dockerfile: Dockerfile.dev.dwh
     image: samply/itcc-omics-data-warehouse
     volumes:
       - ./data:/data
