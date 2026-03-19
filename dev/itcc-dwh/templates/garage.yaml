@@ -47,9 +47,9 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .port }}
             {{- end }}
-{{- with .Values.beamProxy.resources }}
+          {{- with .Values.garage.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
             - name: garage-config

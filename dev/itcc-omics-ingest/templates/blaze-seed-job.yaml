@@ -33,7 +33,8 @@ spec:
               echo "Seeding XML files..."
               for f in /seed/*.xml; do
                 echo "POST $f"
-                curl -fsS -X POST "$BLAZE/fhir" \
+                curl -fS -X POST "$BLAZE/fhir" \
+                  -w "\nHTTP %{http_code} for $f\n" \
                   -H "Content-Type: application/fhir+xml" \
                   --data-binary @"$f" >/dev/null
               done

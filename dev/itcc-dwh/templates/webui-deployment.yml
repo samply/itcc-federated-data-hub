@@ -18,7 +18,7 @@ spec:
           image: {{ .Values.webui.image | quote }}
           ports:
             - containerPort: {{ .Values.webui.port }}
-{{- with .Values.beamProxy.resources }}
+          {{- with .Values.webui.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
             {{- end }}

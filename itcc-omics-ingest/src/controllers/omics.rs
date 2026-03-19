@@ -3,22 +3,45 @@ use crate::beam::maf_key_from_bytes;
 use crate::data::compression::compress_zstd;
 use crate::data::transfer::{read_validate_scan, sanitize_maf_bytes};
 use crate::pseudonym::build_pseudo_map;
+use crate::utils::error_type::ErrorType;
 use crate::AppState;
-use axum::extract::DefaultBodyLimit;
+use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{extract::State, routing::post, Router};
-use itcc_omics_lib::beam::MetaData;
+use axum::{extract::State, routing::post, Json, Router};
+use itcc_omics_lib::beam::{Ack, MetaData};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{error, info};
+use tower_http::trace::TraceLayer;
+use tracing::{error, info, info_span};
 
 pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
         .route("/omics/upload", post(upload_handler))
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<_>| {
+                    info_span!(
+                        "http_request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        status_code = tracing::field::Empty,
+                    )
+                })
+                .on_response(
+                    |response: &axum::response::Response,
+                     latency: std::time::Duration,
+                     span: &tracing::Span| {
+                        span.record("status_code", response.status().as_u16());
+                        info!(parent: span, latency_ms = latency.as_millis(), "response sent");
+                    },
+                ),
+        )
 }
 
 // POST /omics/upload
+#[tracing::instrument(skip(state, body), fields(file_sha, pseudo_sha, partner_id))]
 async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::Bytes) -> Response {
     let file_sha = maf_key_from_bytes(body.as_ref());
 
@@ -41,7 +64,7 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
-    let _compressed = bytes::Bytes::from(compressed_vec.clone());
+    let compressed = bytes::Bytes::from(compressed_vec.clone());
     let pseudo_file_sha = maf_key_from_bytes(&psy_res);
     let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
@@ -49,12 +72,31 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
         partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
-    if let Err(e) =
+    let success = SuccessMAF {
+        data_warehouse_file_id: pseudo_file_sha,
+        local_file_sha: file_sha,
+    };
+    let send_result = if state.services.enable_sockets {
+        beam::send_file_via_sockets(&state, Some(filename), meta_data, &compressed).await
+    } else {
         beam::send_file_via_task(&state, Some(filename), meta_data, &compressed_vec).await
-    {
-        return e.into_response();
-    }
+    };
 
-    (StatusCode::CREATED, format!("stored DHW as: {pseudo_file_sha}, (Optional)file sha256(provided maf file): {file_sha}"))
-        .into_response()
+    match send_result {
+        Ok(None) => (StatusCode::CREATED, Json(success)).into_response(),
+        Ok(Some(msg)) => {
+            info!("Upload success: {:?}", msg);
+            (StatusCode::CREATED, Json(success)).into_response()
+        }
+        Err(e) => {
+            error!("Error sending file to beam: {:?}", e);
+            e.into_response()
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Serialize)]
+struct SuccessMAF {
+    pub data_warehouse_file_id: String,
+    pub local_file_sha: String,
 }
