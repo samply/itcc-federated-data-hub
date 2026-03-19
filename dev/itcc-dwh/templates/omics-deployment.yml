@@ -1,44 +1,45 @@
+{{- range $mode, $cfg := .Values.omics.modes }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: omics-dwh
-  namespace: {{ .Release.Namespace }}
+  name: omics-dwh-{{ $mode }}
+  namespace: {{ $.Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: {{ $cfg.replicas | default 1 }}
   selector:
     matchLabels:
-      app: omics-dwh
+      app: omics-dwh-{{ $mode }}
   template:
     metadata:
       labels:
-        app: omics-dwh
+        app: omics-dwh-{{ $mode }}
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - name: omics-dwh
-          image: {{ .Values.omics.image | quote }}
-          imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
-          {{- with .Values.omics.resources }}
+        - name: omics-dwh-{{ $mode }}
+          image: {{ $cfg.image | quote }}
+          imagePullPolicy: {{ $cfg.imagePullPolicy | default "IfNotPresent" }}
+          {{- with $cfg.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- end }}
           env:
             - name: BEAM_ID
-              value: {{ .Values.omics.beamId | quote }}
+              value: {{ $cfg.beamId | quote }}
             - name: BEAM_SECRET
               valueFrom:
                 secretKeyRef:
                   name: omics-beam-secret
                   key: BEAM_SECRET
             - name: BEAM_URL
-              value: {{ .Values.omics.beamUrl | quote }}
+              value: {{ $cfg.beamUrl | quote }}
             - name: S3_DEFAULT_REGION
-              value: {{ .Values.omics.s3.region | quote }}
+              value: {{ $cfg.s3.region | quote }}
             - name: S3_ENDPOINT_URL
-              value: {{ .Values.omics.s3.endpointUrl | quote }}
+              value: {{ $cfg.s3.endpointUrl | quote }}
             - name: S3_BUCKET
-              value: {{ .Values.omics.s3.bucket | quote }}
+              value: {{ $cfg.s3.bucket | quote }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -50,7 +51,7 @@ spec:
                   name: omics-s3-secret
                   key: S3_SECRET_ACCESS_KEY
             - name: RUST_LOG
-              value: {{ .Values.omics.rustLog | quote }}
+              value: {{ $cfg.rustLog | default "info" | quote }}
           volumeMounts:
             - name: data
               mountPath: /data
@@ -58,3 +59,5 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: omics-data
+---
+{{- end }}

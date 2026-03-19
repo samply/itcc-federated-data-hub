@@ -3,11 +3,13 @@ kind: PersistentVolumeClaim
 metadata:
   name: omics-data
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
-      storage: {{ .Values.omics.storageSize }}
+      storage: {{ .Values.omics.storage.size }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

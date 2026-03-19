@@ -3,6 +3,8 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.dev.dwh
+      args:
+        FEATURES: task-polling
     image: samply/itcc-omics-data-warehouse
     volumes:
       - ./data:/data

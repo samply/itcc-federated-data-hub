@@ -28,7 +28,7 @@ spec:
             - name: S3_ENDPOINT_URL
               value: "http://garage:{{ .Values.garage.s3Port }}"
             - name: AUTH_USER_PASS
-              value: "root:root"
+              value: "root:$2y$10$gjubYCpvkG3lPWG256s6nuqfNMrkpUrIL4tzBb6/4zFgh.fKK3Xh6"
           volumeMounts:
             - name: garage-config
               mountPath: /etc/garage.toml
