@@ -24,6 +24,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   rust-dwh:
+    needs: rust-ingest
     uses: samply/github-workflows/.github/workflows/rust.yml@main
     permissions:
       contents: read
