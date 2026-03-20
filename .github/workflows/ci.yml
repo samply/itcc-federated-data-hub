@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  rust:
+  rust-ingest:
     uses: samply/github-workflows/.github/workflows/rust.yml@main
     permissions:
       contents: read
@@ -16,11 +16,25 @@ jobs:
       statuses: read
     with:
       image-prefix: "samply/"
-      components: '[ "itcc-omics-ingest", "itcc-omics-data-warehouse" ]'
-      architectures: '[ "amd64"]'
-      #profile: debug
-      test-via-script: false
-      cargo-fmt-check: true
+      components: '[ "itcc-omics-ingest" ]'
+      architectures: '[ "amd64" ]'
+      features: '[ "" ]'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  rust-dwh:
+    uses: samply/github-workflows/.github/workflows/rust.yml@main
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+      security-events: write
+      statuses: read
+    with:
+      image-prefix: "samply/"
+      components: '[ "itcc-omics-data-warehouse" ]'
+      architectures: '[ "amd64" ]'
       features: '[ "", "task-polling", "socket-polling" ]'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
