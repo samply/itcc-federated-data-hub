@@ -81,7 +81,7 @@ pub fn init_tracing() {
                 .with_file(true)
                 .with_line_number(true)
                 .pretty(),
-                //.json(),
+            //.json(),
         )
         .init();
 }
