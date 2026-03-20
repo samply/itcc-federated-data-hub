@@ -1,0 +1,121 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: garage-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: garage-init
+      containers:
+        - name: garage-init
+          image: bitnami/kubectl:latest
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              POD=garage-0
+              NS={{ .Release.Namespace }}
+              EXEC="kubectl exec -n ${NS} ${POD} --"
+
+              echo "==> Waiting for garage pod..."
+              kubectl wait --for=condition=Ready pod/${POD} -n ${NS} --timeout=120s
+
+              echo "==> Cluster status..."
+              ${EXEC} /garage status
+
+              echo "==> Applying layout..."
+              NODE=$(${EXEC} /garage node id -q | cut -d@ -f1)
+              ${EXEC} /garage layout assign \
+                -z {{ .Values.garage.region }} \
+                -c 1G "${NODE}" || true
+              ${EXEC} /garage layout apply --version 1 || true
+
+              echo "==> Creating key if not exists..."
+              if ! ${EXEC} /garage key info {{ .Values.garage.accessKeyName }} > /dev/null 2>&1; then
+              ${EXEC} /garage key create {{ .Values.garage.accessKeyName }}
+              echo "Key created."
+              else
+              echo "Key already exists, skipping."
+              fi
+
+              echo "==> Extracting credentials..."
+              KEY_INFO=$(${EXEC} /garage key info {{ .Values.garage.accessKeyName }} --show-secret)
+              KEY_ID=$(echo "${KEY_INFO}"   | grep "Key ID:"     | awk '{print $3}')
+              SECRET_KEY=$(echo "${KEY_INFO}" | grep "Secret key:" | awk '{print $3}')
+              echo "Key ID: ${KEY_ID}"
+
+              echo "==> Creating bucket if not exists..."
+              if ! ${EXEC} /garage bucket info {{ .Values.garage.bucket }} > /dev/null 2>&1; then
+              ${EXEC} /garage bucket create {{ .Values.garage.bucket }}
+              echo "Bucket created."
+              else
+              echo "Bucket already exists, skipping."
+              fi
+
+              echo "==> Granting permissions..."
+              ${EXEC} /garage bucket allow \
+              --read --write --owner \
+              --key {{ .Values.garage.accessKeyName }} \
+              {{ .Values.garage.bucket }}
+
+              echo "==> Patching omics-s3-secret..."
+              kubectl patch secret omics-s3-secret \
+              --namespace=${NS} \
+              --type=merge \
+              -p "{\"stringData\":{\"S3_ACCESS_KEY_ID\":\"${KEY_ID}\",\"S3_SECRET_ACCESS_KEY\":\"${SECRET_KEY}\"}}"
+
+              echo "==> Done."
+          env:
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_SECRET_ACCESS_KEY
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: garage-init
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: garage-init
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "get", "patch" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: garage-init
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: garage-init
+roleRef:
+  kind: Role
+  name: garage-init
+  apiGroup: rbac.authorization.k8s.io

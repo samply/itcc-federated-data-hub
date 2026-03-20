@@ -80,7 +80,8 @@ pub fn init_tracing() {
                 .with_thread_ids(false)
                 .with_file(true)
                 .with_line_number(true)
-                .json(),
+                .pretty(),
+                //.json(),
         )
         .init();
 }

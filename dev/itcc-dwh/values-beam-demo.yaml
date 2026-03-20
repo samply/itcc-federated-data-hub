@@ -11,6 +11,9 @@ garage:
   image: dxflrs/garage:v2.1.0
   s3Port: 3900
   adminPort: 3903
+  region: garage
+  bucket: omics
+  accessKeyName: omics-key
   extraPorts:
     - name: admin3901
       port: 3901
