@@ -16,9 +16,9 @@ beam-lib = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 zstd = { workspace = true }
-itcc-omics-lib = { workspace = true }
 tempfile = { workspace = true }
 reqwest = { workspace = true }
 polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}
 aws-sdk-s3 = { workspace = true }
 futures = "0.3.31"
+itcc-omics-lib = { path = "../itcc-omics-lib", features = ["fhir", "s3", "beam"] }

@@ -10,8 +10,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 beam-lib = { workspace = true }
-aws-config = { workspace = true }
-aws-sdk-s3 = { workspace = true }
+aws-sdk-s3 = { version = "1", optional = true }
+aws-config = { version = "1", optional = true }
 tracing = { workspace = true }
 once_cell = { workspace = true }
 tempfile = { workspace = true }
@@ -20,6 +20,6 @@ serde_bytes = { workspace = true }
 reqwest = { workspace = true }
 
 [features]
+s3 = ["dep:aws-sdk-s3", "dep:aws-config"]
 fhir = []
 beam = []
-s3 = []
