@@ -54,10 +54,10 @@ pub fn init_tracing() {
         )
         .with(
             fmt::layer()
-                .with_target(true)
+                .with_target(false)
                 .with_thread_ids(false)
-                .with_file(true)
-                .with_line_number(true)
+                .with_file(false)
+                .with_line_number(false)
                 .pretty(),
             // .json()
         )

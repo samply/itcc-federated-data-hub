@@ -22,8 +22,3 @@ reqwest = { workspace = true }
 polars = { version = "0.52.0", default-features = false, features = ["csv", "parquet"]}
 aws-sdk-s3 = { workspace = true }
 futures = "0.3.31"
-
-[features]
-default = ["task-polling", "socket-polling"]
-task-polling = []
-socket-polling = []

@@ -4,7 +4,7 @@ metadata:
   name: omics-data
   namespace: {{ .Release.Namespace }}
   annotations:
-    helm.sh/resource-policy: keep
+    "helm.sh/resource-policy": keep
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:

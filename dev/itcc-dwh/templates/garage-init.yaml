@@ -1,3 +1,4 @@
+{{- if index .Values "garage-init" "enabled" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -119,3 +120,4 @@ roleRef:
   kind: Role
   name: garage-init
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

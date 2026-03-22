@@ -8,17 +8,13 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS builder
 WORKDIR /app
 
-ARG FEATURES=task-polling,socket-polling
-
 COPY --from=planner /app/recipe.json recipe.json
 COPY Cargo.toml Cargo.lock ./
 
-RUN cargo chef cook --release --no-default-features --features ${FEATURES} --recipe-path recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
-RUN cargo build --release --no-default-features --features ${FEATURES} \
-    -p itcc-omics-data-warehouse --bin itcc-omics-data-warehouse
-
+RUN cargo build --release -p itcc-omics-data-warehouse --bin itcc-omics-data-warehouse
 FROM gcr.io/distroless/cc-debian12 AS runtime
 
 COPY --from=builder /app/target/release/itcc-omics-data-warehouse /usr/local/bin/itcc-omics-data-warehouse

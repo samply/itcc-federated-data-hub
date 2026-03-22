@@ -44,28 +44,19 @@ pub async fn run_with_config() -> anyhow::Result<()> {
     run_polling().await
 }
 
-#[cfg(not(any(feature = "task-polling", feature = "socket-polling")))]
-compile_error!("At least one of `task-polling` or `socket-polling` features must be enabled");
 async fn run_polling() -> anyhow::Result<()> {
-    #[cfg(all(feature = "task-polling", feature = "socket-polling"))]
-    tokio::select! {
-        res = run_task_polling() => res?,
+    // polling sockets or tasks
+    if DATALAKE_CONFIG.enable_sockets {
+        tokio::select! {
         res = run_socket_polling() => res?,
         _ = tokio::signal::ctrl_c() => info!("Shutting down"),
-    }
-
-    #[cfg(all(feature = "task-polling", not(feature = "socket-polling")))]
-    tokio::select! {
+        }
+    } else {
+        tokio::select! {
         res = run_task_polling() => res?,
         _ = tokio::signal::ctrl_c() => info!("Shutting down"),
+        }
     }
-
-    #[cfg(all(feature = "socket-polling", not(feature = "task-polling")))]
-    tokio::select! {
-        res = run_socket_polling() => res?,
-        _ = tokio::signal::ctrl_c() => info!("Shutting down"),
-    }
-
     Ok(())
 }
 
@@ -76,10 +67,10 @@ pub fn init_tracing() {
         }))
         .with(
             fmt::layer()
-                .with_target(true)
+                .with_target(false)
                 .with_thread_ids(false)
-                .with_file(true)
-                .with_line_number(true)
+                .with_file(false)
+                .with_line_number(false)
                 .pretty(),
             //.json(),
         )

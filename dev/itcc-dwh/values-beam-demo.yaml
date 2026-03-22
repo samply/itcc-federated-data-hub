@@ -7,6 +7,9 @@ blaze:
   serviceName: blaze
   port: 8080
 
+garage-init:
+  enabled: true
+
 garage:
   image: dxflrs/garage:v2.1.0
   s3Port: 3900
@@ -30,18 +33,16 @@ webui:
 omics:
   storage:
     size: "1Gi"
-  modes:
-    task:
-      image: docker.io/samply/itcc-omics-data-warehouse:latest
-      imagePullPolicy: Never
-      beamId: "app1.proxy2.broker"
-      beamUrl: "http://beam-proxy-proxy2.samply-beam-demo.svc.cluster.local:8082"
-      #beamUrl: "http://proxy2:8082"
-      s3:
-        region: garage
-        endpointUrl: "http://garage:3900"
-        bucket: omics
-      rustLog: debug
+  image: docker.io/samply/itcc-omics-data-warehouse:latest
+  imagePullPolicy: Never
+  beamId: "app1.proxy2.broker"
+  beamUrl: "http://beam-proxy-proxy2.samply-beam-demo.svc.cluster.local:8082"
+  #beamUrl: "http://proxy2:8082"
+  s3:
+    region: garage
+    endpointUrl: "http://garage:3900"
+    bucket: omics
+  rustLog: debug
 
 secrets:
   # You can set these via helm --set / --set-file in real deployments
