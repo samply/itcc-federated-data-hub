@@ -23,3 +23,6 @@ aws-config = "1.8.15"
 axum = { version = "0.8", features = ["json", "macros"] }
 serde_bytes = "0.11"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+
+[patch.crates-io]
+rustls-webpki = { version = "0.103.10" }
