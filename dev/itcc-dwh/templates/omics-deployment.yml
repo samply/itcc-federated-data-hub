@@ -4,7 +4,9 @@ metadata:
   name: omics-dwh
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: omics-dwh
@@ -19,7 +21,7 @@ spec:
         - name: omics-dwh
           image: {{ .Values.omics.image | quote }}
           imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
-{{- with .Values.beamProxy.resources }}
+{{- with .Values.omics.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -56,5 +58,4 @@ spec:
               mountPath: /data
       volumes:
         - name: data
-          persistentVolumeClaim:
-            claimName: omics-data
+          emptyDir: {}
