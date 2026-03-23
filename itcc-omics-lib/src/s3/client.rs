@@ -26,6 +26,7 @@ pub async fn init_s3_client(custom_conf: ConfigS3) -> &'static Client {
                     None,
                     "static",
                 ))
+                .sleep_impl(aws_smithy_async::rt::sleep::TokioSleep::new())
                 .load()
                 .await;
 
