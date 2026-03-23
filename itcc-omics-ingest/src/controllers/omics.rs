@@ -59,13 +59,15 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
+    drop(body);
 
     let compressed_vec = match compress_zstd(&psy_res, &state.zstd_level) {
         Ok(v) => v,
         Err(e) => return e.into_response(),
     };
-    let compressed = bytes::Bytes::from(compressed_vec.clone());
     let pseudo_file_sha = maf_key_from_bytes(&psy_res);
+    drop(psy_res);
+
     let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
         maf_id: pseudo_file_sha.clone(),
@@ -77,6 +79,7 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
         local_file_sha: file_sha,
     };
     let send_result = if state.services.enable_sockets {
+        let compressed = bytes::Bytes::from(compressed_vec);
         beam::send_file_via_sockets(&state, Some(filename), meta_data, &compressed).await
     } else {
         beam::send_file_via_task(&state, Some(filename), meta_data, &compressed_vec).await
