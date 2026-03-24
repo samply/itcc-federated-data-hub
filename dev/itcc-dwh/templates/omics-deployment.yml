@@ -4,7 +4,7 @@ metadata:
   name: omics-dwh
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: Recreate
   selector:
