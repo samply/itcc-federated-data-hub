@@ -44,7 +44,7 @@ pub async fn send_file_via_sockets(
     suggested_name: Option<String>,
     meta_data: MetaData,
     body: &Bytes,
-) -> Result<(), ErrorType> {
+) -> Result<Option<Vec<Ack>>, ErrorType> {
     let meta_json = serde_json::to_value(&meta_data).map_err(|_| ErrorType::BeamError)?;
     let mut conn = state
         .beam_client
@@ -64,7 +64,7 @@ pub async fn send_file_via_sockets(
         error!("Failed to tunnel response: {e}");
         BeamStreamFileError
     })?;
-    Ok(())
+    Ok(None)
 }
 
 pub async fn send_file_via_task(
@@ -72,7 +72,7 @@ pub async fn send_file_via_task(
     suggested_name: Option<String>,
     meta_data: MetaData,
     body: &[u8],
-) -> Result<Vec<Ack>, ErrorType> {
+) -> Result<Option<Vec<Ack>>, ErrorType> {
     let task_body = MafTask {
         meta: meta_data,
         suggested_name,
@@ -101,9 +101,13 @@ pub async fn send_file_via_task(
         .map_err(|e| {
             error!("Failed to tunnel request: {e}");
             BeamError
-        })?;
+        })?
+        .into_iter()
+        .map(|r| r.body)
+        .flatten()
+        .collect();
 
-    Ok(results.into_iter().map(|r| r.body).flatten().collect())
+    Ok(Some(results))
 }
 
 pub fn maf_key_from_bytes(bytes: &[u8]) -> String {

@@ -13,6 +13,7 @@ tokio = { workspace = true }
 serde = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+tower-http = { workspace = true }
 clap = { workspace = true }
 once_cell = { workspace = true }
 csv = { workspace = true }
@@ -22,4 +23,4 @@ anyhow = { workspace = true }
 zstd = { workspace = true }
 uuid = { workspace = true }
 reqwest = { workspace = true }
-itcc-omics-lib = { workspace = true }
+itcc-omics-lib = { path = "../itcc-omics-lib", features = ["fhir", "beam"] }

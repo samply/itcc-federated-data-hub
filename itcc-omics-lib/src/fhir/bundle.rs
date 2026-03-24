@@ -1,8 +1,6 @@
 use crate::error_type::LibError;
 use crate::fhir::resources::{Condition, Patient, Resource};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bundle {
@@ -41,7 +39,7 @@ impl Bundle {
     pub fn patient_info(&self) -> Option<(String, String)> {
         self.entry.as_ref()?.iter().find_map(|entry| {
             if let Resource::Patient(patient) = &entry.resource {
-                Some((patient.id.clone()?, entry.fullUrl.clone()?))
+                Some((patient.id.clone(), entry.fullUrl.clone()?))
             } else {
                 None
             }
@@ -106,89 +104,41 @@ impl Bundle {
         old_id: &str,
         new_id: &str,
     ) -> Result<(), LibError> {
-        let from_ref = format!("Patient/{}", old_id);
-        let to_ref = format!("Patient/{}", new_id);
-
-        self.rewrite_all_references(&from_ref.as_str(), &to_ref.as_str());
-
         if let Some(entries) = self.entry.as_mut() {
             for entry in entries {
                 entry.search = None;
                 match &mut entry.resource {
                     Resource::Patient(p) => {
-                        p.meta = None;
-                        if p.id.as_deref() == Some(old_id) {
-                            p.id = Some(new_id.to_string());
-                        } else {
-                            return Err(LibError::FhirCheckError);
-                        }
-
-                        if let Some(meta) = &mut p.meta {
-                            meta.versionId = None;
-                            meta.lastUpdated = None;
-                        }
+                        p.identifier
+                            .iter_mut()
+                            .filter(|id| id.value == old_id)
+                            .for_each(|id| id.value = new_id.to_string());
 
                         entry.request = Some(BundleRequest {
                             method: "PUT".to_string(),
-                            url: format!("Patient/{}", new_id),
+                            url: format!("Patient/{}", p.id),
                         });
-
-                        if let Some(full) = entry.fullUrl.as_mut() {
-                            *full = full.replace(
-                                &format!("/Patient/{}", old_id),
-                                &format!("/Patient/{}", new_id),
-                            );
-                        } else {
-                            return Err(LibError::FhirCheckError);
-                        }
                     }
 
                     Resource::Condition(c) => {
-                        c.meta = None;
-                        if let Some(meta) = &mut c.meta {
-                            meta.versionId = None;
-                            meta.lastUpdated = None;
-                        }
-                        if let Some(id) = c.id.as_deref() {
-                            entry.request = Some(BundleRequest {
-                                method: "PUT".to_string(),
-                                url: format!("Condition/{}", id),
-                            });
-                        } else {
-                            return Err(LibError::FhirCheckError);
-                        }
+                        entry.request = Some(BundleRequest {
+                            method: "PUT".to_string(),
+                            url: format!("Condition/{}", c.id),
+                        });
                     }
 
                     Resource::Observation(o) => {
-                        o.meta = None;
-                        if let Some(meta) = &mut o.meta {
-                            meta.versionId = None;
-                            meta.lastUpdated = None;
-                        }
-                        if let Some(id) = o.id.as_deref() {
-                            entry.request = Some(BundleRequest {
-                                method: "PUT".to_string(),
-                                url: format!("Observation/{}", id),
-                            });
-                        } else {
-                            return Err(LibError::FhirCheckError);
-                        }
+                        entry.request = Some(BundleRequest {
+                            method: "PUT".to_string(),
+                            url: format!("Observation/{}", o.id),
+                        });
                     }
 
                     Resource::Specimen(s) => {
-                        s.meta = None;
-                        if let Some(meta) = &mut s.meta {
-                            meta.versionId = None;
-                            meta.lastUpdated = None;
-                        }
-                        if let Some(id) = s.id.as_deref() {
-                            entry.request = Some(BundleRequest {
-                                method: "PUT".to_string(),
-                                url: format!("Specimen/{}", id),
-                            });
-                        } else {
-                            return Err(LibError::FhirCheckError);
-                        }
+                        entry.request = Some(BundleRequest {
+                            method: "PUT".to_string(),
+                            url: format!("Specimen/{}", s.id),
+                        });
                     }
 
                     Resource::Unknown => {}
@@ -202,6 +152,7 @@ impl Bundle {
         Ok(())
     }
 
+    // security check that fhir is pseudomised all fields
     pub fn contains_patient_id(&self, patient_id: &str) -> bool {
         let needle_ref = format!("Patient/{}", patient_id);
 
@@ -218,14 +169,9 @@ impl Bundle {
 
             match &entry.resource {
                 Resource::Patient(p) => {
-                    // Check resource id
-                    if p.id.as_deref() == Some(patient_id) {
-                        return true;
-                    }
-
-                    if let Some(ids) = &p.identifier {
+                    if let ids = &p.identifier {
                         for id in ids {
-                            if id.value.as_deref() == Some(patient_id) {
+                            if id.value == patient_id {
                                 return true;
                             }
                         }
@@ -233,7 +179,7 @@ impl Bundle {
                 }
 
                 Resource::Condition(c) => {
-                    if c.id.as_deref() == Some(patient_id) {
+                    if c.id == patient_id {
                         return true;
                     }
 
@@ -255,7 +201,7 @@ impl Bundle {
                 }
 
                 Resource::Observation(o) => {
-                    if o.id.as_deref() == Some(patient_id) {
+                    if o.id == patient_id {
                         return true;
                     }
 
@@ -275,7 +221,7 @@ impl Bundle {
                 }
 
                 Resource::Specimen(s) => {
-                    if s.id.as_deref() == Some(patient_id) {
+                    if s.id == patient_id {
                         return true;
                     }
 
@@ -287,7 +233,7 @@ impl Bundle {
 
                     if let Some(ids) = &s.identifier {
                         for id in ids {
-                            if id.value.as_deref() == Some(patient_id) {
+                            if id.value == patient_id {
                                 return true;
                             }
                         }

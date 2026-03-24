@@ -83,15 +83,13 @@ pub async fn get_object(
         .send()
         .await?;
     debug!("s3 response: {:?}", resp);
-    let mut body = resp.body.into_async_read();
+
+    let bytes = resp.body.collect().await?.into_bytes();
 
     let tmp = NamedTempFile::new()?;
-    let path: PathBuf = tmp.path().to_path_buf();
     let (_file, path) = tmp.keep()?;
 
-    let mut out = tokio::fs::File::create(&path).await?;
-    tokio::io::copy(&mut body, &mut out).await?;
-    out.flush().await?;
+    tokio::fs::write(&path, &bytes).await?;
 
     Ok(path)
 }

@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 
 pub mod blaze;
 pub mod bundle;
-pub mod crypto_id;
 pub mod resources;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

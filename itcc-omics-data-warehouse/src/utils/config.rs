@@ -26,4 +26,6 @@ pub struct Config {
     pub s3_default_region: String,
     #[clap(env, long, default_value = "omics")]
     pub s3_bucket: String,
+    #[clap(env, long, default_value_t = false)]
+    pub enable_sockets: bool,
 }

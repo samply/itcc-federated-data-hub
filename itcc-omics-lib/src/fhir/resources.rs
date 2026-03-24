@@ -22,13 +22,13 @@ pub enum Resource {
 }
 
 impl Resource {
-    pub fn id(&self) -> Option<&str> {
+    pub fn id(&self) -> &str {
         match self {
-            Resource::Patient(r) => r.id.as_deref(),
-            Resource::Condition(r) => r.id.as_deref(),
-            Resource::Observation(r) => r.id.as_deref(),
-            Resource::Specimen(r) => r.id.as_deref(),
-            Resource::Unknown => None,
+            Resource::Patient(r) => r.id.as_str(),
+            Resource::Condition(r) => r.id.as_str(),
+            Resource::Observation(r) => r.id.as_str(),
+            Resource::Specimen(r) => r.id.as_str(),
+            Resource::Unknown => "unknown",
         }
     }
 }
@@ -50,8 +50,7 @@ pub struct Meta {
 pub struct Identifier {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<String>,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -113,12 +112,8 @@ pub struct Extension {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Patient {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<Meta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub identifier: Option<Vec<Identifier>>,
+    pub id: String,
+    pub identifier: Vec<Identifier>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gender: Option<String>,
 }
@@ -129,10 +124,7 @@ pub struct Patient {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Condition {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<Meta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub onsetAge: Option<OnsetAge>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -161,10 +153,7 @@ pub struct OnsetAge {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Observation {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<Meta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<CodeableConcept>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -193,11 +182,7 @@ pub struct ObservationComponent {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Specimen {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<Meta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-
+    pub id: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub specimen_type: Option<CodeableConcept>,
     #[serde(skip_serializing_if = "Option::is_none")]

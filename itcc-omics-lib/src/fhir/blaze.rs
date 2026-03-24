@@ -10,29 +10,26 @@ pub async fn get_patient_by_id(
     patient_id: &str,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
-        .join(&format!("Patient/{}/$everything", patient_id))
+        .join(&format!("Patient?identifier={patient_id}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject"))
         .expect("blaze url should be present");
     debug!("Patient: {}", patient_id);
     debug!("PatientUrl: {}", patient_url);
-    let resp = client
-        .get(patient_url)
-        .send()
-        .await
-        .map_err(|_| LibError::BlazeError)?;
+    let resp = client.get(patient_url).send().await.map_err(|e| {
+        error!("Failed to get patient: {}", patient_id);
+        error!("Error: {e}");
+        LibError::BlazeError
+    })?;
     let status = resp.status();
-
-    if status.is_success() {
-        let bundle = resp
-            .json::<Bundle>()
-            .await
-            .map_err(|_| LibError::BlazeError)?;
-        return Ok(bundle);
-    }
     if status == StatusCode::NOT_FOUND {
         return Err(LibError::FhirPatientNotFound);
-    } else {
-        return Err(LibError::BlazeError);
     }
+
+    let bundle = resp.json::<Bundle>().await.map_err(|e| {
+        error!("Failed to get patient: {}", patient_id);
+        error!("Error: {e}");
+        LibError::BlazeError
+    })?;
+    Ok(bundle)
 }
 
 pub async fn pseudomize_patient_by_id(

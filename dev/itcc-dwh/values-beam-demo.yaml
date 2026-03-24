@@ -7,10 +7,16 @@ blaze:
   serviceName: blaze
   port: 8080
 
+garage-init:
+  enabled: true
+
 garage:
   image: dxflrs/garage:v2.1.0
   s3Port: 3900
   adminPort: 3903
+  region: garage
+  bucket: omics
+  accessKeyName: omics-key
   extraPorts:
     - name: admin3901
       port: 3901
@@ -25,6 +31,8 @@ webui:
   port: 3909
 
 omics:
+  storage:
+    size: "1Gi"
   image: docker.io/samply/itcc-omics-data-warehouse:latest
   imagePullPolicy: Never
   beamId: "app1.proxy2.broker"
@@ -35,7 +43,6 @@ omics:
     endpointUrl: "http://garage:3900"
     bucket: omics
   rustLog: debug
-  storageSize: 1Gi
 
 secrets:
   # You can set these via helm --set / --set-file in real deployments

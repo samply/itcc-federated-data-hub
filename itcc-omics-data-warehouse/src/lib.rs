@@ -10,6 +10,9 @@ use clap::Parser;
 use itcc_omics_lib::s3::client::{init_s3_client, ConfigS3};
 use once_cell::sync::Lazy;
 use tracing::info;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, EnvFilter};
 
 pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
     once_cell::sync::Lazy::new(|| Config::parse());
@@ -38,10 +41,38 @@ pub async fn run_with_config() -> anyhow::Result<()> {
         s3_endpoint_url: DATALAKE_CONFIG.s3_endpoint_url.to_string(),
     };
     init_s3_client(custom_config).await;
-    tokio::select! {
-        //res = run_socket_polling() => res?,
+    run_polling().await
+}
+
+async fn run_polling() -> anyhow::Result<()> {
+    // polling sockets or tasks
+    if DATALAKE_CONFIG.enable_sockets {
+        tokio::select! {
+        res = run_socket_polling() => res?,
+        _ = tokio::signal::ctrl_c() => info!("Shutting down"),
+        }
+    } else {
+        tokio::select! {
         res = run_task_polling() => res?,
-        _ = tokio::signal::ctrl_c() => tracing::info!("Shutting down"),
+        _ = tokio::signal::ctrl_c() => info!("Shutting down"),
+        }
     }
     Ok(())
+}
+
+pub fn init_tracing() {
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+            EnvFilter::new("itcc_omics_data_warehouse=debug,tower_http=debug,info")
+        }))
+        .with(
+            fmt::layer()
+                .with_target(false)
+                .with_thread_ids(false)
+                .with_file(false)
+                .with_line_number(false)
+                .pretty(),
+            //.json(),
+        )
+        .init();
 }

@@ -31,9 +31,9 @@ spec:
           image: samply/blaze:latest
           ports:
             - containerPort: 8080
-{{- with .Values.beamProxy.resources }}
+          {{- with .Values.blaze.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           readinessProbe:
             httpGet:

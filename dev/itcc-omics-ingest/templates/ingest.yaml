@@ -17,6 +17,13 @@ spec:
         - name: ingest
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
           ports:
             - name: http
               containerPort: {{ .Values.service.port | default 6080 }}

@@ -18,6 +18,9 @@ use once_cell::sync::Lazy;
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 use tracing::info;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{fmt, EnvFilter};
 
 pub static CONFIG_INGEST: Lazy<IngestConfig> = Lazy::new(<IngestConfig as clap::Parser>::parse);
 pub async fn run_with_config() {
@@ -41,4 +44,22 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         .route_layer(from_fn_with_state(app_state.clone(), api_key_check))
         .merge(health::routers())
         .with_state(app_state)
+}
+
+pub fn init_tracing() {
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("itcc_omics_ingest=info,tower_http=debug,info")),
+        )
+        .with(
+            fmt::layer()
+                .with_target(false)
+                .with_thread_ids(false)
+                .with_file(false)
+                .with_line_number(false)
+                .pretty(),
+            // .json()
+        )
+        .init();
 }
