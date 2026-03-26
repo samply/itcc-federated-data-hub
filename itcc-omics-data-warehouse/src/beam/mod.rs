@@ -1,7 +1,9 @@
 use crate::data::handler::handle_fhir_bundle;
 use crate::data::{process_and_generate_data, save_files_s3};
-use crate::{BEAM_CLIENT, DATALAKE_CONFIG};
+use crate::{BEAM_SOCKET_CLIENT, BEAM_TASK_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
 use futures::future::join_all;
 use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
@@ -13,7 +15,7 @@ use tokio::io::AsyncRead;
 use tracing::{debug, error, info, warn};
 
 pub async fn run_socket_polling() -> anyhow::Result<()> {
-    BEAM_CLIENT
+    BEAM_SOCKET_CLIENT
         .handle_sockets(|task, incoming| async move {
             info!("[Beam] Starting socket polling...");
             // print_file(task, incoming).await;
@@ -32,11 +34,11 @@ pub async fn run_task_polling() -> anyhow::Result<()> {
     let block_one = BlockingOptions::from_count(1);
 
     loop {
-        match BEAM_CLIENT.poll_pending_tasks(&block_one).await {
+        match BEAM_TASK_CLIENT.poll_pending_tasks(&block_one).await {
             Ok(tasks) => {
                 join_all(tasks.into_iter().map(|task| async move {
                     let claimed = TaskResult {
-                        from: DATALAKE_CONFIG.beam_id.clone(),
+                        from: DATALAKE_CONFIG.beam_task_id.clone(),
                         to: vec![task.from.clone()],
                         task: task.id.clone(),
                         status: WorkStatus::Claimed,
@@ -44,7 +46,7 @@ pub async fn run_task_polling() -> anyhow::Result<()> {
                         metadata: ().into(),
                     };
 
-                    if let Err(e) = BEAM_CLIENT.put_result(&claimed, &claimed.task).await {
+                    if let Err(e) = BEAM_SOCKET_CLIENT.put_result(&claimed, &claimed.task).await {
                         warn!("Failed to claim task from {}: {e}", claimed.to[0]);
                         return;
                     }
@@ -126,12 +128,21 @@ async fn handle_maf(task: MafTask) -> Ack {
         .clone()
         .unwrap_or_else(|| format!("{}.maf", task.meta.maf_id));
     let s3_key = format!("{}/{}/{}", task.meta.partner_id, task.meta.maf_id, filename);
+    let raw_bytes = match STANDARD.decode(&task.bytes_b64) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            return Ack {
+                ok: false,
+                message: Some(e.to_string()),
+            }
+        }
+    };
 
     match upload_to_s3_from_bytes(
         &s3_client,
         &DATALAKE_CONFIG.s3_bucket,
         &s3_key,
-        task.bytes_b64,
+        raw_bytes,
         "application/zstd",
     )
     .await
@@ -168,10 +179,10 @@ async fn handle_task(task: TaskRequest<Vec<IngestTask>>) {
     )
     .await;
 
-    let put = BEAM_CLIENT
+    let put = BEAM_TASK_CLIENT
         .put_result(
             &TaskResult {
-                from: DATALAKE_CONFIG.beam_id.clone(),
+                from: DATALAKE_CONFIG.beam_task_id.clone(),
                 to: vec![from],
                 task: task.id.clone(),
                 status: WorkStatus::Succeeded,

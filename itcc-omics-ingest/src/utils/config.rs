@@ -12,7 +12,6 @@ pub struct AppState {
     pub api_key: Arc<str>,
     pub zstd_level: i32,
     pub required_omics_columns: Arc<[String]>,
-    pub data_warehouse_id: AppId,
     pub partner_id: Arc<str>,
     pub services: Arc<Services>,
 }
@@ -25,6 +24,8 @@ pub struct Services {
     pub beam_id: AppId,
     pub beam_secret: Arc<str>,
     pub enable_sockets: bool,
+    pub dwh_socket_id: AppId,
+    pub dwh_task_id: AppId,
 }
 
 impl From<&IngestConfig> for AppState {
@@ -40,7 +41,6 @@ impl From<&IngestConfig> for AppState {
             api_key: Arc::from(c.api_key.as_str()),
             zstd_level: c.zstd_level,
             required_omics_columns: Arc::from(c.required_omics_columns.as_slice()),
-            data_warehouse_id: c.data_warehouse_id.clone(),
             partner_id: Arc::from(c.partner_id.as_str()),
             services: Arc::from(Services {
                 ml_url: c.ml_url.clone(),
@@ -50,6 +50,8 @@ impl From<&IngestConfig> for AppState {
                 beam_id: c.beam_id.clone(),
                 beam_secret: Arc::from(c.beam_secret.as_str()),
                 enable_sockets: c.enable_sockets,
+                dwh_socket_id: c.dwh_socket_id.clone(),
+                dwh_task_id: c.dwh_task_id.clone(),
             }),
         }
     }
@@ -78,9 +80,11 @@ pub struct IngestConfig {
     pub beam_id: AppId,
     #[clap(env, long, default_value_t = false)]
     pub enable_sockets: bool,
-    /// The app id of the central data lake(receiver)
+    /// The app id of the central data warehouse(receiver)
     #[clap(long, env, value_parser = parse_beam_id)]
-    pub data_warehouse_id: AppId,
+    pub dwh_task_id: AppId,
+    #[clap(long, env, value_parser = parse_beam_id)]
+    pub dwh_socket_id: AppId,
     #[clap(long, env, default_value = "3")]
     pub zstd_level: i32,
     #[clap(

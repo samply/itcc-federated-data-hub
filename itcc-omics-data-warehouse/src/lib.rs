@@ -16,9 +16,17 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
     once_cell::sync::Lazy::new(|| Config::parse());
-pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+pub static BEAM_TASK_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
-        &DATALAKE_CONFIG.beam_id,
+        &DATALAKE_CONFIG.beam_task_id,
+        &DATALAKE_CONFIG.beam_secret,
+        DATALAKE_CONFIG.beam_url.clone(),
+    )
+});
+
+pub static BEAM_SOCKET_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+    BeamClient::new(
+        &DATALAKE_CONFIG.beam_socket_id,
         &DATALAKE_CONFIG.beam_secret,
         DATALAKE_CONFIG.beam_url.clone(),
     )

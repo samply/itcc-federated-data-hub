@@ -23,3 +23,4 @@ aws-smithy-async = { version = "1", features = ["rt-tokio"] }
 axum = { version = "0.8", features = ["json", "macros"] }
 serde_bytes = "0.11"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+base64 = "0.22"
