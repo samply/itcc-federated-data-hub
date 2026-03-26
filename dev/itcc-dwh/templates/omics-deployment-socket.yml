@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: omics-dwh-sockets
+  name: omics-dwh-socket
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -9,19 +9,19 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: omics-dwh-sockets
+      app: omics-dwh-socket
   template:
     metadata:
       labels:
-        app: omics-dwh-sockets
+        app: omics-dwh-socket
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - name: omics-dwh-sockets
-          image: {{ .Values.omicsSockets.image | quote }}
-          imagePullPolicy: {{ .Values.omicsSockets.imagePullPolicy | default "IfNotPresent" }}
-{{- with .Values.omicsSockets.resources }}
+        - name: omics-dwh-socket
+          image: {{ .Values.omicsSocket.image | quote }}
+          imagePullPolicy: {{ .Values.omicsSocket.imagePullPolicy | default "IfNotPresent" }}
+{{- with .Values.omicsSocket.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -36,13 +36,13 @@ spec:
                   name: omics-beam-secret
                   key: BEAM_SECRET
             - name: BEAM_URL
-              value: {{ .Values.omicsSockets.beamUrl | quote }}
+              value: {{ .Values.omicsSocket.beamUrl | quote }}
             - name: S3_DEFAULT_REGION
-              value: {{ .Values.omicsSockets.s3.region | quote }}
+              value: {{ .Values.omicsSocket.s3.region | quote }}
             - name: S3_ENDPOINT_URL
-              value: {{ .Values.omicsSockets.s3.endpointUrl | quote }}
+              value: {{ .Values.omicsSocket.s3.endpointUrl | quote }}
             - name: S3_BUCKET
-              value: {{ .Values.omicsSockets.s3.bucket | quote }}
+              value: {{ .Values.omicsSocket.s3.bucket | quote }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -54,7 +54,7 @@ spec:
                   name: omics-s3-secret
                   key: S3_SECRET_ACCESS_KEY
             - name: RUST_LOG
-              value: {{ .Values.omicsSockets.rustLog | quote }}
+              value: {{ .Values.omicsSocket.rustLog | quote }}
             - name: ENABLE_SOCKETS
               value: "true"
           volumeMounts:
