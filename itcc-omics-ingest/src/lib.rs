@@ -7,7 +7,7 @@ pub mod test;
 pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
-use crate::controllers::{health, omics};
+use crate::controllers::{health, omics, patient};
 use crate::utils::config::IngestConfig;
 use crate::utils::config::{AppState, Services};
 use axum::extract::State;
@@ -43,6 +43,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         .merge(omics::routers())
         .route_layer(from_fn_with_state(app_state.clone(), api_key_check))
         .merge(health::routers())
+        .merge(patient::routers())
         .with_state(app_state)
 }
 
