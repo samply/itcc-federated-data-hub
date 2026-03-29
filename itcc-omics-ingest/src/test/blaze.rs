@@ -161,7 +161,7 @@ async fn get_all_patients_count() -> Result<(), ErrorType> {
     Ok(())
 }
 
-//#[ignore = "Require blaze"]
+#[ignore = "Require blaze"]
 #[tokio::test]
 async fn get_all_patient_identifiers_test() -> Result<(), ErrorType> {
     let app_state = test_app_state();
