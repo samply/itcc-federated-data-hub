@@ -23,5 +23,5 @@ anyhow = { workspace = true }
 zstd = { workspace = true }
 uuid = { workspace = true }
 reqwest = { workspace = true }
-itcc-omics-lib = { path = "../itcc-omics-lib", features = ["fhir", "beam"] }
+itcc-omics-lib = { path = "../itcc-omics-lib", features = ["fhir", "beam", "ml"] }
 base64 = { workspace = true }

@@ -42,8 +42,10 @@ spec:
               value: {{ .Values.env.ML_URL | quote }}
             - name: BLAZE_URL
               value: {{ .Values.env.BLAZE_URL | quote }}
-            - name: DATA_WAREHOUSE_ID
-              value: {{ .Values.env.DATA_WAREHOUSE_ID | quote }}
+            - name: DWH_TASK_ID
+              value: {{ .Values.env.dwhTaskId | quote }}
+            - name: DWH_SOCKET_ID
+              value: {{ .Values.env.dwhSocketId | quote }}
             - name: PARTNER_ID
               value: {{ .Values.env.PARTNER_ID | quote }}
             - name: ML_API_KEY

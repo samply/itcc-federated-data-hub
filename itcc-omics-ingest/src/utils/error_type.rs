@@ -101,6 +101,10 @@ impl From<LibError> for ErrorType {
             LibError::Other(_) => ErrorType::BlazeError,
             LibError::BlazeError => ErrorType::BlazeError,
             LibError::FhirPatientNotFound => ErrorType::FhirPatientNotFound,
+            LibError::MlSessionError => ErrorType::MlSessionError,
+            LibError::MlTokenError => ErrorType::MlTokenError,
+            LibError::MLCreatePatientError => ErrorType::MLCreatePatientError,
+            LibError::PseudoError => ErrorType::PseudoError,
         }
     }
 }

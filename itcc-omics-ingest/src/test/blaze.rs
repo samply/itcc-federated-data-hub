@@ -4,7 +4,8 @@ use axum::http::StatusCode;
 use beam_lib::reqwest::Url;
 use itcc_omics_lib::error_type::LibError;
 use itcc_omics_lib::fhir::blaze::{
-    filter_patient_id_from_bundle, get_patient_by_id, post_patient_fhir_bundle,
+    filter_patient_id_from_bundle, get_all_patient_count, get_all_patient_identifiers,
+    get_patient_by_id, post_patient_fhir_bundle,
 };
 use itcc_omics_lib::fhir::bundle::Bundle;
 use reqwest::Client;
@@ -34,7 +35,7 @@ async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let id = "patient-001";
     let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, id).await?;
-    //debug!("{:#?}", res);
+    debug!("{:#?}", res);
     Ok(())
 }
 
@@ -150,4 +151,23 @@ pub async fn get_patient_by_id_debug(
         error!("Bundle parse failed for patient {}: {}", patient_id, e);
         LibError::BlazeError
     })
+}
+
+#[ignore = "Require blaze"]
+#[tokio::test]
+async fn get_all_patients_count() -> Result<(), ErrorType> {
+    let app_state = test_app_state();
+    get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
+    Ok(())
+}
+
+//#[ignore = "Require blaze"]
+#[tokio::test]
+async fn get_all_patient_identifiers_test() -> Result<(), ErrorType> {
+    let app_state = test_app_state();
+    get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
+    let res =
+        get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, 10).await?;
+    debug!("{:#?}", res);
+    Ok(())
 }

@@ -2,6 +2,7 @@ use crate::error_type::LibError;
 use crate::fhir::bundle::Bundle;
 use crate::fhir::resources::Resource;
 use reqwest::{StatusCode, Url};
+use std::collections::HashSet;
 use tracing::{debug, error};
 
 pub async fn get_patient_by_id(
@@ -32,7 +33,7 @@ pub async fn get_patient_by_id(
     Ok(bundle)
 }
 
-pub async fn pseudomize_patient_by_id(
+pub async fn pseudomize_patient_by_id_transport(
     client: &reqwest::Client,
     blaze_url: &Url,
     patient_id: &str,
@@ -117,4 +118,55 @@ pub async fn post_patient_fhir_bundle(
         error!("Post to blaze {:?}", body);
         Err(LibError::BlazeError)
     }
+}
+
+pub async fn get_all_patient_count(
+    client: &reqwest::Client,
+    blaze_url: &Url,
+) -> Result<(), LibError> {
+    let patient_url = blaze_url
+        .join("Patient?_summary=count&_total=accurate")
+        .expect("blaze url should be present");
+
+    let resp: serde_json::Value = client
+        .get(patient_url)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Error: {e}");
+            LibError::BlazeError
+        })?
+        .error_for_status()
+        .map_err(|_| LibError::BlazeError)?
+        .json()
+        .await
+        .map_err(|_| LibError::BlazeError)?;
+    debug!("resp: {:#?}", resp);
+    let count = resp.get("total").unwrap();
+    debug!("Count: {:?}", count);
+
+    Ok(())
+}
+
+pub async fn get_all_patient_identifiers(
+    client: &reqwest::Client,
+    blaze_url: &Url,
+    count: i32,
+) -> Result<HashSet<String>, LibError> {
+    let patient_url = blaze_url
+        .join("Patient?_elements=identifier&_count=500")
+        .expect("blaze url should be present");
+
+    let mut bundle: Bundle = client
+        .get(patient_url)
+        .send()
+        .await
+        .map_err(|_| LibError::BlazeError)?
+        .error_for_status()
+        .map_err(|_| LibError::BlazeError)?
+        .json::<Bundle>()
+        .await
+        .map_err(|_| LibError::BlazeError)?;
+    debug!("Bundle: {:#?}", bundle);
+    Ok(bundle.get_all_patient_identifiers())
 }
