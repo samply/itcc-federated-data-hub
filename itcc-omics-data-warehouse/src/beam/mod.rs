@@ -46,7 +46,7 @@ pub async fn run_task_polling() -> anyhow::Result<()> {
                         metadata: ().into(),
                     };
 
-                    if let Err(e) = BEAM_SOCKET_CLIENT.put_result(&claimed, &claimed.task).await {
+                    if let Err(e) = BEAM_TASK_CLIENT.put_result(&claimed, &claimed.task).await {
                         warn!("Failed to claim task from {}: {e}", claimed.to[0]);
                         return;
                     }
