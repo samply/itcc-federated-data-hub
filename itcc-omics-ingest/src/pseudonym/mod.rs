@@ -10,6 +10,17 @@ use itcc_omics_lib::patient_id::{filter_patient_id, insert_base, split_base};
 use std::collections::{HashMap, HashSet};
 use tracing::debug;
 
+/// Builds a pseudonym mapping for a set of sample IDs by:
+/// 1. Extracting patient IDs from the sample IDs
+/// 2. Obtaining a Mainzelliste session token
+/// 3. Encrypting patient IDs to cryptographic pseudonyms via Mainzelliste
+/// 4. Fetching each patient's FHIR bundle from Blaze, rewriting the patient ID
+///    to its pseudonym, and transmitting the bundle via Beam
+/// 5. Constructing and returning a `HashMap<original_sample_id, pseudonymized_sample_id>`
+///
+/// # Errors
+/// Returns [`ErrorType`] if Mainzelliste token creation, encryption, FHIR retrieval,
+/// ID rewriting, Beam transmission, or pseudonym lookup fails.
 pub async fn build_pseudo_map(
     app_state: &AppState,
     sample_ids: HashSet<String>,
