@@ -13,9 +13,11 @@ pub struct Config {
     /// Beam api key
     #[clap(env, long)]
     pub beam_secret: String,
-    /// The app id of this application
+    /// The app id of this application for socket and task reciever
     #[clap(long, env, value_parser = parse_beam_id)]
-    pub beam_id: AppId,
+    pub beam_task_id: AppId,
+    #[clap(long, env, value_parser = parse_beam_id)]
+    pub beam_socket_id: AppId,
     #[clap(env, long, default_value = "http://garage:3900")]
     pub s3_endpoint_url: Url,
     #[clap(env, long)]

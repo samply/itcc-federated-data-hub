@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: omics-dwh
+  name: omics-dwh-socket
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -9,38 +9,40 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: omics-dwh
+      app: omics-dwh-socket
   template:
     metadata:
       labels:
-        app: omics-dwh
+        app: omics-dwh-socket
     spec:
       imagePullSecrets:
         - name: ghcr-secret
       containers:
-        - name: omics-dwh
-          image: {{ .Values.omics.image | quote }}
-          imagePullPolicy: {{ .Values.omics.imagePullPolicy | default "IfNotPresent" }}
-{{- with .Values.omics.resources }}
+        - name: omics-dwh-socket
+          image: {{ .Values.omicsSocket.image | quote }}
+          imagePullPolicy: {{ .Values.omicsSocket.imagePullPolicy | default "IfNotPresent" }}
+{{- with .Values.omicsSocket.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           env:
-            - name: BEAM_ID
-              value: {{ .Values.omics.beamId | quote }}
+            - name: BEAM_TASK_ID
+              value: {{ .Values.omicsTask.beamId | quote }}
+            - name: BEAM_SOCKET_ID
+              value: {{ .Values.omicsSocket.beamId | quote }}
             - name: BEAM_SECRET
               valueFrom:
                 secretKeyRef:
                   name: omics-beam-secret
                   key: BEAM_SECRET
             - name: BEAM_URL
-              value: {{ .Values.omics.beamUrl | quote }}
+              value: {{ .Values.omicsSocket.beamUrl | quote }}
             - name: S3_DEFAULT_REGION
-              value: {{ .Values.omics.s3.region | quote }}
+              value: {{ .Values.omicsSocket.s3.region | quote }}
             - name: S3_ENDPOINT_URL
-              value: {{ .Values.omics.s3.endpointUrl | quote }}
+              value: {{ .Values.omicsSocket.s3.endpointUrl | quote }}
             - name: S3_BUCKET
-              value: {{ .Values.omics.s3.bucket | quote }}
+              value: {{ .Values.omicsSocket.s3.bucket | quote }}
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -52,7 +54,9 @@ spec:
                   name: omics-s3-secret
                   key: S3_SECRET_ACCESS_KEY
             - name: RUST_LOG
-              value: {{ .Values.omics.rustLog | quote }}
+              value: {{ .Values.omicsSocket.rustLog | quote }}
+            - name: ENABLE_SOCKETS
+              value: "true"
           volumeMounts:
             - name: data
               mountPath: /data

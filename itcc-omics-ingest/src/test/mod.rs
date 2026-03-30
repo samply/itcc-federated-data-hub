@@ -21,7 +21,8 @@ fn test_config() -> IngestConfig {
         beam_secret: "App1Secret".to_string(),
         beam_id: AppId::new_unchecked("app1.proxy1.broker"),
         enable_sockets: false,
-        data_warehouse_id: AppId::new_unchecked("app1.proxy2.broker"),
+        dwh_task_id: AppId::new_unchecked("task.proxy2.broker"),
+        dwh_socket_id: AppId::new_unchecked("socket.proxy2.broker"),
         zstd_level: 3,
         required_omics_columns: vec![
             "Hugo_Symbol".to_string(),
@@ -44,5 +45,4 @@ fn app_state_is_derived_from_config() {
 
     assert_eq!(state.api_key, "omics".into());
     assert_eq!(state.zstd_level, 3);
-    assert_eq!(state.data_warehouse_id, cfg.data_warehouse_id);
 }

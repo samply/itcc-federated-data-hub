@@ -3,6 +3,8 @@ pub mod beam;
 pub mod error_type;
 #[cfg(feature = "fhir")]
 pub mod fhir;
+#[cfg(feature = "ml")]
+pub mod mainzelliste;
 pub mod patient_id;
 #[cfg(feature = "s3")]
 pub mod s3;

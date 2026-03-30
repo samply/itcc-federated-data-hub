@@ -28,7 +28,12 @@ spec:
               value: {{ .Values.beamProxy.brokerUrl | quote }}
             - name: PROXY_ID
               value: {{ .Values.beamProxy.proxyId | quote }}
-            - name: {{ .Values.beamProxy.appKeyName | quote }}
+            - name: {{ .Values.beamProxy.appKeyNameTask | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: omics-beam-secret
+                  key: BEAM_SECRET
+            - name: {{ .Values.beamProxy.appKeyNameSocket | quote }}
               valueFrom:
                 secretKeyRef:
                   name: omics-beam-secret

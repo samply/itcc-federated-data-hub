@@ -13,8 +13,7 @@ pub struct MetaData {
 pub struct MafTask {
     pub meta: MetaData,
     pub suggested_name: Option<String>,
-    #[serde(with = "serde_bytes")]
-    pub bytes_b64: Vec<u8>,
+    pub bytes_b64: String,
 }
 
 pub fn parse_beam_id(id: &str) -> Result<AppId, String> {

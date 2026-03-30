@@ -16,9 +16,17 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 pub static DATALAKE_CONFIG: once_cell::sync::Lazy<Config> =
     once_cell::sync::Lazy::new(|| Config::parse());
-pub static BEAM_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+pub static BEAM_TASK_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
     BeamClient::new(
-        &DATALAKE_CONFIG.beam_id,
+        &DATALAKE_CONFIG.beam_task_id,
+        &DATALAKE_CONFIG.beam_secret,
+        DATALAKE_CONFIG.beam_url.clone(),
+    )
+});
+
+pub static BEAM_SOCKET_CLIENT: Lazy<BeamClient> = Lazy::new(|| {
+    BeamClient::new(
+        &DATALAKE_CONFIG.beam_socket_id,
         &DATALAKE_CONFIG.beam_secret,
         DATALAKE_CONFIG.beam_url.clone(),
     )
@@ -34,6 +42,8 @@ pub async fn run_with_config() -> anyhow::Result<()> {
         "S3_SECRET_ACCESS_KEY len={}",
         DATALAKE_CONFIG.s3_secret_access_key.len()
     );
+    info!("Beam Socket init: {:?}", BEAM_SOCKET_CLIENT);
+    info!("Beam Task init: {:?}", BEAM_TASK_CLIENT);
     let custom_config: ConfigS3 = ConfigS3 {
         s3_default_region: DATALAKE_CONFIG.s3_default_region.clone(),
         s3_access_key_id: DATALAKE_CONFIG.s3_access_key_id.clone(),

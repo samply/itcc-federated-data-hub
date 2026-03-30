@@ -1,29 +1,47 @@
 use crate::beam;
-use crate::pseudonym::handler::{
-    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
-};
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use itcc_omics_lib::fhir::blaze::get_patient_by_id;
+use itcc_omics_lib::mainzelliste::handler::{
+    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
+};
+use itcc_omics_lib::mainzelliste::{encryption_ml, init_mainzelliste};
 use itcc_omics_lib::patient_id::{filter_patient_id, insert_base, split_base};
 use std::collections::{HashMap, HashSet};
 use tracing::debug;
 
-pub mod handler;
-
+/// Builds a pseudonym mapping for a set of sample IDs by:
+/// 1. Extracting patient IDs from the sample IDs
+/// 2. Obtaining a Mainzelliste session token
+/// 3. Encrypting patient IDs to cryptographic pseudonyms via Mainzelliste
+/// 4. Fetching each patient's FHIR bundle from Blaze, rewriting the patient ID
+///    to its pseudonym, and transmitting the bundle via Beam
+/// 5. Constructing and returning a `HashMap<original_sample_id, pseudonymized_sample_id>`
+///
+/// # Errors
+/// Returns [`ErrorType`] if Mainzelliste token creation, encryption, FHIR retrieval,
+/// ID rewriting, Beam transmission, or pseudonym lookup fails.
 pub async fn build_pseudo_map(
     app_state: &AppState,
     sample_ids: HashSet<String>,
 ) -> Result<HashMap<String, String>, ErrorType> {
     // Mainzelliste
     let patients_id = filter_patient_id(&sample_ids);
-    let session_id = create_session(&app_state).await?;
-    let token: CreateTokenResp = create_token(&app_state, &session_id, patients_id.len()).await?;
-    let pseudonym_res: Vec<CreatePatientResp> =
-        create_patients(&app_state, &token.id, patients_id).await?;
-    let local_crypto_ids: HashMap<String, String> = extract_mapping(pseudonym_res)?;
-
-    debug!("Mapping: {:#?}", local_crypto_ids);
+    let token: CreateTokenResp = init_mainzelliste(
+        &app_state.http,
+        app_state.services.ml_api_key.as_ref(),
+        &app_state.services.ml_url,
+        patients_id.len(),
+    )
+    .await?;
+    let local_crypto_ids = encryption_ml(
+        &app_state.http,
+        app_state.services.ml_api_key.as_ref(),
+        &app_state.services.ml_url,
+        &token.id,
+        patients_id,
+    )
+    .await?;
     // fhir handling
     for (patient_id, pseudo_id) in local_crypto_ids.iter() {
         debug!("Patient: {}", patient_id);
@@ -53,24 +71,4 @@ pub async fn build_pseudo_map(
     }
 
     Ok(mapping_ids)
-}
-
-fn extract_mapping(resp: Vec<CreatePatientResp>) -> Result<HashMap<String, String>, ErrorType> {
-    resp.into_iter()
-        .map(|r| {
-            let local = r
-                .iter()
-                .find(|x| x.id_type == "localid")
-                .map(|x| x.id_string.clone())
-                .ok_or(ErrorType::PseudoError)?;
-
-            let crypto = r
-                .iter()
-                .find(|x| x.id_type == "cryptoid")
-                .map(|x| x.id_string.clone())
-                .ok_or(ErrorType::PseudoError)?;
-
-            Ok((local, crypto))
-        })
-        .collect::<Result<HashMap<String, String>, ErrorType>>()
 }

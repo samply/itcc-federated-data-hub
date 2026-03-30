@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omics-dwh-task
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: omics-dwh-task
+  template:
+    metadata:
+      labels:
+        app: omics-dwh-task
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: omics-dwh-task
+          image: {{ .Values.omicsTask.image | quote }}
+          imagePullPolicy: {{ .Values.omicsTask.imagePullPolicy | default "IfNotPresent" }}
+{{- with .Values.omicsTask.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          env:
+            - name: BEAM_TASK_ID
+              value: {{ .Values.omicsTask.beamId | quote }}
+            - name: BEAM_SOCKET_ID
+              value: {{ .Values.omicsSocket.beamId | quote }}
+            - name: BEAM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omics-beam-secret
+                  key: BEAM_SECRET
+            - name: BEAM_URL
+              value: {{ .Values.omicsTask.beamUrl | quote }}
+            - name: S3_DEFAULT_REGION
+              value: {{ .Values.omicsTask.s3.region | quote }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.omicsTask.s3.endpointUrl | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.omicsTask.s3.bucket | quote }}
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_SECRET_ACCESS_KEY
+            - name: RUST_LOG
+              value: {{ .Values.omicsTask.rustLog | quote }}
+            - name: ENABLE_SOCKETS
+              value: "false"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
