@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mainzelliste
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: mainzelliste
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mainzelliste
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mainzelliste
+  template:
+    metadata:
+      labels:
+        app: mainzelliste
+    spec:
+      containers:
+        - name: mainzelliste
+          image: medicalinformatics/mainzelliste:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ML_API_KEY
+              value: changeme1
+            - name: ML_DB_HOST
+              value: mzl-db
+            - name: ML_DB_PORT
+              value: "5432"
+            - name: ML_DB_NAME
+              value: mainzelliste
+            - name: ML_DB_USER
+              value: mainzelliste
+            - name: ML_DB_PASS
+              value: PleasePutASafePasswordHere
+            - name: ML_DB_DRIVER
+              value: org.postgresql.Driver
+            - name: ML_DB_TYPE
+              value: postgresql
+            - name: ML_LOG_LEVEL
+              value: INFO
+            - name: ML_ALLOWEDREMOTEADDRESSES
+              value: "0.0.0.0,::1,127.0.0.1,192.168.65.1,172.16.0.0/12"
+          volumeMounts:
+            - name: mainzelliste-config
+              mountPath: /etc/mainzelliste/mainzelliste.conf
+              subPath: mainzelliste.conf
+            - name: symmetric-key
+              mountPath: /etc/resources/keys/symmetric_key.der
+              subPath: symmetric_key.der
+      volumes:
+        - name: mainzelliste-config
+          secret:
+            secretName: mainzelliste-config
+        - name: symmetric-key
+          secret:
+            secretName: mainzelliste-symmetric-key

@@ -1,0 +1,26 @@
+[package]
+name = "itcc-omics-ingest"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+axum = { workspace = true }
+sha2 = "0.10.9"
+hex = "0.4.3"
+bytes = "1.11.1"
+tokio = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tower-http = { workspace = true }
+clap = { workspace = true }
+once_cell = { workspace = true }
+csv = { workspace = true }
+beam-lib = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+zstd = { workspace = true }
+uuid = { workspace = true }
+reqwest = { workspace = true }
+itcc-omics-lib = { path = "../itcc-omics-lib", features = ["fhir", "beam"] }

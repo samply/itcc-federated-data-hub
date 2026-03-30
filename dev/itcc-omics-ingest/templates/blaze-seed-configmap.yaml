@@ -1,0 +1,13 @@
+{{- if .Values.seed.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-blaze-seed-xml
+  namespace: {{ .Release.Namespace }}
+data:
+{{- $files := .Files.Glob "files/seed-xml/*" }}
+{{- range $path, $file := $files }}
+  {{ base $path }}: |-
+{{ $file | toString | indent 4 }}
+{{- end }}
+{{- end }}

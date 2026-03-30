@@ -1,0 +1,11 @@
+[env]
+API_KEY="omics"
+RUST_LOG="debug"
+BEAM_ID="app1.proxy1.broker"
+BEAM_SECRET="App1Secret"
+BEAM_URL="http://proxy1:8083"
+BLAZE_URL="http://host.docker.internal:8008"
+ML_URL="http://host.docker.internal:7887"
+DATA_WAREHOUSE_ID="app1.proxy2.broker"
+SITE_ID="itcc-inform"
+API_MZL_KEY="changeme1"

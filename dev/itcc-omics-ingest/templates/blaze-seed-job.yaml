@@ -1,0 +1,49 @@
+{{- if .Values.seed.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-blaze-seed
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: curlimages/curl:8.7.1
+          command: ["sh","-lc"]
+          args:
+            - |
+              set -euo pipefail
+              BLAZE="http://{{ .Values.blaze.serviceName }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.blaze.port }}"
+
+              echo "Waiting for Blaze..."
+              for i in $(seq 1 120); do
+                if curl -fsS "$BLAZE/fhir/metadata" >/dev/null; then
+                  echo "Blaze ready"
+                  break
+                fi
+                sleep 2
+              done
+
+              echo "Seeding XML files..."
+              for f in /seed/*.xml; do
+                echo "POST $f"
+                curl -fS -X POST "$BLAZE/fhir" \
+                  -w "\nHTTP %{http_code} for $f\n" \
+                  -H "Content-Type: application/fhir+xml" \
+                  --data-binary @"$f" >/dev/null
+              done
+              echo "Seed done."
+          volumeMounts:
+            - name: seed
+              mountPath: /seed
+      volumes:
+        - name: seed
+          configMap:
+            name: {{ .Release.Name }}-blaze-seed-xml
+  {{- end }}

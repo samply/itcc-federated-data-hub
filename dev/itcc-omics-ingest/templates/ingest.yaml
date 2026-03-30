@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itcc-omics-ingest
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: itcc-omics-ingest
+  template:
+    metadata:
+      labels:
+        app: itcc-omics-ingest
+    spec:
+      containers:
+        - name: ingest
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port | default 6080 }}
+          env:
+            - name: API_KEY
+              value: {{ .Values.env.API_KEY | quote }}
+            - name: RUST_LOG
+              value: {{ .Values.env.RUST_LOG | quote }}
+            - name: BEAM_ID
+              value: {{ .Values.env.BEAM_ID | quote }}
+            - name: BEAM_SECRET
+              value: {{ .Values.env.BEAM_SECRET | quote }}
+            - name: BEAM_URL
+              value: "http://{{ .Values.beam.service }}.{{ .Values.beam.namespace }}.svc.cluster.local:{{ .Values.beam.port }}"
+            - name: ML_URL
+              value: {{ .Values.env.ML_URL | quote }}
+            - name: BLAZE_URL
+              value: {{ .Values.env.BLAZE_URL | quote }}
+            - name: DATA_WAREHOUSE_ID
+              value: {{ .Values.env.DATA_WAREHOUSE_ID | quote }}
+            - name: PARTNER_ID
+              value: {{ .Values.env.PARTNER_ID | quote }}
+            - name: ML_API_KEY
+              value: {{ .Values.env.ML_API_KEY | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itcc-omics-ingest
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: itcc-omics-ingest
+  ports:
+    - name: http
+      port: {{ .Values.service.port | default 6080 }}
+      targetPort: http

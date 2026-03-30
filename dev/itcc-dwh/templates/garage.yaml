@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: garage
+  ports:
+    - name: s3
+      port: {{ .Values.garage.s3Port }}
+      targetPort: {{ .Values.garage.s3Port }}
+    - name: admin
+      port: {{ .Values.garage.adminPort }}
+      targetPort: {{ .Values.garage.adminPort }}
+    {{- range .Values.garage.extraPorts }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: garage
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: garage
+  replicas: 1
+  selector:
+    matchLabels:
+      app: garage
+  template:
+    metadata:
+      labels:
+        app: garage
+    spec:
+      containers:
+        - name: garage
+          image: {{ .Values.garage.image | quote }}
+          ports:
+            - name: s3
+              containerPort: {{ .Values.garage.s3Port }}
+            - name: admin
+              containerPort: {{ .Values.garage.adminPort }}
+            {{- range .Values.garage.extraPorts }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+          {{- with .Values.garage.resources }}
+          resources:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: garage-config
+              mountPath: /etc/garage.toml
+              subPath: garage.toml
+              readOnly: true
+            - name: garage-meta
+              mountPath: /var/lib/garage/meta
+            - name: garage-data
+              mountPath: /var/lib/garage/data
+      volumes:
+        - name: garage-config
+          secret:
+            secretName: garage-config
+        - name: garage-meta
+          persistentVolumeClaim:
+            claimName: garage-meta
+        - name: garage-data
+          persistentVolumeClaim:
+            claimName: garage-data

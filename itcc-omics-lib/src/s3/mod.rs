@@ -1,0 +1,95 @@
+pub mod client;
+
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::Client;
+use std::path::{Path, PathBuf};
+use tempfile::NamedTempFile;
+use tokio::io::AsyncWriteExt;
+use tracing::{debug, info};
+
+fn content_type_for_path(path: &Path) -> &'static str {
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("txt") | Some("tsv") | Some("maf") => "text/plain; charset=utf-8",
+        Some("json") => "application/json",
+        Some("parquet") => "application/octet-stream",
+        Some("zst") | Some("zstd") => "application/zstd",
+        _ => "application/octet-stream",
+    }
+}
+
+pub async fn upload_to_s3_from_path(
+    client_s3: &Client,
+    bucket: &str,
+    s3_key: &str,
+    path: impl AsRef<Path>,
+) -> anyhow::Result<()> {
+    let path = path.as_ref();
+    let content_type = content_type_for_path(path);
+
+    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+
+    let bytes = tokio::fs::read(path).await?;
+    let len = bytes.len() as i64;
+    let body = ByteStream::from(bytes);
+
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(s3_key)
+        .content_type(content_type)
+        .content_length(len)
+        .body(body)
+        .send()
+        .await?;
+
+    info!("s3 {s3_key} saved");
+    Ok(())
+}
+pub async fn upload_to_s3_from_bytes(
+    client_s3: &Client,
+    bucket: &str,
+    s3_key: &str,
+    bytes: Vec<u8>,
+    content_type: &'static str,
+) -> anyhow::Result<()> {
+    let len = bytes.len() as i64;
+    let body = ByteStream::from(bytes);
+
+    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+
+    client_s3
+        .put_object()
+        .bucket(bucket)
+        .key(s3_key)
+        .content_type(content_type)
+        .content_length(len)
+        .body(body)
+        .send()
+        .await?;
+
+    info!("s3 {s3_key} saved");
+    Ok(())
+}
+
+pub async fn get_object(
+    client_s3: &Client,
+    bucket: &str,
+    filename: &str,
+) -> anyhow::Result<PathBuf> {
+    let resp = client_s3
+        .get_object()
+        .bucket(bucket)
+        .key(filename)
+        .send()
+        .await?;
+    debug!("s3 response: {:?}", resp);
+
+    let bytes = resp.body.collect().await?.into_bytes();
+
+    let tmp = NamedTempFile::new()?;
+    let (_file, path) = tmp.keep()?;
+
+    tokio::fs::write(&path, &bytes).await?;
+
+    Ok(path)
+}

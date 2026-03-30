@@ -1,0 +1,22 @@
+FROM lukemathwalker/cargo-chef:0.1.73-rust-1.92.0-bookworm AS chef
+WORKDIR /app
+
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder
+WORKDIR /app
+
+COPY --from=planner /app/recipe.json recipe.json
+COPY Cargo.toml Cargo.lock ./
+
+RUN cargo chef cook --release --recipe-path recipe.json
+
+COPY . .
+RUN cargo build --release -p itcc-omics-data-warehouse --bin itcc-omics-data-warehouse
+FROM gcr.io/distroless/cc-debian12 AS runtime
+
+COPY --from=builder /app/target/release/itcc-omics-data-warehouse /usr/local/bin/itcc-omics-data-warehouse
+
+ENTRYPOINT ["/usr/local/bin/itcc-omics-data-warehouse"]

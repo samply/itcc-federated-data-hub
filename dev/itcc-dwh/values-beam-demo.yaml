@@ -1,0 +1,53 @@
+namespace: itcc-dwh
+
+beamProxy:
+  enabled: false
+
+blaze:
+  serviceName: blaze
+  port: 8080
+
+garage-init:
+  enabled: true
+
+garage:
+  image: dxflrs/garage:v2.1.0
+  s3Port: 3900
+  adminPort: 3903
+  region: garage
+  bucket: omics
+  accessKeyName: omics-key
+  extraPorts:
+    - name: admin3901
+      port: 3901
+    - name: rpc3902
+      port: 3902
+  storage:
+    metaSize: 1Gi
+    dataSize: 1Gi
+
+webui:
+  image: khairul169/garage-webui:latest
+  port: 3909
+
+omics:
+  storage:
+    size: "1Gi"
+  image: docker.io/samply/itcc-omics-data-warehouse:latest
+  imagePullPolicy: Never
+  beamId: "app1.proxy2.broker"
+  beamUrl: "http://beam-proxy-proxy2.samply-beam-demo.svc.cluster.local:8082"
+  #beamUrl: "http://proxy2:8082"
+  s3:
+    region: garage
+    endpointUrl: "http://garage:3900"
+    bucket: omics
+  rustLog: debug
+
+secrets:
+  # You can set these via helm --set / --set-file in real deployments
+  beamSecret: "App1Secret"
+  s3AccessKeyId: "GKda285c2610de8258eb3b817c"
+  s3SecretAccessKey: "bc396f56e53bb550b7b98c4adc705d1f4a0bb15d1954bed99f0345aaf280da31"
+config:
+
