@@ -22,6 +22,7 @@ pub enum ErrorType {
     MLCreatePatientError,
     MafWriteError,
     BlazeError,
+    BlazeResultError,
     FhirCheckError,
     FhirPatientNotFound,
 }
@@ -87,6 +88,10 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "fhir data for patient not found please provide".to_string(),
             ),
+            ErrorType::BlazeResultError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "result error".to_string(),
+            ),
         };
         (status, Json(body)).into_response()
     }
@@ -105,6 +110,7 @@ impl From<LibError> for ErrorType {
             LibError::MlTokenError => ErrorType::MlTokenError,
             LibError::MLCreatePatientError => ErrorType::MLCreatePatientError,
             LibError::PseudoError => ErrorType::PseudoError,
+            LibError::BlazeResultError => ErrorType::BlazeResultError,
         }
     }
 }

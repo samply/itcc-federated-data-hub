@@ -8,6 +8,8 @@ pub enum LibError {
     MissingFullUrl,
     #[error("Expected Patient resource not found / mismatched id")]
     PatientIdMismatch,
+    #[error("Blaze error to much patients")]
+    BlazeResultError,
     #[error("Blaze communication error")]
     BlazeError,
     #[error("Patient not Found")]

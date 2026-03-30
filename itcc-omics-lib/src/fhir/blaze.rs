@@ -123,7 +123,7 @@ pub async fn post_patient_fhir_bundle(
 pub async fn get_all_patient_count(
     client: &reqwest::Client,
     blaze_url: &Url,
-) -> Result<(), LibError> {
+) -> Result<i64, LibError> {
     let patient_url = blaze_url
         .join("Patient?_summary=count&_total=accurate")
         .expect("blaze url should be present");
@@ -142,19 +142,27 @@ pub async fn get_all_patient_count(
         .await
         .map_err(|_| LibError::BlazeError)?;
     debug!("resp: {:#?}", resp);
-    let count = resp.get("total").unwrap();
+    let count: i64 = resp
+        .get("total")
+        .ok_or_else(|| LibError::BlazeError)?
+        .as_i64()
+        .ok_or_else(|| LibError::BlazeError)?;
     debug!("Count: {:?}", count);
-
-    Ok(())
+    if count >= 100000 {
+        // TODO paging offer 10000 patients
+        return Err(LibError::BlazeResultError);
+    } else {
+        return Ok(count);
+    }
 }
 
 pub async fn get_all_patient_identifiers(
     client: &reqwest::Client,
     blaze_url: &Url,
-    count: i32,
+    count: i64,
 ) -> Result<HashSet<String>, LibError> {
     let patient_url = blaze_url
-        .join("Patient?_elements=identifier&_count=500")
+        .join(format!("Patient?_elements=identifier&_count={count}").as_str())
         .expect("blaze url should be present");
 
     let mut bundle: Bundle = client
