@@ -8,6 +8,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, info_span};
+use itcc_omics_lib::fhir::blaze::{
+    get_all_patient_count,
+    get_all_patient_identifiers,
+    get_patient_by_id,
+};
 
 pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
@@ -68,35 +73,59 @@ async fn export_patients_to_dwh(
     patient_id: Option<String>,
 ) -> Result<PatientExportResponse, ErrorType> {
     match patient_id {
-        Some(id) => {
-            info!("Exporting single patient to data warehouse: {}", id);
-
-            // TODO:
-            // 1. fetch only this patient
-            // 2. transform/export it
-            // 3. send it to the data warehouse
-
-            Ok(PatientExportResponse {
-                message: format!("Patient {} exported successfully", id),
-                exported_patient_id: Some(id),
-                exported_all: false,
-            })
-        }
-        None => {
-            info!("Exporting all patients to data warehouse");
-
-            // TODO:
-            // 1. fetch all patients
-            // 2. transform/export them
-            // 3. send them to the data warehouse
-
-            Ok(PatientExportResponse {
-                message: "All patients exported successfully".to_string(),
-                exported_patient_id: None,
-                exported_all: true,
-            })
-        }
+        Some(id) => export_single_patient(state, &id).await,
+        None => export_all_patients(state).await,
     }
+}
+
+async fn export_single_patient(
+    state: &Arc<AppState>,
+    patient_id: &str,
+) -> Result<PatientExportResponse, ErrorType> {
+    let bundle = get_patient_by_id(
+        &state.http,
+        &state.services.blaze_url,
+        patient_id,
+    ).await?;
+
+    // TODO: send to DWH
+
+    Ok(PatientExportResponse {
+        message: format!("Patient {} exported successfully", patient_id),
+        exported_patient_id: Some(patient_id.to_string()),
+        exported_all: false,
+    })
+}
+
+async fn export_all_patients(
+    state: &Arc<AppState>,
+) -> Result<PatientExportResponse, ErrorType> {
+    let count = get_all_patient_count(
+        &state.http,
+        &state.services.blaze_url,
+    ).await?;
+
+    let patient_ids = get_all_patient_identifiers(
+        &state.http,
+        &state.services.blaze_url,
+        count,
+    ).await?;
+
+    for patient_id in patient_ids {
+        let bundle = get_patient_by_id(
+            &state.http,
+            &state.services.blaze_url,
+            &patient_id,
+        ).await?;
+
+        // TODO: send to DWH
+    }
+
+    Ok(PatientExportResponse {
+        message: "All patients exported successfully".to_string(),
+        exported_patient_id: None,
+        exported_all: true,
+    })
 }
 
 #[derive(Deserialize, Debug, Clone, Serialize)]
