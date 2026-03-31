@@ -137,7 +137,7 @@ pub async fn create_patient(
         .post(patient_url)
         .query(&[("tokenId", token)])
         .header("mainzellisteApiKey", ml_api_key)
-        .header("mainzellisteApiVersion", "2.0")
+        .header("mainzellisteApiVersion", "3.3.0")
         .json(&body)
         .send()
         .await
