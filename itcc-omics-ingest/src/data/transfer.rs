@@ -6,6 +6,18 @@ use std::collections::{HashMap, HashSet};
 use std::io::Cursor;
 use tracing::{debug, info};
 
+/// Parses and validates a tab-separated MAF (Mutation Annotation Format) file,
+/// returning a deduplicated set of all sample IDs found in the file.
+///
+/// Specifically:
+/// - Parses the TSV with `#`-prefixed comment lines skipped
+/// - Validates the headers against the required omics column schema
+/// - Extracts all non-empty values from `Tumor_Sample_Barcode` and
+///   `Matched_Norm_Sample_Barcode` columns into a [`HashSet`]
+///
+/// # Errors
+/// Returns [`ErrorType`] if the headers are missing or invalid, a required
+/// column is absent, or a CSV parsing error occurs.
 pub async fn read_validate_scan(
     input: &axum::body::Bytes,
     state: &AppState,
@@ -56,6 +68,16 @@ pub async fn read_validate_scan(
     Ok(ids)
 }
 
+/// Rewrites a MAF file's sample ID columns in-place with their pseudonyms.
+///
+/// Reads the tab-separated input bytes, replaces every value in
+/// `Tumor_Sample_Barcode` and `Matched_Norm_Sample_Barcode` with the
+/// corresponding pseudonym from `pseudo`, and returns the rewritten file
+/// as a byte vector with all other columns and comment lines preserved.
+///
+/// # Errors
+/// Returns [`ErrorType`] if headers are missing, a required column is absent,
+/// a sample ID has no entry in `pseudo`, or a CSV read/write error occurs.
 pub fn sanitize_maf_bytes(
     input: &axum::body::Bytes,
     pseudo: &HashMap<String, String>,

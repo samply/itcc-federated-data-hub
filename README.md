@@ -1,9 +1,9 @@
 # Genomics Data Warehouse – Bridgehead Architecture
 
-This repository documents and implements a secure, federated genomics data ingestion pipeline based on FHIR, pseudonymisation, and a central data lake.
+This repository documents and implements a secure, federated genomics data ingestion pipeline based on FHIR, pseudonymisation, and a central data warehouse.
 
 The design follows a bridgehead pattern:
-partners keep control over their data, while pseudonymised data is transferred securely into a central lake for analytics and downstream services.
+partners keep control over their data, while pseudonymised data is transferred securely into a central data warehouse for analytics and downstream services.
 
 # High-Level Architecture
 
@@ -13,16 +13,18 @@ Flow (top → bottom):
 3.	Pseudonymised data is transferred via Samply BEAM
 4.	Data lands in a central FHIR Blaze and genomic data in S3 store  
 5.	Genomic data is transformed into Parquet/Iceberg for analytics
-6.	Optional: exports for cBioPortal, Beacon, or other consumers
+6.	Optional: exports for cBioPortal or other consumers
 
 # Components
 
-## Partner Bridgehead
+## Partner Bridgehead / Uploader / Ingest Service
+![Ingest Service](/docu/Ingest-BridgeheadV2.png)
+
 - FHIR Blaze (Partner)
 - Receives FHIR resources pushed by the partner
 - Stores identifiable data locally (never leaves the partner site)
 - Pseudonymisation Service
-- Reads FHIR resources from Blaze
+- Read FHIR resources from Blaze
 - Replaces patient/sample identifiers with deterministic pseudonyms
 - No identifying data leaves the bridgehead
 - Transfer Metadata
@@ -36,17 +38,19 @@ Transfers:
 - metadata sidecars
 - No interpretation of data, transport only
 
-## Central Bridgehead / Data Warehouse
+## Data Warehouse
+![Data Warehouse](/docu/central-DWH-V2.png)
+
 ### Clinical Data
 - FHIR Blaze (Central)
 - Stores pseudonymised FHIR resources
 - Acts as the canonical clinical/genomic API
-### Data warehouse Genomic Data
+### Genomic Data
 - Raw Zone
 - Immutable storage of received payloads
 - Full auditability and replay capability
 - Transformation of MAF → Parquet
-Iceberg tables for:
+Optional: Iceberg tables for:
 - variants
 - samples
 - patients
@@ -97,22 +101,20 @@ Exporter / APIs Generate:
 - FHIR
 - GA4GH
 - cBioPortal
-- Beacon
 - Samply BEAM
 
+## Ingest Service / Data Warehouse
+[Documentation Proposel](/docu/itcc.pdf)
 
-# Ingest Service
-itcc-omics-ingest
-## Endpoints
+### Endpoints
 - `GET /omics/health`
 - `POST /omics/upload`
   - Body: raw bytes (any file)
   - Optional header: `X-Filename`
 
-# Data Lake
-itcc-omics-data-lake
+# Development
 
-# Local development
+## Local development
 This repository is a Rust workspace with multiple services (itcc-omics-ingest and itcc-omics-data-lake).
 
 ### Requirements:
@@ -182,3 +184,4 @@ Stop services:
 docker compose -f dev/ingest-compose.yaml down
 docker compose -f dev/dwh-compose.yaml down
 ```
+# Kubernetes

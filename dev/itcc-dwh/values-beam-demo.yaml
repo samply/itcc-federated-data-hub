@@ -30,7 +30,7 @@ webui:
   image: khairul169/garage-webui:latest
   port: 3909
 
-omics:
+omicsTask:
   storage:
     size: "1Gi"
   image: docker.io/samply/itcc-omics-data-warehouse:latest
@@ -43,6 +43,21 @@ omics:
     endpointUrl: "http://garage:3900"
     bucket: omics
   rustLog: debug
+
+omicsSocket:
+  storage:
+    size: "1Gi"
+  image: docker.io/samply/itcc-omics-data-warehouse:latest
+  imagePullPolicy: Never
+  beamId: "app1.proxy2.broker"
+  beamUrl: "http://beam-proxy-proxy2.samply-beam-demo.svc.cluster.local:8082"
+  #beamUrl: "http://proxy2:8082"
+  s3:
+    region: garage
+    endpointUrl: "http://garage:3900"
+    bucket: omics
+  rustLog: debug
+
 
 secrets:
   # You can set these via helm --set / --set-file in real deployments

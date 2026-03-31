@@ -1,6 +1,7 @@
 use crate::error_type::LibError;
 use crate::fhir::resources::{Condition, Patient, Resource};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bundle {
@@ -150,6 +151,18 @@ impl Bundle {
         self.total = None;
         self.bundle_type = Some("transaction".to_string());
         Ok(())
+    }
+    pub fn get_all_patient_identifiers(&self) -> HashSet<String> {
+        self.entry
+            .iter()
+            .flatten()
+            .filter_map(|entry| match &entry.resource {
+                Resource::Patient(p) => Some(p),
+                _ => None,
+            })
+            .flat_map(|p| p.identifier.iter())
+            .map(|id| id.value.clone())
+            .collect()
     }
 
     // security check that fhir is pseudomised all fields
