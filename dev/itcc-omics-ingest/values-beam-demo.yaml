@@ -17,7 +17,8 @@ env:
   BEAM_SECRET: "App1Secret"
   ML_URL: "http://mainzelliste:8080"
   BLAZE_URL: "http://blaze:8080/fhir/"
-  DATA_WAREHOUSE_ID: "app1.proxy2.broker"
+  dwhSocketId: "app1.proxy2.broker"
+  dwhTaskId: "app1.proxy2.broker"
   PARTNER_ID: "itcc-inform"
   ML_API_KEY: "changeme1"
 

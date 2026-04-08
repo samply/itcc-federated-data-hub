@@ -2,6 +2,8 @@ use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use crate::utils::error_type::ErrorType::{BeamError, BeamStreamFileError};
 use axum::body::Bytes;
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 use beam_lib::{BlockingOptions, MsgId, TaskRequest};
 use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
 use itcc_omics_lib::fhir::bundle::Bundle;
@@ -15,7 +17,7 @@ pub async fn send_fhir_bundle(state: &AppState, bundle: Bundle) -> Result<Vec<Ac
     let task = TaskRequest {
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
-        to: vec![state.data_warehouse_id.clone()],
+        to: vec![state.services.dwh_task_id.clone()],
         body: vec![IngestTask::Fhir { bundle }],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,
@@ -49,7 +51,7 @@ pub async fn send_file_via_sockets(
     let mut conn = state
         .beam_client
         .create_socket_with_metadata(
-            &state.data_warehouse_id,
+            &state.services.dwh_socket_id,
             FileMeta {
                 suggested_name,
                 meta: Some(meta_json),
@@ -76,12 +78,12 @@ pub async fn send_file_via_task(
     let task_body = MafTask {
         meta: meta_data,
         suggested_name,
-        bytes_b64: body.to_vec(),
+        bytes_b64: STANDARD.encode(body),
     };
     let task = TaskRequest {
         id: MsgId::new(),
         from: state.services.beam_id.clone(),
-        to: vec![state.data_warehouse_id.clone()],
+        to: vec![state.services.dwh_task_id.clone()],
         body: vec![IngestTask::Maf(task_body)],
         ttl: "60s".to_string(),
         failure_strategy: beam_lib::FailureStrategy::Discard,
