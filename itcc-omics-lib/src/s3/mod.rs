@@ -164,3 +164,23 @@ pub async fn list_keys(
     );
     Ok(keys)
 }
+
+pub async fn copy_s3_object(
+    client_s3: &Client,
+    source_bucket: &str,
+    source_key: &str,
+    dest_bucket: &str,
+    dest_key: &str,
+) -> anyhow::Result<()> {
+    let copy_source = format!("{}/{}", source_bucket, source_key);
+
+    client_s3
+        .copy_object()
+        .copy_source(&copy_source)
+        .bucket(dest_bucket)
+        .key(dest_key)
+        .send()
+        .await?;
+    info!("s3 {dest_bucket}={dest_bucket}");
+    Ok(())
+}
