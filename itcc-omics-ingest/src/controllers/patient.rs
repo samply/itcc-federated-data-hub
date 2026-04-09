@@ -132,36 +132,54 @@ async fn export_single_patient(
 }
 
 async fn export_all_patients(
-    state: &Arc<AppState>,
+    app_state: &Arc<AppState>,
 ) -> Result<PatientExportResponse, ErrorType> {
     let count = get_all_patient_count(
-        &state.http,
-        &state.services.blaze_url,
-    ).await?;
+        &app_state.http,
+        &app_state.services.blaze_url,
+    )
+    .await?;
 
     let patient_ids = get_all_patient_identifiers(
-        &state.http,
-        &state.services.blaze_url,
+        &app_state.http,
+        &app_state.services.blaze_url,
         count,
-    ).await?;
+    )
+    .await?;
 
-    for patient_id in patient_ids {
+    let token: CreateTokenResp = init_mainzelliste(
+        &app_state.http,
+        app_state.services.ml_api_key.as_ref(),
+        &app_state.services.ml_url,
+        patient_ids.len(),
+    )
+    .await?;
+
+    let local_crypto_ids = encryption_ml(
+        &app_state.http,
+        app_state.services.ml_api_key.as_ref(),
+        &app_state.services.ml_url,
+        &token.id,
+        patient_ids.clone(),
+    )
+    .await?;
+
+    for (patient_id, pseudo_id) in local_crypto_ids.iter() {
         let mut bundle = get_patient_by_id(
-            &state.http,
-            &state.services.blaze_url,
-            &patient_id,
-        ).await?;
+            &app_state.http,
+            &app_state.services.blaze_url,
+            patient_id,
+        )
+        .await?;
 
-        let pseudo_id = patient_id.clone(); // TEMP ONLY
-
-        bundle.rename_patient_id_everywhere(&patient_id, &pseudo_id)?;
-        debug!("Bundle: {:#?}", bundle);
-        beam::send_fhir_bundle(state, bundle).await?;
+        bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
+        debug!("Bundle AFTER: {:#?}", bundle);
+        beam::send_fhir_bundle(app_state, bundle).await?;
     }
 
     Ok(PatientExportResponse {
-        message: "All patients exported successfully".to_string(),
-        exported_patient_id: HashSet::new(),
+        message: format!("All {} patients exported successfully", patient_ids.len()),
+        exported_patient_id: patient_ids,
         exported_all: true,
     })
 }
