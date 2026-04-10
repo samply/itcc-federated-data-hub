@@ -1,25 +1,23 @@
+use crate::beam;
 use crate::utils::error_type::ErrorType;
 use crate::AppState;
-use crate::beam;
-use tracing::debug;
 use axum::extract::{Path, Request};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::{extract::State, routing::post, Json, Router};
+use itcc_omics_lib::fhir::blaze::{
+    get_all_patient_count, get_all_patient_identifiers, get_patient_by_id,
+};
+use itcc_omics_lib::mainzelliste::handler::{
+    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
+};
+use itcc_omics_lib::mainzelliste::{encryption_ml, init_mainzelliste};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
+use tracing::debug;
 use tracing::{error, info, info_span};
-use itcc_omics_lib::mainzelliste::handler::{
-create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
-};
-use itcc_omics_lib::mainzelliste::{encryption_ml, init_mainzelliste};
-use itcc_omics_lib::fhir::blaze::{
-    get_all_patient_count,
-    get_all_patient_identifiers,
-    get_patient_by_id,
-};
 
 pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
@@ -63,9 +61,7 @@ async fn upload_patient_by_id_handler(
 
 // POST /upload/patient
 #[tracing::instrument(skip(state))]
-async fn upload_all_patients_handler(
-    State(state): State<Arc<AppState>>,
-) -> Response {
+async fn upload_all_patients_handler(State(state): State<Arc<AppState>>) -> Response {
     match export_patients_to_dwh(&state, None).await {
         Ok(result) => (StatusCode::CREATED, Json(result)).into_response(),
         Err(e) => {
@@ -83,7 +79,7 @@ async fn export_patients_to_dwh(
         Some(id) => {
             let patient_vec: HashSet<String> = HashSet::from([id]);
             export_single_patient(state, patient_vec).await
-        },
+        }
         None => export_all_patients(state).await,
     }
 }
@@ -92,7 +88,6 @@ async fn export_single_patient(
     app_state: &Arc<AppState>,
     patient_id: HashSet<String>,
 ) -> Result<PatientExportResponse, ErrorType> {
-
     let token: CreateTokenResp = init_mainzelliste(
         &app_state.http,
         app_state.services.ml_api_key.as_ref(),
@@ -106,24 +101,20 @@ async fn export_single_patient(
         app_state.services.ml_api_key.as_ref(),
         &app_state.services.ml_url,
         &token.id,
-        patient_id.clone(),   
+        patient_id.clone(),
     )
     .await?;
 
     for (patient_id, pseudo_id) in local_crypto_ids.iter() {
-
-            let mut bundle = get_patient_by_id(
-                &app_state.http,
-                &app_state.services.blaze_url,
-                patient_id,
-            ).await?;
-            bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
-            debug!("Bundle AFTER: {:#?}", bundle);
-            beam::send_fhir_bundle(app_state, bundle).await?;
+        let mut bundle =
+            get_patient_by_id(&app_state.http, &app_state.services.blaze_url, patient_id).await?;
+        bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
+        debug!("Bundle AFTER: {:#?}", bundle);
+        beam::send_fhir_bundle(app_state, bundle).await?;
     }
 
     let exported_id = patient_id.iter().next().cloned().unwrap_or_default();
- 
+
     Ok(PatientExportResponse {
         message: format!("Patient {} exported successfully", exported_id),
         exported_patient_id: patient_id,
@@ -134,18 +125,10 @@ async fn export_single_patient(
 async fn export_all_patients(
     app_state: &Arc<AppState>,
 ) -> Result<PatientExportResponse, ErrorType> {
-    let count = get_all_patient_count(
-        &app_state.http,
-        &app_state.services.blaze_url,
-    )
-    .await?;
+    let count = get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
 
-    let patient_ids = get_all_patient_identifiers(
-        &app_state.http,
-        &app_state.services.blaze_url,
-        count,
-    )
-    .await?;
+    let patient_ids =
+        get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, count).await?;
 
     let token: CreateTokenResp = init_mainzelliste(
         &app_state.http,
@@ -165,12 +148,8 @@ async fn export_all_patients(
     .await?;
 
     for (patient_id, pseudo_id) in local_crypto_ids.iter() {
-        let mut bundle = get_patient_by_id(
-            &app_state.http,
-            &app_state.services.blaze_url,
-            patient_id,
-        )
-        .await?;
+        let mut bundle =
+            get_patient_by_id(&app_state.http, &app_state.services.blaze_url, patient_id).await?;
 
         bundle.rename_patient_id_everywhere(patient_id, pseudo_id)?;
         debug!("Bundle AFTER: {:#?}", bundle);
