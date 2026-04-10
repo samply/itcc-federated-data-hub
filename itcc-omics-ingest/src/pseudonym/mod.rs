@@ -2,9 +2,7 @@ use crate::beam;
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use itcc_omics_lib::fhir::blaze::get_patient_by_id;
-use itcc_omics_lib::mainzelliste::handler::{
-    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
-};
+use itcc_omics_lib::mainzelliste::handler::CreateTokenResp;
 use itcc_omics_lib::mainzelliste::{encryption_ml, init_mainzelliste};
 use itcc_omics_lib::patient_id::{filter_patient_id, insert_base, split_base};
 use std::collections::{HashMap, HashSet};

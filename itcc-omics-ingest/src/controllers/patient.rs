@@ -8,9 +8,7 @@ use axum::{extract::State, routing::post, Json, Router};
 use itcc_omics_lib::fhir::blaze::{
     get_all_patient_count, get_all_patient_identifiers, get_patient_by_id,
 };
-use itcc_omics_lib::mainzelliste::handler::{
-    create_patients, create_session, create_token, CreatePatientResp, CreateTokenResp,
-};
+use itcc_omics_lib::mainzelliste::handler::CreateTokenResp;
 use itcc_omics_lib::mainzelliste::{encryption_ml, init_mainzelliste};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;

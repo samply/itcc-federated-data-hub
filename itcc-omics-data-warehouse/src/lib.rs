@@ -1,5 +1,4 @@
 pub mod beam;
-pub mod cbio_portal;
 pub mod data;
 pub mod utils;
 

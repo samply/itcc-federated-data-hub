@@ -1,6 +1,6 @@
 use crate::fhir::bundle::Bundle;
 
-use crate::beam::MafTask;
+use crate::MafTask;
 use serde::{Deserialize, Serialize};
 
 pub mod blaze;

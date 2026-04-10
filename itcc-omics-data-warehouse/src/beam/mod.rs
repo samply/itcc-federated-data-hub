@@ -1,15 +1,17 @@
 use crate::data::handler::handle_fhir_bundle;
-use crate::data::{process_and_generate_data, save_files_s3};
+use crate::data::save_files_s3;
 use crate::{BEAM_SOCKET_CLIENT, BEAM_TASK_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
 use futures::future::join_all;
-use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
+use itcc_omics_lib::beam::{Ack, FileMeta};
 use itcc_omics_lib::fhir::IngestTask;
+use itcc_omics_lib::parquet::process_and_generate_data;
 use itcc_omics_lib::s3::client::{s3_client, CLIENT};
 use itcc_omics_lib::s3::upload_to_s3_from_bytes;
+use itcc_omics_lib::{MafTask, MetaData};
 use std::time::Duration;
 use tokio::io::AsyncRead;
 use tracing::{debug, error, info, warn};
@@ -105,7 +107,7 @@ async fn beam_save_generate(
         suggested_name = %suggested_name,
         "[Beam] received file + metadata"
     );
-    let file_path = format!("{}/{}/{}", meta.partner_id, meta.maf_id, suggested_name);
+    let file_path = format!("{}/{}", meta.partner_id, suggested_name);
     save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
     process_and_generate_data(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
     Ok(())

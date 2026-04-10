@@ -1,5 +1,5 @@
-use itcc_omics_lib::patient_id::split_base;
-use itcc_omics_lib::s3::upload_to_s3_from_path;
+use crate::patient_id::split_base;
+use crate::s3::upload_to_s3_from_path;
 use std::fmt::{self, Display};
 use std::path::Path;
 // --------------------

@@ -2,10 +2,28 @@ pub mod client;
 
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
+use std::fs::File;
+use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 use tokio::io::AsyncWriteExt;
 use tracing::{debug, info};
+
+pub fn decompress_zstd_to_tempfile(
+    zst_path: &std::path::Path,
+) -> anyhow::Result<std::path::PathBuf> {
+    let input = std::fs::File::open(zst_path)?;
+    let mut decoder = zstd::stream::read::Decoder::new(input)?;
+
+    let tmp = NamedTempFile::new()?;
+    let _ = tmp.path().to_path_buf();
+    let (mut out_file, out_path) = tmp.keep()?;
+
+    std::io::copy(&mut decoder, &mut out_file)?;
+    out_file.flush()?;
+
+    Ok(out_path)
+}
 
 fn content_type_for_path(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {

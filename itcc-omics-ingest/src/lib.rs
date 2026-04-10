@@ -8,9 +8,8 @@ pub mod utils;
 
 use crate::controllers::extractors::api_key_check;
 use crate::controllers::{health, omics, patient};
+use crate::utils::config::AppState;
 use crate::utils::config::IngestConfig;
-use crate::utils::config::{AppState, Services};
-use axum::extract::State;
 use axum::middleware::from_fn_with_state;
 use axum::Router;
 use clap::Parser;
