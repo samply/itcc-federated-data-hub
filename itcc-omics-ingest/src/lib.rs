@@ -41,9 +41,9 @@ pub async fn run_with_config() {
 pub fn create_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .merge(omics::routers())
+        .merge(patient::routers())
         .route_layer(from_fn_with_state(app_state.clone(), api_key_check))
         .merge(health::routers())
-        .merge(patient::routers())
         .with_state(app_state)
 }
 
