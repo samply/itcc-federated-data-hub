@@ -14,8 +14,7 @@ pub struct Bundle {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub bundle_type: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub total: Option<u32>,
+    pub total: u32,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entry: Option<Vec<BundleEntry>>,
@@ -148,7 +147,6 @@ impl Bundle {
         }
         // Importent to allow storing in DWH blaze
         self.id = None;
-        self.total = None;
         self.bundle_type = Some("transaction".to_string());
         Ok(())
     }

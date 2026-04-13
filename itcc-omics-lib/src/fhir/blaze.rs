@@ -3,7 +3,7 @@ use crate::fhir::bundle::Bundle;
 use crate::fhir::resources::Resource;
 use reqwest::{StatusCode, Url};
 use std::collections::HashSet;
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 
 pub async fn get_patient_by_id(
     client: &reqwest::Client,
@@ -11,7 +11,7 @@ pub async fn get_patient_by_id(
     patient_id: &str,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
-        .join(&format!("Patient?identifier={patient_id}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject"))
+        .join(format!("Patient?identifier={patient_id}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject").as_str())
         .expect("blaze url should be present");
     debug!("Patient: {}", patient_id);
     debug!("PatientUrl: {}", patient_url);
@@ -30,7 +30,16 @@ pub async fn get_patient_by_id(
         error!("Error: {e}");
         LibError::BlazeError
     })?;
-    Ok(bundle)
+    match bundle.patient() {
+        Some(patient) => {
+            info!("Patient: {:#?}", patient);
+            if !bundle.contains_patient_id(patient_id) {
+                return Err(LibError::FhirCheckError);
+            }
+            Ok(bundle)
+        }
+        None => Err(LibError::FhirPatientNotFound),
+    }
 }
 
 pub async fn pseudomize_patient_by_id_transport(
@@ -45,21 +54,32 @@ pub async fn pseudomize_patient_by_id_transport(
             patient_id
         ).as_str())
         .expect("blaze url should be present");
-    let mut bundle: Bundle = client
-        .get(patient_url)
-        .send()
-        .await
-        .map_err(|_| LibError::BlazeError)?
-        .error_for_status()
-        .map_err(|_| LibError::BlazeError)?
-        .json::<Bundle>()
-        .await
-        .map_err(|_| LibError::BlazeError)?;
-    if !bundle.contains_patient_id(patient_id) {
-        return Err(LibError::FhirCheckError);
+    let resp = client.get(patient_url).send().await.map_err(|e| {
+        error!("Failed to get patient: {}", patient_id);
+        error!("Error: {e}");
+        LibError::BlazeError
+    })?;
+    let status = resp.status();
+    if status == StatusCode::NOT_FOUND {
+        return Err(LibError::FhirPatientNotFound);
     }
-    bundle.rename_patient_id_everywhere(patient_id, pseudonym)?;
-    Ok(bundle)
+
+    let mut bundle = resp.json::<Bundle>().await.map_err(|e| {
+        error!("Failed to get patient: {}", patient_id);
+        error!("Error: {e}");
+        LibError::BlazeError
+    })?;
+    match bundle.patient() {
+        Some(patient) => {
+            info!("Patient: {:#?}", patient);
+            if !bundle.contains_patient_id(patient_id) {
+                return Err(LibError::FhirCheckError);
+            }
+            bundle.rename_patient_id_everywhere(patient_id, pseudonym)?;
+            Ok(bundle)
+        }
+        None => Err(LibError::FhirPatientNotFound),
+    }
 }
 
 pub async fn filter_patient_id_from_bundle(bundle: Bundle) -> Result<Bundle, LibError> {

@@ -14,7 +14,8 @@ use tracing::{debug, info};
 
 pub async fn handle_fhir_bundle(client: &reqwest::Client, blaze_url: &Url, bundle: Bundle) -> Ack {
     // store to blaze
-    debug!("Received Bundle Task");
+    info!("Received Bundle Task");
+    info!("Patient: {:#?}", bundle);
     match post_patient_fhir_bundle(client, blaze_url, &bundle).await {
         Ok(_) => Ack {
             ok: true,

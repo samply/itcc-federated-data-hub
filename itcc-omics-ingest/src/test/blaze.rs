@@ -89,7 +89,7 @@ async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
         resourceType: "Bundle".to_string(),
         id: None,
         bundle_type: Some("transaction".to_string()),
-        total: None,
+        total: 0,
         entry: Some(vec![]),
     };
     let res =

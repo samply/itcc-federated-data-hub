@@ -114,8 +114,7 @@ async fn beam_save_generate(
 }
 
 async fn handle_one(t: IngestTask) -> Ack {
-    info!("Beam receive one");
-    info!("Beam {:?}", t);
+    info!("Beam receive one task");
     match t {
         IngestTask::Fhir { bundle } => {
             handle_fhir_bundle(&CLIENT, &DATALAKE_CONFIG.blaze_url, bundle).await
