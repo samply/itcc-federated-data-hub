@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "beam")]
 pub mod beam;
+#[cfg(feature = "s3")]
 pub mod cbio_portal;
 pub mod error_type;
 #[cfg(feature = "fhir")]

@@ -77,7 +77,7 @@ impl IntoResponse for ErrorType {
             ),
             ErrorType::MLCreatePatientError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "patient creation error".to_string(),
+                "mainzelliste patient creation error".to_string(),
             ),
             ErrorType::BlazeError => (StatusCode::INTERNAL_SERVER_ERROR, "blaze error".to_string()),
             ErrorType::FhirCheckError => (
