@@ -1,3 +1,29 @@
+{{- if .Values.blaze.auth.password }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: itcc-blaze
+  namespace: itcc-dev
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: dwh-blaze-secret
+    nginx.ingress.kubernetes.io/auth-realm: "ITCC Blaze"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ .Values.blaze.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blaze
+                port:
+                  number: 8080
+{{- end }}
+
+---
 apiVersion: v1
 kind: Service
 metadata:
