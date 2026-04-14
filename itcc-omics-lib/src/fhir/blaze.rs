@@ -145,7 +145,7 @@ pub async fn get_all_patient_count(
     blaze_url: &Url,
 ) -> Result<i64, LibError> {
     let patient_url = blaze_url
-        .join("Patient?_summary=count&_total=accurate")
+        .join("Patient?identifier:missing=false&_summary=count&_total=accurate")
         .expect("blaze url should be present");
 
     let resp: serde_json::Value = client
@@ -182,17 +182,20 @@ pub async fn get_all_patient_identifiers(
     count: i64,
 ) -> Result<HashSet<String>, LibError> {
     let patient_url = blaze_url
-        .join(format!("Patient?_elements=identifier&_count={count}").as_str())
+        .join(format!("Patient?identifier:missing=false&_elements=identifier&_count={count}").as_str())
         .expect("blaze url should be present");
     debug!("Patient: {:#?}", patient_url);
 
-    let mut bundle: Bundle = client
+    let res = client
         .get(patient_url)
         .send()
         .await
         .map_err(|_| LibError::BlazeError)?
         .error_for_status()
-        .map_err(|_| LibError::BlazeError)?
+        .map_err(|_| LibError::BlazeError)?;
+
+    debug!("resp: {:#?}", res);
+    let bundle: Bundle = res
         .json::<Bundle>()
         .await
         .map_err(|_| LibError::BlazeError)?;
