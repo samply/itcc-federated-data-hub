@@ -147,6 +147,7 @@ async fn handle_maf(task: MafTask) -> Ack {
         &s3_key,
         raw_bytes,
         "application/zstd",
+        false,
     )
     .await
     {

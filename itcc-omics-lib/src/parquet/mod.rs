@@ -41,7 +41,7 @@ pub async fn process_and_generate_data(
         "{}/analytics/{}.parquet",
         meta_data.partner_id, meta_data.maf_id
     );
-    upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path).await?;
+    upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path, false).await?;
     info!("uploading parquet to s3://{bucket}/analytics/{parquet_key}");
     let patient_ids: Vec<PatientId> = sample_ids
         .iter()
@@ -56,7 +56,15 @@ pub async fn process_and_generate_data(
         "{}/analytics/{}.json",
         meta_data.partner_id, meta_data.maf_id
     );
-    upload_to_s3_from_bytes(s3_client, bucket, &meta_key, meta_json, "application/json").await?;
+    upload_to_s3_from_bytes(
+        s3_client,
+        bucket,
+        &meta_key,
+        meta_json,
+        "application/json",
+        false,
+    )
+    .await?;
     info!("uploaded metadata json to s3://{bucket}/{meta_key}");
 
     // generate_all_cbio_portal(

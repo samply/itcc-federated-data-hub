@@ -35,58 +35,50 @@ fn content_type_for_path(path: &Path) -> &'static str {
     }
 }
 
-pub async fn upload_to_s3_from_path(
-    client_s3: &Client,
-    bucket: &str,
-    s3_key: &str,
-    path: impl AsRef<Path>,
-) -> anyhow::Result<()> {
-    let path = path.as_ref();
-    let content_type = content_type_for_path(path);
-
-    debug!("uploading to s3 key={s3_key} content_type={content_type}");
-
-    let bytes = tokio::fs::read(path).await?;
-    let len = bytes.len() as i64;
-    let body = ByteStream::from(bytes);
-
-    client_s3
-        .put_object()
-        .bucket(bucket)
-        .key(s3_key)
-        .content_type(content_type)
-        .content_length(len)
-        .body(body)
-        .send()
-        .await?;
-
-    info!("s3 {s3_key} saved");
-    Ok(())
-}
 pub async fn upload_to_s3_from_bytes(
     client_s3: &Client,
     bucket: &str,
     s3_key: &str,
     bytes: Vec<u8>,
     content_type: &'static str,
+    overwrite: bool,
 ) -> anyhow::Result<()> {
     let len = bytes.len() as i64;
     let body = ByteStream::from(bytes);
 
-    debug!("uploading to s3 key={s3_key} content_type={content_type}");
+    debug!("uploading to s3 key={s3_key} content_type={content_type} overwrite={overwrite}");
 
-    client_s3
+    let req = client_s3
         .put_object()
         .bucket(bucket)
         .key(s3_key)
         .content_type(content_type)
         .content_length(len)
-        .body(body)
-        .send()
-        .await?;
+        .body(body);
+
+    let req = if overwrite {
+        req
+    } else {
+        req.if_none_match("*")
+    };
+
+    req.send().await?;
 
     info!("s3 {s3_key} saved");
     Ok(())
+}
+
+pub async fn upload_to_s3_from_path(
+    client_s3: &Client,
+    bucket: &str,
+    s3_key: &str,
+    path: impl AsRef<Path>,
+    overwrite: bool,
+) -> anyhow::Result<()> {
+    let path = path.as_ref();
+    let content_type = content_type_for_path(path);
+    let bytes = tokio::fs::read(path).await?;
+    upload_to_s3_from_bytes(client_s3, bucket, s3_key, bytes, content_type, overwrite).await
 }
 
 pub async fn get_object(

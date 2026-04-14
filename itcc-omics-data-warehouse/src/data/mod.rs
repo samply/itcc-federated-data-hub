@@ -26,6 +26,6 @@ pub async fn save_files_s3(
     let size_u64 = tokio::io::copy(&mut incoming, &mut f).await?;
     f.flush().await?;
     debug!("wrote {size_u64} bytes to temp");
-    upload_to_s3_from_path(client_s3, bucket, filename, path).await?;
+    upload_to_s3_from_path(client_s3, bucket, filename, path, false).await?;
     Ok(())
 }
