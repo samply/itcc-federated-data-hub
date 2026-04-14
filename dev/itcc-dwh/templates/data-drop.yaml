@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-drop
+  namespace: lemedart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-drop
+  template:
+    metadata:
+      labels:
+        app: data-drop
+    spec:
+      containers:
+        - name: data-drop
+          image: ghcr.io/samply/data-drop:feature-process
+          ports:
+            - containerPort: 5150
+          env:
+            - name: API_KEY
+              value: "pefkom-4rigte-seKnoc"
+            - name: S3_DEFAULT_REGION
+              value: {{ .Values.omicsTask.s3.region | quote }}
+            - name: S3_ENDPOINT_URL
+              value: {{ .Values.omicsTask.s3.endpointUrl | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.omicsTask.s3.bucket | quote }}
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: omics-s3-secret
+                  key: S3_SECRET_ACCESS_KEY
+            - name: RUST_LOG
+              value: {{ .Values.omicsTask.rustLog | quote }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-drop
+  namespace: lemedart
+spec:
+  selector:
+    app: data-drop
+  ports:
+    - port: 5150
+      targetPort: 5150

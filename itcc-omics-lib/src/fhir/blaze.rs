@@ -184,6 +184,7 @@ pub async fn get_all_patient_identifiers(
     let patient_url = blaze_url
         .join(format!("Patient?_elements=identifier&_count={count}").as_str())
         .expect("blaze url should be present");
+    debug!("Patient: {:#?}", patient_url);
 
     let mut bundle: Bundle = client
         .get(patient_url)
@@ -195,6 +196,5 @@ pub async fn get_all_patient_identifiers(
         .json::<Bundle>()
         .await
         .map_err(|_| LibError::BlazeError)?;
-    debug!("Bundle: {:#?}", bundle);
     Ok(bundle.get_all_patient_identifiers())
 }

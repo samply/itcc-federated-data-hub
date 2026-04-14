@@ -124,10 +124,10 @@ async fn export_all_patients(
     app_state: &Arc<AppState>,
 ) -> Result<PatientExportResponse, ErrorType> {
     let count = get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
-
+    debug!("Exporting all {} patients", count);
     let patient_ids =
         get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, count).await?;
-
+    debug!("Exporting all {:?} patients", patient_ids);
     let token: CreateTokenResp = init_mainzelliste(
         &app_state.http,
         app_state.services.ml_api_key.as_ref(),
