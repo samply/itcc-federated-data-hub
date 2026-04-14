@@ -8,7 +8,9 @@ use crate::cbio_portal::{
     build_minimal_cbio_rows, generate_cbio_portal_data_min, generate_cbio_portal_meta_min,
 };
 use crate::parquet::handler::maf_to_parquet;
-use crate::s3::{decompress_zstd_to_tempfile, get_object, upload_to_s3_from_path};
+use crate::s3::{
+    decompress_zstd_to_tempfile, get_object, upload_to_s3_from_bytes, upload_to_s3_from_path,
+};
 use crate::MetaData;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -41,6 +43,22 @@ pub async fn process_and_generate_data(
     );
     upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path).await?;
     info!("uploading parquet to s3://{bucket}/analytics/{parquet_key}");
+    let patient_ids: Vec<PatientId> = sample_ids
+        .iter()
+        .map(|s| s.to_patient_id())
+        .collect::<anyhow::Result<Vec<_>>>()?;
+    let meta_json = serde_json::to_vec_pretty(&serde_json::json!({
+    "meta": meta_data,
+    "patient_ids": patient_ids,
+    }))?;
+
+    let meta_key = format!(
+        "{}/analytics/{}.json",
+        meta_data.partner_id, meta_data.maf_id
+    );
+    upload_to_s3_from_bytes(s3_client, bucket, &meta_key, meta_json, "application/json").await?;
+    info!("uploaded metadata json to s3://{bucket}/{meta_key}");
+
     // generate_all_cbio_portal(
     //     s3_client,
     //     bucket,

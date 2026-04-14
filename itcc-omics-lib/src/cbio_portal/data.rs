@@ -1,5 +1,6 @@
 use crate::patient_id::split_base;
 use crate::s3::upload_to_s3_from_path;
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 use std::path::Path;
 // --------------------
@@ -25,7 +26,7 @@ pub trait CbioWritable {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct PatientId(String);
 
 impl PatientId {

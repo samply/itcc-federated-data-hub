@@ -18,6 +18,7 @@ pub mod s3;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MetaData {
     pub maf_id: String,
+    pub origin_maf_id: String,
     pub partner_id: String,
     pub checked_fhir: bool,
 }

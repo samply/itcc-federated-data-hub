@@ -12,6 +12,7 @@ use axum::{extract::State, routing::post, Json, Router};
 use itcc_omics_lib::beam::Ack;
 use itcc_omics_lib::MetaData;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, info_span};
@@ -72,12 +73,14 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
     let filename = format!("{pseudo_file_sha}.maf.zstd");
     let meta_data = MetaData {
         maf_id: pseudo_file_sha.clone(),
+        origin_maf_id: file_sha.clone(),
         partner_id: state.partner_id.clone().to_string(),
         checked_fhir: true,
     };
     let success = SuccessMAF {
         data_warehouse_file_id: pseudo_file_sha,
         local_file_sha: file_sha,
+        uploaded_samples: r,
     };
     let send_result = if state.services.enable_sockets {
         let compressed = bytes::Bytes::from(compressed_vec);
@@ -103,4 +106,5 @@ async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::By
 struct SuccessMAF {
     pub data_warehouse_file_id: String,
     pub local_file_sha: String,
+    pub uploaded_samples: HashMap<String, String>,
 }

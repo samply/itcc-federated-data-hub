@@ -130,7 +130,7 @@ async fn handle_maf(task: MafTask) -> Ack {
         .suggested_name
         .clone()
         .unwrap_or_else(|| format!("{}.maf", task.meta.maf_id));
-    let s3_key = format!("{}/{}/{}", task.meta.partner_id, task.meta.maf_id, filename);
+    let s3_key = format!("{}/{}", task.meta.partner_id, filename);
     let raw_bytes = match STANDARD.decode(&task.bytes_b64) {
         Ok(bytes) => bytes,
         Err(e) => {
