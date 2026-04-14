@@ -19,7 +19,7 @@ use tracing::{error, info, info_span};
 
 pub fn routers() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/omics/upload", post(upload_handler))
+        .route("/upload/omics", post(upload_handler))
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
         .layer(
             TraceLayer::new_for_http()
@@ -42,7 +42,7 @@ pub fn routers() -> Router<Arc<AppState>> {
         )
 }
 
-// POST /omics/upload
+// POST /upload/omics
 #[tracing::instrument(skip(state, body), fields(file_sha, pseudo_sha, partner_id))]
 async fn upload_handler(State(state): State<Arc<AppState>>, body: axum::body::Bytes) -> Response {
     let file_sha = maf_key_from_bytes(body.as_ref());
