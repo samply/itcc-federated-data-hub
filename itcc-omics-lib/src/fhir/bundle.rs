@@ -14,10 +14,12 @@ pub struct Bundle {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub bundle_type: Option<String>,
 
-    pub total: u32,
+    pub total: Option<i64>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entry: Option<Vec<BundleEntry>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link: Option<Vec<BundleLink>>,
 }
 
 impl Bundle {
@@ -257,6 +259,15 @@ impl Bundle {
 
         false
     }
+
+    // pageing over result bundle
+    pub fn next_link(&self) -> Option<String> {
+        self.link
+            .iter()
+            .flatten()
+            .find(|l| l.relation == "next")
+            .map(|l| l.url.clone())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -282,4 +293,9 @@ pub struct BundleRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchInfo {
     pub mode: Option<String>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleLink {
+    pub relation: String,
+    pub url: String,
 }

@@ -179,12 +179,49 @@ pub async fn get_all_patient_count(
 pub async fn get_all_patient_identifiers(
     client: &reqwest::Client,
     blaze_url: &Url,
+) -> Result<HashSet<String>, LibError> {
+    let mut identifiers = HashSet::new();
+    let mut next_url: Option<String> = Some(
+        blaze_url
+            .join("Patient?identifier:missing=false&_elements=identifier&_count=4")
+            .expect("blaze url should be present")
+            .to_string(),
+    );
+    debug!("Patient: {:#?}", next_url);
+    while let Some(url) = next_url {
+        let bundle: Bundle = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| LibError::BlazeConnectionError {
+                url: url.clone(),
+                message: e.to_string(),
+            })?
+            .error_for_status()
+            .map_err(|_| LibError::BlazeError)?
+            .json::<Bundle>()
+            .await
+            .map_err(|_| LibError::BlazeError)?;
+
+        identifiers.extend(bundle.get_all_patient_identifiers());
+        next_url = bundle.next_link();
+        debug!("Patient: {:#?}", next_url);
+    }
+
+    Ok(identifiers)
+}
+
+pub async fn get_all_patient_identifiers_dbg(
+    client: &reqwest::Client,
+    blaze_url: &Url,
     count: i64,
 ) -> Result<HashSet<String>, LibError> {
     let patient_url = blaze_url
-        .join(format!("Patient?identifier:missing=false&_elements=identifier&_count={count}").as_str())
+        .join(
+            format!("Patient?identifier:missing=false&_elements=identifier&_count={count}")
+                .as_str(),
+        )
         .expect("blaze url should be present");
-    debug!("Patient: {:#?}", patient_url);
 
     let res = client
         .get(patient_url)

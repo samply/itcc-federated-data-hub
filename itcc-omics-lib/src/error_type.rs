@@ -12,6 +12,10 @@ pub enum LibError {
     BlazeResultError,
     #[error("Blaze communication error")]
     BlazeError,
+    #[error("Blaze connection error for URL {url}: {message}")]
+    BlazeConnectionError { url: String, message: String },
+    #[error("Blaze parse error: {0}")]
+    BlazeParseError(String),
     #[error("Patient not Found")]
     FhirPatientNotFound,
     #[error("Mainzelliste communication error")]

@@ -25,6 +25,8 @@ pub enum ErrorType {
     BlazeResultError,
     FhirCheckError,
     FhirPatientNotFound,
+    BlazeParseError(String),
+    BlazeConnectionError(String),
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
@@ -92,6 +94,14 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "result error".to_string(),
             ),
+            ErrorType::BlazeConnectionError(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("blaze connection error {msg}").to_string(),
+            ),
+            ErrorType::BlazeParseError(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("blaze parse error {msg}").to_string(),
+            ),
         };
         (status, Json(body)).into_response()
     }
@@ -111,6 +121,10 @@ impl From<LibError> for ErrorType {
             LibError::MLCreatePatientError => ErrorType::MLCreatePatientError,
             LibError::PseudoError => ErrorType::PseudoError,
             LibError::BlazeResultError => ErrorType::BlazeResultError,
+            LibError::BlazeConnectionError { url, message } => {
+                ErrorType::BlazeConnectionError(format!("{url}: {message}"))
+            }
+            LibError::BlazeParseError(msg) => ErrorType::BlazeParseError(msg),
         }
     }
 }

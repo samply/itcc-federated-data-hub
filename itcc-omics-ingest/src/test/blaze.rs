@@ -89,8 +89,9 @@ async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
         resourceType: "Bundle".to_string(),
         id: None,
         bundle_type: Some("transaction".to_string()),
-        total: 0,
+        total: Some(0),
         entry: Some(vec![]),
+        link: None,
     };
     let res =
         post_patient_fhir_bundle(&app_state.http, &app_state.services.blaze_url, &bundle).await?;
@@ -169,8 +170,8 @@ async fn get_all_patients_count() -> Result<(), ErrorType> {
 async fn get_all_patient_identifiers_test() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let count = get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
-    let res =
-        get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, count).await?;
+    debug!("{:#?}", count);
+    let res = get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url).await?;
     debug!("{:#?}", res);
     Ok(())
 }
