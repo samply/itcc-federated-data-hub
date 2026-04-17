@@ -181,15 +181,19 @@ pub async fn get_all_patient_identifiers(
     blaze_url: &Url,
 ) -> Result<HashSet<String>, LibError> {
     let mut identifiers = HashSet::new();
+    let mut page = 0;
     let mut next_url: Option<String> = Some(
         blaze_url
-            .join("Patient?identifier:missing=false&_elements=identifier&_count=4")
+            .join("Patient?identifier:missing=false&_elements=identifier&_count=1000")
             .expect("blaze url should be present")
             .to_string(),
     );
-    debug!("Patient: {:#?}", next_url);
+
     while let Some(url) = next_url {
-        let bundle: Bundle = client
+        page += 1;
+        debug!("Fetching patient identifiers page {page}: {url}");
+
+        let resp = client
             .get(&url)
             .send()
             .await
@@ -198,16 +202,25 @@ pub async fn get_all_patient_identifiers(
                 message: e.to_string(),
             })?
             .error_for_status()
-            .map_err(|_| LibError::BlazeError)?
+            .map_err(|e| LibError::BlazeConnectionError {
+                url: url.clone(),
+                message: e.to_string(),
+            })?;
+
+        let bundle: Bundle = resp
             .json::<Bundle>()
             .await
-            .map_err(|_| LibError::BlazeError)?;
+            .map_err(|e| LibError::BlazeParseError(e.to_string()))?;
 
-        identifiers.extend(bundle.get_all_patient_identifiers());
+        let page_identifiers = bundle.get_all_patient_identifiers();
+        debug!("Page {page}: got {} identifiers: {page_identifiers:?}", page_identifiers.len());
+        identifiers.extend(page_identifiers);
+
         next_url = bundle.next_link();
-        debug!("Patient: {:#?}", next_url);
+        debug!("Page {page}: next_url = {next_url:?}");
     }
 
+    info!("Fetched {} patient identifiers in {page} page(s)", identifiers.len());
     Ok(identifiers)
 }
 
