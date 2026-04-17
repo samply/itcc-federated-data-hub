@@ -184,7 +184,7 @@ pub async fn get_all_patient_identifiers(
     let mut page = 0;
     let mut next_url: Option<String> = Some(
         blaze_url
-            .join("Patient?identifier:missing=false&_elements=identifier&_count=1000")
+            .join("Patient?identifier:missing=false&_elements=identifier&_count=2")
             .expect("blaze url should be present")
             .to_string(),
     );
