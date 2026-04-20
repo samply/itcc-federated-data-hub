@@ -170,8 +170,8 @@ async fn get_all_patients_count() -> Result<(), ErrorType> {
 async fn get_all_patient_identifiers_test() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let count = get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
-    debug!("{:#?}", count);
+    debug!("Counter {:#?}", count);
     let res = get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url).await?;
-    debug!("{:#?}", res);
+    debug!("identifier: {:#?}", res);
     Ok(())
 }

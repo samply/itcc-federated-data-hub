@@ -4,6 +4,9 @@ beamProxy:
   enabled: false
 
 blaze:
+  auth:
+    username: ""
+    password: ""
   serviceName: blaze
   port: 8080
 

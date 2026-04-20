@@ -36,26 +36,22 @@ pub async fn process_and_generate_data(
         downloaded
     };
     let parquet_path = work_path.join("mutation.parquet");
-    let sample_ids: HashSet<SampleId> = maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
+    let sample_set: HashSet<SampleId> = maf_to_parquet(Path::new(&maf_path), &parquet_path)?;
     let parquet_key = format!(
         "{}/analytics/{}.parquet",
         meta_data.partner_id, meta_data.maf_id
     );
     upload_to_s3_from_path(s3_client, bucket, &parquet_key, &parquet_path, false).await?;
-    info!("uploading parquet to s3://{bucket}/analytics/{parquet_key}");
-    let patient_ids: Vec<PatientId> = sample_ids
+    let sample_ids: Vec<PatientId> = sample_set
         .iter()
         .map(|s| s.to_patient_id())
         .collect::<anyhow::Result<Vec<_>>>()?;
     let meta_json = serde_json::to_vec_pretty(&serde_json::json!({
     "meta": meta_data,
-    "patient_ids": patient_ids,
+    "patient_ids": sample_ids,
     }))?;
 
-    let meta_key = format!(
-        "{}/analytics/{}.json",
-        meta_data.partner_id, meta_data.maf_id
-    );
+    let meta_key = format!("meta/{}.json", meta_data.maf_id);
     upload_to_s3_from_bytes(
         s3_client,
         bucket,
@@ -65,7 +61,7 @@ pub async fn process_and_generate_data(
         false,
     )
     .await?;
-    info!("uploaded metadata json to s3://{bucket}/{meta_key}");
+    info!("uploaded metadata json to {meta_key}");
 
     // generate_all_cbio_portal(
     //     s3_client,

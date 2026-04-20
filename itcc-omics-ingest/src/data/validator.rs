@@ -46,3 +46,7 @@ fn validate_required_columns(h: &HeaderInfo, required: &[String]) -> Result<(), 
     }
     Ok(())
 }
+
+pub fn has_valid_sample_format(id: &str) -> bool {
+    id.contains('_')
+}

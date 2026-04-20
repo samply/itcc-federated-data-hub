@@ -6,9 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ErrorType {
-    WriteFile,
     CompressFile,
-    NonEmptyDir,
     ApiKeyError,
     MafEmptyHeader,
     MafDuplicateHeader,
@@ -27,80 +25,92 @@ pub enum ErrorType {
     FhirPatientNotFound,
     BlazeParseError(String),
     BlazeConnectionError(String),
+    MafInvalidSampleId(Vec<String>),
 }
 impl IntoResponse for ErrorType {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            ErrorType::NonEmptyDir => (
-                StatusCode::NOT_FOUND,
-                "Directory already exists and is non-empty".to_string(),
+            ErrorType::ApiKeyError => (
+                StatusCode::UNAUTHORIZED,
+                "API key is invalid or missing".to_string(),
             ),
-            ErrorType::WriteFile => (
+            ErrorType::MafEmptyHeader => (
+                StatusCode::BAD_REQUEST,
+                "MAF header is empty or could not be read".to_string(),
+            ),
+            ErrorType::MafDuplicateHeader => (
+                StatusCode::CONFLICT,
+                "MAF file has duplicated headers".to_string(),
+            ),
+            ErrorType::MafMissingColumn => (
+                StatusCode::BAD_REQUEST,
+                "MAF file is missing one or more required columns".to_string(),
+            ),
+            ErrorType::MafInvalidSampleId(ids) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                format!(
+                    "Invalid sample ID format. Expected '{{base}}_{{suffix}}' (e.g. 'SAMPLE001_T1'). Offending IDs: {}", ids.join(", ")
+                ),
+            ),
+            ErrorType::BeamError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "failed to write file on server".to_string(),
+                "Failed to send data via Beam".to_string(),
             ),
-            ErrorType::ApiKeyError => {
-                (StatusCode::UNAUTHORIZED, "API key is not valid".to_string())
-            }
-            ErrorType::MafEmptyHeader => {
-                (StatusCode::BAD_REQUEST, "Header is malformed".to_string())
-            }
-            ErrorType::MafDuplicateHeader => {
-                (StatusCode::CONFLICT, "Header already exists".to_string())
-            }
-            ErrorType::MafMissingColumn => {
-                (StatusCode::BAD_REQUEST, "Column is missing".to_string())
-            }
-            ErrorType::BeamError => (StatusCode::INTERNAL_SERVER_ERROR, "beam error".to_string()),
             ErrorType::BeamStreamFileError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "beam stream error".to_string(),
-            ),
-            ErrorType::CompressFile => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "compression error".to_string(),
-            ),
-            ErrorType::CsvError => (StatusCode::INTERNAL_SERVER_ERROR, "csv error".to_string()),
-            ErrorType::PseudoError => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "error by providing pseudomiesation".to_string(),
+                "Failed to stream file via Beam socket".to_string(),
             ),
             ErrorType::MafWriteError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "error writing MAF".to_string(),
+                "Failed to write pseudonymized MAF file".to_string(),
+            ),
+            ErrorType::CsvError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to parse MAF file as CSV".to_string(),
+            ),
+            ErrorType::CompressFile => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to compress file before transfer".to_string(),
+            ),
+            ErrorType::PseudoError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Pseudonymization failed".to_string(),
             ),
             ErrorType::MlSessionError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "mainzelliste session error".to_string(),
+                "Failed to create Mainzelliste session".to_string(),
             ),
             ErrorType::MlTokenError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "mainzelliste token error".to_string(),
+                "Failed to obtain Mainzelliste token".to_string(),
             ),
             ErrorType::MLCreatePatientError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "mainzelliste patient creation error".to_string(),
+                "Failed to create patient in Mainzelliste".to_string(),
             ),
-            ErrorType::BlazeError => (StatusCode::INTERNAL_SERVER_ERROR, "blaze error".to_string()),
             ErrorType::FhirCheckError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "fhir check error".to_string(),
+                "FHIR resource validation failed".to_string(),
             ),
             ErrorType::FhirPatientNotFound => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "fhir data for patient not found please provide".to_string(),
+                StatusCode::NOT_FOUND,
+                "No FHIR data found for this patient — upload a FHIR bundle first".to_string(),
             ),
-            ErrorType::BlazeResultError => (
+            ErrorType::BlazeError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "result error".to_string(),
+                "Blaze FHIR server returned an error".to_string(),
             ),
             ErrorType::BlazeConnectionError(msg) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("blaze connection error {msg}").to_string(),
+                format!("Failed to connect to Blaze: {msg}"),
             ),
             ErrorType::BlazeParseError(msg) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("blaze parse error {msg}").to_string(),
+                format!("Failed to parse Blaze response: {msg}"),
+            ),
+            ErrorType::BlazeResultError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Blaze returned an unexpected or empty result".to_string(),
             ),
         };
         (status, Json(body)).into_response()

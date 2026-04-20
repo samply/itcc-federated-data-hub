@@ -50,20 +50,31 @@ pub async fn read_validate_scan(
     debug!("Matched Norm_Sample_Barcode: {}", normal_idx);
 
     let mut ids = HashSet::new();
+    let mut invalid_ids = Vec::new();
     for row in rdr.records() {
         let rec = row.map_err(|_| ErrorType::CsvError)?;
-        if let Some(v) = rec.get(tumor_idx) {
-            let v = v.trim();
-            if !v.is_empty() {
-                ids.insert(v.to_string());
+
+        for idx in [tumor_idx, normal_idx] {
+            if let Some(v) = rec.get(idx) {
+                let v = v.trim();
+                if v.is_empty() {
+                    continue;
+                }
+                if !v.contains('_') {
+                    invalid_ids.push(v.to_string());
+                } else {
+                    ids.insert(v.to_string());
+                }
             }
         }
-        if let Some(v) = rec.get(normal_idx) {
-            let v = v.trim();
-            if !v.is_empty() {
-                ids.insert(v.to_string());
-            }
-        }
+    }
+
+    if !invalid_ids.is_empty() {
+        tracing::error!(
+            invalid_sample_ids = ?invalid_ids,
+            "Sample IDs do not match expected pattern {{base}}_{{suffix}}"
+        );
+        return Err(ErrorType::MafInvalidSampleId(invalid_ids));
     }
     Ok(ids)
 }

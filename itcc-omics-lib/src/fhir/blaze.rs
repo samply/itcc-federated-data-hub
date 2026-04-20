@@ -213,14 +213,20 @@ pub async fn get_all_patient_identifiers(
             .map_err(|e| LibError::BlazeParseError(e.to_string()))?;
 
         let page_identifiers = bundle.get_all_patient_identifiers();
-        debug!("Page {page}: got {} identifiers: {page_identifiers:?}", page_identifiers.len());
+        debug!(
+            "Page {page}: got {} identifiers: {page_identifiers:?}",
+            page_identifiers.len()
+        );
         identifiers.extend(page_identifiers);
 
         next_url = bundle.next_link();
         debug!("Page {page}: next_url = {next_url:?}");
     }
 
-    info!("Fetched {} patient identifiers in {page} page(s)", identifiers.len());
+    info!(
+        "Fetched {} patient identifiers in {page} page(s)",
+        identifiers.len()
+    );
     Ok(identifiers)
 }
 
