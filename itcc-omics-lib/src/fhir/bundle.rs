@@ -1,5 +1,6 @@
 use crate::error_type::LibError;
 use crate::fhir::resources::{Condition, Patient, Resource};
+use crate::patient_id::PatientId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -103,8 +104,8 @@ impl Bundle {
 
     pub fn rename_patient_id_everywhere(
         &mut self,
-        old_id: &str,
-        new_id: &str,
+        old_id: &PatientId,
+        new_id: &PatientId,
     ) -> Result<(), LibError> {
         if let Some(entries) = self.entry.as_mut() {
             for entry in entries {
@@ -113,7 +114,7 @@ impl Bundle {
                     Resource::Patient(p) => {
                         p.identifier
                             .iter_mut()
-                            .filter(|id| id.value == old_id)
+                            .filter(|id| id.value == old_id.to_string())
                             .for_each(|id| id.value = new_id.to_string());
 
                         entry.request = Some(BundleRequest {
@@ -152,7 +153,7 @@ impl Bundle {
         self.bundle_type = Some("transaction".to_string());
         Ok(())
     }
-    pub fn get_all_patient_identifiers(&self) -> HashSet<String> {
+    pub fn get_all_patient_identifiers(&self) -> HashSet<PatientId> {
         self.entry
             .iter()
             .flatten()
@@ -161,12 +162,12 @@ impl Bundle {
                 _ => None,
             })
             .flat_map(|p| p.identifier.iter())
-            .map(|id| id.value.clone())
+            .map(|id| PatientId::new(id.value.clone()))
             .collect()
     }
 
     // security check that fhir is pseudomised all fields
-    pub fn contains_patient_id(&self, patient_id: &str) -> bool {
+    pub fn contains_patient_id(&self, patient_id: &PatientId) -> bool {
         let needle_ref = format!("Patient/{}", patient_id);
 
         let Some(entries) = &self.entry else {
@@ -175,7 +176,7 @@ impl Bundle {
 
         for entry in entries {
             if let Some(full) = &entry.fullUrl {
-                if full.contains(patient_id) {
+                if full.contains(patient_id.as_str()) {
                     return true;
                 }
             }
@@ -184,7 +185,7 @@ impl Bundle {
                 Resource::Patient(p) => {
                     if let ids = &p.identifier {
                         for id in ids {
-                            if id.value == patient_id {
+                            if id.value == patient_id.as_str() {
                                 return true;
                             }
                         }
@@ -192,7 +193,7 @@ impl Bundle {
                 }
 
                 Resource::Condition(c) => {
-                    if c.id == patient_id {
+                    if c.id == patient_id.as_str() {
                         return true;
                     }
 
@@ -214,7 +215,7 @@ impl Bundle {
                 }
 
                 Resource::Observation(o) => {
-                    if o.id == patient_id {
+                    if o.id == patient_id.as_str() {
                         return true;
                     }
 
@@ -234,7 +235,7 @@ impl Bundle {
                 }
 
                 Resource::Specimen(s) => {
-                    if s.id == patient_id {
+                    if s.id == patient_id.as_str() {
                         return true;
                     }
 
@@ -246,7 +247,7 @@ impl Bundle {
 
                     if let Some(ids) = &s.identifier {
                         for id in ids {
-                            if id.value == patient_id {
+                            if id.value == patient_id.as_str() {
                                 return true;
                             }
                         }

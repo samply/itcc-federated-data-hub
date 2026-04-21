@@ -15,12 +15,14 @@ spec:
     spec:
       containers:
         - name: meta-cache
-          image: ghcr.io/samply/meta-cache:feature-process
+          image: {{ .Values.metaCache.image }}
           ports:
-            - containerPort: 5150
+            - containerPort: {{ .Values.metaCache.port }}
           env:
+            - name: PROJECT
+              value: {{ .Values.metaCache.projekt | quote }}
             - name: API_KEY
-              value: "pefkom-4rigte-seKnoc"
+              value: {{ .Values.metaCache.ApiKey | quote }}
             - name: S3_DEFAULT_REGION
               value: {{ .Values.omicsTask.s3.region | quote }}
             - name: S3_ENDPOINT_URL
@@ -50,5 +52,5 @@ spec:
   selector:
     app: meta-cache
   ports:
-    - port: 5150
-      targetPort: 5150
+    - port: {{ .Values.metaCache.port }}
+      targetPort: {{ .Values.metaCache.port }}

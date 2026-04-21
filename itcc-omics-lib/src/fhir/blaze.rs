@@ -1,6 +1,7 @@
 use crate::error_type::LibError;
 use crate::fhir::bundle::Bundle;
 use crate::fhir::resources::Resource;
+use crate::patient_id::PatientId;
 use reqwest::{StatusCode, Url};
 use std::collections::HashSet;
 use tracing::{debug, error, info};
@@ -8,10 +9,10 @@ use tracing::{debug, error, info};
 pub async fn get_patient_by_id(
     client: &reqwest::Client,
     blaze_url: &Url,
-    patient_id: &str,
+    patient_id: &PatientId,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
-        .join(format!("Patient?identifier={patient_id}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject").as_str())
+        .join(format!("Patient?identifier={}&_revinclude=Condition:subject&_revinclude=Observation:subject&_revinclude=Specimen:subject", patient_id.as_str()).as_str())
         .expect("blaze url should be present");
     debug!("Patient: {}", patient_id);
     debug!("PatientUrl: {}", patient_url);
@@ -45,8 +46,8 @@ pub async fn get_patient_by_id(
 pub async fn pseudomize_patient_by_id_transport(
     client: &reqwest::Client,
     blaze_url: &Url,
-    patient_id: &str,
-    pseudonym: &str,
+    patient_id: &PatientId,
+    pseudonym: &PatientId,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
         .join(&format!(
@@ -179,12 +180,19 @@ pub async fn get_all_patient_count(
 pub async fn get_all_patient_identifiers(
     client: &reqwest::Client,
     blaze_url: &Url,
-) -> Result<HashSet<String>, LibError> {
+    counter: i64,
+) -> Result<HashSet<PatientId>, LibError> {
     let mut identifiers = HashSet::new();
     let mut page = 0;
     let mut next_url: Option<String> = Some(
         blaze_url
-            .join("Patient?identifier:missing=false&_elements=identifier&_count=2")
+            .join(
+                format!(
+                    "Patient?identifier:missing=false&_elements=identifier&_count={}",
+                    counter
+                )
+                .as_str(),
+            )
             .expect("blaze url should be present")
             .to_string(),
     );
@@ -234,7 +242,7 @@ pub async fn get_all_patient_identifiers_dbg(
     client: &reqwest::Client,
     blaze_url: &Url,
     count: i64,
-) -> Result<HashSet<String>, LibError> {
+) -> Result<HashSet<PatientId>, LibError> {
     let patient_url = blaze_url
         .join(
             format!("Patient?identifier:missing=false&_elements=identifier&_count={count}")

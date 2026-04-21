@@ -29,7 +29,7 @@ fn content_type_for_path(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {
         Some("txt") | Some("tsv") | Some("maf") => "text/plain; charset=utf-8",
         Some("json") => "application/json",
-        Some("parquet") => "application/octet-stream",
+        Some("dwh") => "application/octet-stream",
         Some("zst") | Some("zstd") => "application/zstd",
         _ => "application/octet-stream",
     }

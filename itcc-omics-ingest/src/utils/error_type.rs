@@ -12,6 +12,9 @@ pub enum ErrorType {
     MafDuplicateHeader,
     MafMissingColumn,
     CsvError,
+    SampleIdEmpty,
+    SampleIdInvalidFormat(String),
+    MetaDataError,
     BeamError,
     BeamStreamFileError,
     PseudoError,
@@ -112,6 +115,18 @@ impl IntoResponse for ErrorType {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Blaze returned an unexpected or empty result".to_string(),
             ),
+            ErrorType::SampleIdEmpty => (
+                StatusCode::NOT_FOUND,
+                "Sample ID cannot be empty".to_string(),
+            ),
+            ErrorType::SampleIdInvalidFormat(e) => (
+                StatusCode::BAD_REQUEST,
+                format!("Sample ID format is invalid {e}"),
+                ),
+            ErrorType::MetaDataError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Meta data conflict".to_string(),
+                ),
         };
         (status, Json(body)).into_response()
     }
@@ -135,6 +150,9 @@ impl From<LibError> for ErrorType {
                 ErrorType::BlazeConnectionError(format!("{url}: {message}"))
             }
             LibError::BlazeParseError(msg) => ErrorType::BlazeParseError(msg),
+            LibError::SampleIdEmpty => ErrorType::SampleIdEmpty,
+            LibError::SampleIdInvalidFormat(e) => ErrorType::SampleIdInvalidFormat(e),
+            LibError::MetaDataError => ErrorType::MetaDataError,
         }
     }
 }

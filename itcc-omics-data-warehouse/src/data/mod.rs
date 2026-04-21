@@ -1,11 +1,4 @@
-use itcc_omics_lib::cbio_portal::data::{
-    ClinicalPatientData, ClinicalPatientRow, ClinicalSampleData, ClinicalSampleRow, Diagnosis,
-    PatientId, SampleId,
-};
-use itcc_omics_lib::cbio_portal::{generate_cbio_portal_data_min, generate_cbio_portal_meta_min};
 use itcc_omics_lib::s3::{get_object, upload_to_s3_from_path};
-use itcc_omics_lib::MetaData;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tempfile::{NamedTempFile, TempDir};
 use tokio::io::AsyncRead;

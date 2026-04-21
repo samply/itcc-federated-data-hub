@@ -1,4 +1,5 @@
 use crate::error_type::LibError;
+use crate::patient_id::PatientId;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -156,7 +157,7 @@ pub async fn create_patients(
     ml_api_key: &str,
     ml_url: &Url,
     token: &Uuid,
-    patient_ids: HashSet<String>,
+    patient_ids: &HashSet<PatientId>,
 ) -> Result<Vec<CreatePatientResp>, LibError> {
     let mut out = Vec::with_capacity(patient_ids.len());
 
@@ -169,22 +170,26 @@ pub async fn create_patients(
     Ok(out)
 }
 
-pub fn extract_mapping(resp: Vec<CreatePatientResp>) -> Result<HashMap<String, String>, LibError> {
+pub fn extract_mapping(
+    resp: Vec<CreatePatientResp>,
+) -> Result<HashMap<PatientId, PatientId>, LibError> {
     resp.into_iter()
         .map(|r| {
-            let local = r
-                .iter()
-                .find(|x| x.id_type == "localid")
-                .map(|x| x.id_string.clone())
-                .ok_or(LibError::PseudoError)?;
+            let local: PatientId = PatientId::new(
+                r.iter()
+                    .find(|x| x.id_type == "localid")
+                    .map(|x| x.id_string.clone())
+                    .ok_or(LibError::PseudoError)?,
+            );
 
-            let crypto = r
-                .iter()
-                .find(|x| x.id_type == "cryptoid")
-                .map(|x| x.id_string.clone())
-                .ok_or(LibError::PseudoError)?;
+            let crypto: PatientId = PatientId::new(
+                r.iter()
+                    .find(|x| x.id_type == "cryptoid")
+                    .map(|x| x.id_string.clone())
+                    .ok_or(LibError::PseudoError)?,
+            );
 
             Ok((local, crypto))
         })
-        .collect::<Result<HashMap<String, String>, LibError>>()
+        .collect::<Result<HashMap<PatientId, PatientId>, LibError>>()
 }

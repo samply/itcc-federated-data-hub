@@ -1,6 +1,5 @@
-use crate::cbio_portal::data::{
-    ClinicalPatientRow, ClinicalSampleRow, Diagnosis, PatientId, SampleId,
-};
+use crate::cbio_portal::data::{ClinicalPatientRow, ClinicalSampleRow, Diagnosis};
+use crate::patient_id::{PatientId, SampleId};
 use crate::MetaData;
 use data::CbioWritable as dataCbioWritable;
 use data::{ClinicalPatientData, ClinicalSampleData};
@@ -19,7 +18,7 @@ pub fn build_minimal_cbio_rows(
     let mut patient_ids: HashSet<PatientId> = HashSet::new();
 
     for sample_id in sample_ids {
-        let patient_id = sample_id.to_patient_id()?;
+        let patient_id = sample_id.to_patient_id();
         patient_ids.insert(patient_id.clone());
 
         sample_rows.push(ClinicalSampleRow {

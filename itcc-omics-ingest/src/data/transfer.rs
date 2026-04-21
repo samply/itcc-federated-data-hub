@@ -2,7 +2,9 @@ use crate::data::validator;
 use crate::utils::config::AppState;
 use crate::utils::error_type::ErrorType;
 use csv::{ByteRecord, ReaderBuilder, WriterBuilder};
+use itcc_omics_lib::patient_id::SampleId;
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 use std::io::Cursor;
 use tracing::{debug, info};
 
@@ -21,7 +23,7 @@ use tracing::{debug, info};
 pub async fn read_validate_scan(
     input: &axum::body::Bytes,
     state: &AppState,
-) -> Result<HashSet<String>, ErrorType> {
+) -> Result<HashSet<SampleId>, ErrorType> {
     let mut rdr = ReaderBuilder::new()
         .delimiter(b'\t')
         .comment(Some(b'#'))
@@ -49,7 +51,7 @@ pub async fn read_validate_scan(
     debug!("Tumor_Sample_Barcode: {}", tumor_idx);
     debug!("Matched Norm_Sample_Barcode: {}", normal_idx);
 
-    let mut ids = HashSet::new();
+    let mut ids: HashSet<SampleId> = HashSet::new();
     let mut invalid_ids = Vec::new();
     for row in rdr.records() {
         let rec = row.map_err(|_| ErrorType::CsvError)?;
@@ -63,7 +65,7 @@ pub async fn read_validate_scan(
                 if !v.contains('_') {
                     invalid_ids.push(v.to_string());
                 } else {
-                    ids.insert(v.to_string());
+                    ids.insert(SampleId::new(v).map_err(|_| ErrorType::CsvError)?);
                 }
             }
         }
@@ -91,7 +93,7 @@ pub async fn read_validate_scan(
 /// a sample ID has no entry in `pseudo`, or a CSV read/write error occurs.
 pub fn sanitize_maf_bytes(
     input: &axum::body::Bytes,
-    pseudo: &HashMap<String, String>,
+    pseudo: &HashMap<SampleId, SampleId>,
 ) -> Result<Vec<u8>, ErrorType> {
     let mut rdr = ReaderBuilder::new()
         .delimiter(b'\t')
@@ -131,13 +133,15 @@ pub fn sanitize_maf_bytes(
 
         for (i, field) in rec.iter().enumerate() {
             if i == tumor_idx || i == normal_idx {
-                let s = std::str::from_utf8(field)
-                    .map_err(|_| ErrorType::CsvError)?
-                    .trim();
+                let s = SampleId::new(
+                    std::str::from_utf8(field)
+                        .map_err(|_| ErrorType::CsvError)?
+                        .trim(),
+                )?;
                 if s.is_empty() {
                     out_rec.push_field(field);
                 } else {
-                    let p = pseudo.get(s).ok_or_else(|| ErrorType::CsvError)?;
+                    let p = pseudo.get(&s).ok_or_else(|| ErrorType::CsvError)?;
                     out_rec.push_field(p.as_bytes());
                 }
             } else {

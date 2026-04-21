@@ -8,6 +8,7 @@ use itcc_omics_lib::mainzelliste::handler::{
     CreatePatientResp, CreateTokenResp, Ids,
 };
 use itcc_omics_lib::mainzelliste::init_mainzelliste;
+use itcc_omics_lib::patient_id::PatientId;
 use std::collections::HashSet;
 use tracing::{debug, error, info};
 use uuid::Uuid;
@@ -70,7 +71,7 @@ async fn test_create_patient() -> Result<(), ErrorType> {
 #[tokio::test]
 async fn test_create_patients() -> Result<(), ErrorType> {
     let app_state = test_app_state();
-    let patient_ids: HashSet<String> = [
+    let patient_ids: HashSet<PatientId> = [
         "patient-001",
         "patient-002",
         "patient-003",
@@ -79,7 +80,7 @@ async fn test_create_patients() -> Result<(), ErrorType> {
         "patient-006",
     ]
     .into_iter()
-    .map(|s| s.to_string())
+    .map(|s| PatientId::new(s))
     .collect();
     let token: CreateTokenResp = init_mainzelliste(
         &app_state.http,
@@ -93,7 +94,7 @@ async fn test_create_patients() -> Result<(), ErrorType> {
         app_state.services.ml_api_key.as_ref(),
         &app_state.services.ml_url,
         &token.id,
-        patient_ids,
+        &patient_ids,
     )
     .await?;
     debug!("Created patients");

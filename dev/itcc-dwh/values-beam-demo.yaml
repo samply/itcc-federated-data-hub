@@ -33,6 +33,13 @@ webui:
   image: khairul169/garage-webui:latest
   port: 3909
 
+metaCache:
+  image: ghcr.io/samply/meta-cache:feature-project
+  port: 5150
+  project: "itcc"
+  ApiKey: "meta-cache"
+
+
 omicsTask:
   storage:
     size: "1Gi"
