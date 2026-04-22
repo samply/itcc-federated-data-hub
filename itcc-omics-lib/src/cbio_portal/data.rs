@@ -1,5 +1,6 @@
-use itcc_omics_lib::patient_id::split_base;
-use itcc_omics_lib::s3::upload_to_s3_from_path;
+use crate::patient_id::{split_base, PatientId, SampleId};
+use crate::s3::upload_to_s3_from_path;
+use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 use std::path::Path;
 // --------------------
@@ -21,51 +22,7 @@ pub trait CbioWritable {
         s3_key: &str,
     ) -> anyhow::Result<()> {
         self.write_to(local_path)?;
-        upload_to_s3_from_path(s3_client, bucket, s3_key, local_path).await
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct PatientId(String);
-
-impl PatientId {
-    pub fn new(value: impl Into<String>) -> anyhow::Result<Self> {
-        let value = value.into();
-        anyhow::ensure!(!value.trim().is_empty(), "patient id must not be empty");
-        Ok(Self(value))
-    }
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub fn to_patient_id(&self) -> anyhow::Result<PatientId> {
-        PatientId::new(split_base(self.as_str()))
-    }
-}
-
-impl Display for PatientId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SampleId(String);
-
-impl SampleId {
-    pub fn new(value: impl Into<String>) -> anyhow::Result<Self> {
-        let value = value.into();
-        anyhow::ensure!(!value.trim().is_empty(), "sample id must not be empty");
-        Ok(Self(value))
-    }
-    pub fn to_patient_id(&self) -> anyhow::Result<PatientId> {
-        PatientId::new(split_base(self.0.as_str()))
-    }
-}
-
-impl Display for SampleId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
+        upload_to_s3_from_path(s3_client, bucket, s3_key, local_path, true).await
     }
 }
 

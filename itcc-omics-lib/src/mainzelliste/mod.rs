@@ -3,6 +3,7 @@ use crate::mainzelliste::handler::{
     create_patients, create_session, create_token, extract_mapping, CreatePatientResp,
     CreateTokenResp,
 };
+use crate::patient_id::PatientId;
 use beam_lib::reqwest::Url;
 use std::collections::{HashMap, HashSet};
 use tracing::debug;
@@ -25,11 +26,11 @@ pub async fn encryption_ml(
     ml_api_key: &str,
     ml_url: &Url,
     token: &Uuid,
-    patient_ids: HashSet<String>,
-) -> Result<HashMap<String, String>, LibError> {
+    patient_ids: &HashSet<PatientId>,
+) -> Result<HashMap<PatientId, PatientId>, LibError> {
     let pseudonym_res: Vec<CreatePatientResp> =
         create_patients(http_client, ml_api_key, ml_url, token, patient_ids).await?;
-    let local_crypto_ids: HashMap<String, String> = extract_mapping(pseudonym_res)?;
+    let local_crypto_ids: HashMap<PatientId, PatientId> = extract_mapping(pseudonym_res)?;
     debug!("Mapping: {:#?}", local_crypto_ids);
     Ok(local_crypto_ids)
 }

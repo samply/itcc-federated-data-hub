@@ -2,20 +2,6 @@ use anyhow::anyhow;
 use beam_lib::AppId;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MetaData {
-    pub maf_id: String,
-    pub partner_id: String,
-    pub checked_fhir: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MafTask {
-    pub meta: MetaData,
-    pub suggested_name: Option<String>,
-    pub bytes_b64: String,
-}
-
 pub fn parse_beam_id(id: &str) -> Result<AppId, String> {
     let mut it = id.splitn(3, '.'); // split into 3 parts max
     let app = it.next().unwrap_or("");

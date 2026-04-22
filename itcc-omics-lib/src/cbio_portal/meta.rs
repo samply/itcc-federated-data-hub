@@ -1,5 +1,4 @@
-use itcc_omics_lib::beam::MetaData;
-use itcc_omics_lib::s3::upload_to_s3_from_path;
+use crate::s3::upload_to_s3_from_path;
 use std::fmt::{self, Display};
 use std::path::Path;
 // --------------------
@@ -22,7 +21,7 @@ pub trait CbioWritable {
         s3_key: &str,
     ) -> anyhow::Result<()> {
         self.write_to(local_path)?;
-        upload_to_s3_from_path(s3_client, bucket, s3_key, local_path).await
+        upload_to_s3_from_path(s3_client, bucket, s3_key, local_path, true).await
     }
 }
 

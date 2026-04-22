@@ -8,6 +8,7 @@ use itcc_omics_lib::fhir::blaze::{
     get_patient_by_id, post_patient_fhir_bundle,
 };
 use itcc_omics_lib::fhir::bundle::Bundle;
+use itcc_omics_lib::patient_id::PatientId;
 use reqwest::Client;
 use std::collections::HashMap;
 use tracing::{debug, error};
@@ -33,8 +34,8 @@ async fn check_blaze() -> Result<(), reqwest::Error> {
 #[tokio::test]
 async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
-    let id = "patient-001";
-    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, id).await?;
+    let id = PatientId::new("patient-001");
+    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, &id).await?;
     debug!("{:#?}", res);
     Ok(())
 }
@@ -43,8 +44,8 @@ async fn get_blaze_patient_by_id() -> Result<(), ErrorType> {
 #[tokio::test]
 async fn check_blaze_patient_id() -> Result<(), ErrorType> {
     let app_state = test_app_state();
-    let id = "P0KRKM80V";
-    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, id).await?;
+    let id = PatientId::new("P0KRKM80V");
+    let res = get_patient_by_id(&app_state.http, &app_state.services.blaze_url, &id).await?;
     //debug!("{:#?}", res);
     filter_patient_id_from_bundle(res).await?;
     Ok(())
@@ -53,12 +54,12 @@ async fn check_blaze_patient_id() -> Result<(), ErrorType> {
 #[ignore = "Require blaze"]
 #[tokio::test]
 async fn test_blaze_pseudo() -> Result<(), ErrorType> {
-    let patient_id = "P0KRKM80V";
-    let pseudonym = "test-000";
+    let patient_id = PatientId::new("P0KRKM80V");
+    let pseudonym = PatientId::new("test-000");
     let app_state = test_app_state();
     let mut bundle =
-        get_patient_by_id(&app_state.http, &app_state.services.blaze_url, patient_id).await?;
-    bundle.rename_patient_id_everywhere(patient_id, pseudonym);
+        get_patient_by_id(&app_state.http, &app_state.services.blaze_url, &patient_id).await?;
+    bundle.rename_patient_id_everywhere(&patient_id, &pseudonym);
     debug!("{:#?}", bundle);
     assert!(bundle.patient_info().unwrap().0 == "test-000");
     Ok(())
@@ -67,14 +68,20 @@ async fn test_blaze_pseudo() -> Result<(), ErrorType> {
 #[ignore = "Require blaze"]
 #[tokio::test]
 async fn check_blaze_pseudo() -> Result<(), ErrorType> {
+    let patient_id = PatientId::new("P0KRKM80V");
+    let pseudonym = PatientId::new("test-000");
     let app_state = test_app_state();
-    let mut bundle =
-        get_patient_by_id(&app_state.http, &app_state.services.blaze_url, "P0KRKM80V").await?;
+    let mut bundle = get_patient_by_id(
+        &app_state.http,
+        &app_state.services.blaze_url,
+        &PatientId::new("P0KRKM80V"),
+    )
+    .await?;
 
-    bundle.rename_patient_id_everywhere("P0KRKM80V", "test-000");
+    bundle.rename_patient_id_everywhere(&patient_id, &pseudonym);
 
     assert!(
-        !bundle.contains_patient_id("patient-001"),
+        !bundle.contains_patient_id(&PatientId::new("patient-001")),
         "SECURITY ERROR: Original patient ID still present in bundle!"
     );
 
@@ -89,8 +96,9 @@ async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
         resourceType: "Bundle".to_string(),
         id: None,
         bundle_type: Some("transaction".to_string()),
-        total: None,
+        total: Some(0),
         entry: Some(vec![]),
+        link: None,
     };
     let res =
         post_patient_fhir_bundle(&app_state.http, &app_state.services.blaze_url, &bundle).await?;
@@ -101,15 +109,16 @@ async fn test_post_patient_fhir_bundle() -> Result<(), ErrorType> {
 pub async fn get_patient_by_id_debug(
     client: &reqwest::Client,
     blaze_url: &Url,
-    patient_id: &str,
+    patient_id: &PatientId,
 ) -> Result<Bundle, LibError> {
     let patient_url = blaze_url
         .join(
             format!(
-                "Patient?identifier={patient_id}\
+                "Patient?identifier={}\
             &_revinclude=Condition:subject\
             &_revinclude=Observation:subject\
-            &_revinclude=Specimen:subject"
+            &_revinclude=Specimen:subject",
+                patient_id.as_str()
             )
             .as_str(),
         )
@@ -169,8 +178,9 @@ async fn get_all_patients_count() -> Result<(), ErrorType> {
 async fn get_all_patient_identifiers_test() -> Result<(), ErrorType> {
     let app_state = test_app_state();
     let count = get_all_patient_count(&app_state.http, &app_state.services.blaze_url).await?;
+    debug!("Counter {:#?}", count);
     let res =
-        get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, count).await?;
-    debug!("{:#?}", res);
+        get_all_patient_identifiers(&app_state.http, &app_state.services.blaze_url, 2).await?;
+    debug!("identifier: {:#?}", res);
     Ok(())
 }

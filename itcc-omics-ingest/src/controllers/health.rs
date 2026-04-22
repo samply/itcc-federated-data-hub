@@ -6,10 +6,10 @@ use axum::Router;
 use std::sync::Arc;
 
 pub fn routers() -> Router<Arc<AppState>> {
-    Router::new().route("/omics/health", get(health))
+    Router::new().route("/upload/health", get(health))
 }
 
-// GET /omics/health
+// GET /upload/health
 async fn health() -> impl IntoResponse {
     (StatusCode::OK, "OK".to_string())
 }
