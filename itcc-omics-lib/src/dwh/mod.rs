@@ -1,3 +1,4 @@
+use crate::beam::MetaData;
 use crate::cbio_portal::data::{
     ClinicalPatientData, ClinicalPatientRow, ClinicalSampleData, ClinicalSampleRow, Diagnosis,
 };
@@ -9,7 +10,6 @@ use crate::patient_id::{PatientId, SampleId};
 use crate::s3::{
     decompress_zstd_to_tempfile, get_object, upload_to_s3_from_bytes, upload_to_s3_from_path,
 };
-use crate::MetaData;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;

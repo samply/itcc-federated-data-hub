@@ -1,6 +1,8 @@
+use crate::patient_id::{PatientId, SampleId};
 use anyhow::anyhow;
 use beam_lib::AppId;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 pub fn parse_beam_id(id: &str) -> Result<AppId, String> {
     let mut it = id.splitn(3, '.'); // split into 3 parts max
@@ -26,6 +28,23 @@ pub struct FileMeta {
     pub suggested_name: Option<String>,
 
     pub meta: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MetaData {
+    pub maf_id: String,
+    pub origin_maf_id: String,
+    pub partner_id: String,
+    pub checked_fhir: bool,
+    pub patient_sample_suffix: bool,
+    pub patient_to_sample: HashMap<PatientId, HashSet<SampleId>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MafTask {
+    pub meta: MetaData,
+    pub suggested_name: Option<String>,
+    pub bytes_b64: String,
 }
 
 pub fn deserialize_filename<'de, D: serde::Deserializer<'de>>(
