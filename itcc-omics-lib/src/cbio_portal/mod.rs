@@ -1,6 +1,6 @@
+use crate::beam::MetaData;
 use crate::cbio_portal::data::{ClinicalPatientRow, ClinicalSampleRow, Diagnosis};
 use crate::patient_id::{PatientId, SampleId};
-use crate::MetaData;
 use data::CbioWritable as dataCbioWritable;
 use data::{ClinicalPatientData, ClinicalSampleData};
 use meta::CbioWritable as metaCbioWritable;
