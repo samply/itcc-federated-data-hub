@@ -13,14 +13,21 @@ spec:
       labels:
         app: meta-cache
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+    {{- with .Values.omicsTask.resources }}
+      resources:
+      {{- toYaml . | nindent 12 }}
+      {{- end }}
       containers:
         - name: meta-cache
           image: {{ .Values.metaCache.image }}
+          imagePullPolicy: {{ .Values.metaCache.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ .Values.metaCache.port }}
           env:
             - name: PROJECT
-              value: {{ .Values.metaCache.projekt | quote }}
+              value: {{ .Values.metaCache.project | quote }}
             - name: API_KEY
               value: {{ .Values.metaCache.ApiKey | quote }}
             - name: S3_DEFAULT_REGION
