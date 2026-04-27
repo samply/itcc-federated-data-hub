@@ -234,4 +234,3 @@ pub async fn get_all_patient_identifiers(
     );
     Ok(identifiers)
 }
-

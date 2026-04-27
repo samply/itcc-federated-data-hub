@@ -1,7 +1,7 @@
-use beam_lib::reqwest::{StatusCode, Url};
-use tracing::{debug, error, info};
 use crate::error_type::LibError;
 use crate::patient_id::PatientId;
+use beam_lib::reqwest::{StatusCode, Url};
+use tracing::{debug, error, info};
 
 pub async fn get_patient_fhir_by_id_json(
     client: &reqwest::Client,
