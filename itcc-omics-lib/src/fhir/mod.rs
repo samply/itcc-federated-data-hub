@@ -3,9 +3,9 @@ use crate::fhir::bundle::Bundle;
 use crate::MafTask;
 use serde::{Deserialize, Serialize};
 
-pub mod blaze;
 pub mod bundle;
 pub mod resources;
+pub mod blaze;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind")]
