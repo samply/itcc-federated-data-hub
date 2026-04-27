@@ -1,12 +1,14 @@
 use crate::data::handler::handle_fhir_bundle;
-use crate::data::{process_and_generate_data, save_files_s3};
+use crate::data::save_files_s3;
 use crate::{BEAM_SOCKET_CLIENT, BEAM_TASK_CLIENT, DATALAKE_CONFIG};
 use anyhow::{anyhow, Context};
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
 use beam_lib::{BlockingOptions, SocketTask, TaskRequest, TaskResult, WorkStatus};
 use futures::future::join_all;
-use itcc_omics_lib::beam::{Ack, FileMeta, MafTask, MetaData};
+use itcc_omics_lib::beam::{Ack, FileMeta};
+use itcc_omics_lib::beam::{MafTask, MetaData};
+use itcc_omics_lib::dwh::process_and_generate_data;
 use itcc_omics_lib::fhir::IngestTask;
 use itcc_omics_lib::s3::client::{s3_client, CLIENT};
 use itcc_omics_lib::s3::upload_to_s3_from_bytes;
@@ -105,15 +107,14 @@ async fn beam_save_generate(
         suggested_name = %suggested_name,
         "[Beam] received file + metadata"
     );
-    let file_path = format!("{}/{}/{}", meta.partner_id, meta.maf_id, suggested_name);
+    let file_path = format!("{}/{}", meta.partner_id, suggested_name);
     save_files_s3(s3_client, &DATALAKE_CONFIG.s3_bucket, incoming, &file_path).await?;
     process_and_generate_data(s3_client, &DATALAKE_CONFIG.s3_bucket, &file_path, meta).await?;
     Ok(())
 }
 
 async fn handle_one(t: IngestTask) -> Ack {
-    info!("Beam receive one");
-    info!("Beam {:?}", t);
+    info!("Beam receive one task");
     match t {
         IngestTask::Fhir { bundle } => {
             handle_fhir_bundle(&CLIENT, &DATALAKE_CONFIG.blaze_url, bundle).await
@@ -129,7 +130,7 @@ async fn handle_maf(task: MafTask) -> Ack {
         .suggested_name
         .clone()
         .unwrap_or_else(|| format!("{}.maf", task.meta.maf_id));
-    let s3_key = format!("{}/{}/{}", task.meta.partner_id, task.meta.maf_id, filename);
+    let s3_key = format!("{}/{}", task.meta.partner_id, filename);
     let raw_bytes = match STANDARD.decode(&task.bytes_b64) {
         Ok(bytes) => bytes,
         Err(e) => {
@@ -146,6 +147,7 @@ async fn handle_maf(task: MafTask) -> Ack {
         &s3_key,
         raw_bytes,
         "application/zstd",
+        false,
     )
     .await
     {

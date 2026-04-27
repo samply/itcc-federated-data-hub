@@ -1,12 +1,46 @@
-use crate::cbio_portal::data::CbioWritable as dataCbioWritable;
-use crate::cbio_portal::data::{ClinicalPatientData, ClinicalSampleData};
-use crate::cbio_portal::meta::CbioWritable as metaCbioWritable;
-use crate::cbio_portal::meta::{MetaClinical, MetaMutation, MetaStudy};
-use itcc_omics_lib::beam::MetaData;
+use crate::beam::MetaData;
+use crate::cbio_portal::data::{ClinicalPatientRow, ClinicalSampleRow, Diagnosis};
+use crate::patient_id::{PatientId, SampleId};
+use data::CbioWritable as dataCbioWritable;
+use data::{ClinicalPatientData, ClinicalSampleData};
+use meta::CbioWritable as metaCbioWritable;
+use meta::{MetaClinical, MetaMutation, MetaStudy};
+use std::collections::HashSet;
 use std::path::Path;
 
 pub mod data;
 pub mod meta;
+
+pub fn build_minimal_cbio_rows(
+    sample_ids: &HashSet<SampleId>,
+) -> anyhow::Result<(ClinicalSampleData, ClinicalPatientData)> {
+    let mut sample_rows = Vec::new();
+    let mut patient_ids: HashSet<PatientId> = HashSet::new();
+
+    for sample_id in sample_ids {
+        let patient_id = sample_id.to_patient_id();
+        patient_ids.insert(patient_id.clone());
+
+        sample_rows.push(ClinicalSampleRow {
+            sample_id: sample_id.clone(),
+            patient_id,
+        });
+    }
+
+    let mut patient_rows = Vec::new();
+
+    for patient_id in patient_ids {
+        patient_rows.push(ClinicalPatientRow {
+            patient_id,
+            diagnosis: Diagnosis::Custom("Other".to_string()),
+        });
+    }
+
+    Ok((
+        ClinicalSampleData::from_rows(sample_rows),
+        ClinicalPatientData::from_rows(patient_rows),
+    ))
+}
 
 pub async fn generate_cbio_portal_meta_min(
     s3_client: &aws_sdk_s3::Client,
