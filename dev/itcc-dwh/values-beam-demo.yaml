@@ -35,6 +35,7 @@ webui:
 
 metaCache:
   image: ghcr.io/samply/meta-cache:feature-project
+  imagePullPolicy: Never
   port: 5150
   project: "itcc"
   ApiKey: "meta-cache"
