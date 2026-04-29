@@ -1,4 +1,4 @@
-mod get;
+pub mod get;
 
 use crate::error_type::LibError;
 use crate::fhir::bundle::Bundle;
