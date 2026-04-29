@@ -1,3 +1,5 @@
+pub mod get;
+
 use crate::error_type::LibError;
 use crate::fhir::bundle::Bundle;
 use crate::fhir::resources::Resource;
@@ -169,12 +171,7 @@ pub async fn get_all_patient_count(
         .as_i64()
         .ok_or_else(|| LibError::BlazeError)?;
     debug!("Count: {:?}", count);
-    if count >= 100000 {
-        // TODO paging offer 10000 patients
-        return Err(LibError::BlazeResultError);
-    } else {
-        return Ok(count);
-    }
+    Ok(count)
 }
 
 pub async fn get_all_patient_identifiers(
@@ -236,32 +233,4 @@ pub async fn get_all_patient_identifiers(
         identifiers.len()
     );
     Ok(identifiers)
-}
-
-pub async fn get_all_patient_identifiers_dbg(
-    client: &reqwest::Client,
-    blaze_url: &Url,
-    count: i64,
-) -> Result<HashSet<PatientId>, LibError> {
-    let patient_url = blaze_url
-        .join(
-            format!("Patient?identifier:missing=false&_elements=identifier&_count={count}")
-                .as_str(),
-        )
-        .expect("blaze url should be present");
-
-    let res = client
-        .get(patient_url)
-        .send()
-        .await
-        .map_err(|_| LibError::BlazeError)?
-        .error_for_status()
-        .map_err(|_| LibError::BlazeError)?;
-
-    debug!("resp: {:#?}", res);
-    let bundle: Bundle = res
-        .json::<Bundle>()
-        .await
-        .map_err(|_| LibError::BlazeError)?;
-    Ok(bundle.get_all_patient_identifiers())
 }
